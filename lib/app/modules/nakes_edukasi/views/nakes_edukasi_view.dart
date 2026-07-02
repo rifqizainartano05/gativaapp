@@ -53,8 +53,8 @@ class NakesEdukasiView extends GetView<NakesEdukasiController> {
                     ),
                   ),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-
                       const Text(
                         'Edukasi Natrium',
                         style: TextStyle(
@@ -295,16 +295,18 @@ class NakesEdukasiView extends GetView<NakesEdukasiController> {
 
     Get.bottomSheet(
       SafeArea(
-        child: Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
           ),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.zero,
+          child: Padding(
+            padding: EdgeInsets.only(
+              top: 24,
+              left: 24,
+              right: 24,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 24,
             ),
+            child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -359,57 +361,82 @@ class NakesEdukasiView extends GetView<NakesEdukasiController> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2E7D32),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          side: const BorderSide(color: Colors.grey),
+                        ),
+                        onPressed: () => Get.back(),
+                        child: const Text(
+                          "Batal",
+                          style: TextStyle(
+                            color: Colors.black54,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
-                    onPressed: () {
-                      final title = titleCtrl.text;
-                      final cat = categoryCtrl.text;
-                      final content = contentCtrl.text;
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2E7D32),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () {
+                          final title = titleCtrl.text;
+                          final cat = categoryCtrl.text;
+                          final content = contentCtrl.text;
 
-                      if (title.isNotEmpty && cat.isNotEmpty) {
-                        if (isEdit) {
-                          controller.updateArticle(
-                            article.id,
-                            title,
-                            cat,
-                            content,
-                          );
-                        } else {
-                          controller.addArticle(title, cat, content);
-                        }
-                        Get.back();
-                      } else {
-                        Get.snackbar(
-                          'Peringatan',
-                          'Judul dan Kategori harus diisi',
-                          backgroundColor: Colors.white,
-                        );
-                      }
-                    },
-                    child: Text(
-                      isEdit ? 'Simpan Perubahan' : 'Tambah Data',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                          if (title.isNotEmpty && cat.isNotEmpty) {
+                            if (isEdit) {
+                              controller.updateArticle(
+                                article.id,
+                                title,
+                                cat,
+                                content,
+                              );
+                            } else {
+                              controller.addArticle(title, cat, content);
+                            }
+                            Get.back();
+                          } else {
+                            Get.snackbar(
+                              'Peringatan',
+                              'Judul dan Kategori harus diisi',
+                              backgroundColor: Colors.white,
+                            );
+                          }
+                        },
+                        child: Text(
+                          isEdit ? 'Simpan' : 'Tambah',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),
           ),
+            ),
+          ),
         ),
-      ),
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
     );
   }
 }

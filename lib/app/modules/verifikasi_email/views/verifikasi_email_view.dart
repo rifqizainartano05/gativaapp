@@ -32,13 +32,15 @@ class VerifikasiEmailView extends GetView<VerifikasiEmailController> {
                 color: Colors.green.withOpacity(0.05),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24.0,
-                vertical: 40,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+            Center(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24.0,
+                    vertical: 40,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(
                     Icons.mark_email_unread_rounded,
@@ -122,6 +124,8 @@ class VerifikasiEmailView extends GetView<VerifikasiEmailController> {
                     ),
                   ),
                 ],
+              ),
+            ),
               ),
             ),
           ],

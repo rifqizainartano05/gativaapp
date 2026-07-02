@@ -26,6 +26,7 @@ class ChatMessage {
 class RoomChatController extends GetxController {
   final messages = <ChatMessage>[].obs;
   final selectedDoctor = Rxn<Map<String, dynamic>>();
+  final RxBool hasShownRating = false.obs;
   StreamSubscription<QuerySnapshot>? _chatSubscription;
 
   @override
@@ -42,11 +43,6 @@ class RoomChatController extends GetxController {
     if (text.trim().isEmpty) return;
 
     if (selectedDoctor.value != null) {
-      if (text.toLowerCase().contains('terima kasih')) {
-        _sendToFirebase(text);
-        Get.back();
-        return;
-      }
       _sendToFirebase(text);
     }
   }

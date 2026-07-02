@@ -96,6 +96,142 @@ class NakesDetailPasienGativaView
                 ),
                 child: Column(
                   children: [
+                    // Natrium Box (Moved to top & Beautified)
+                    Obx(() {
+                      final natrium = controller.pasienData['natrium'] ?? controller.pasienData['totalNatrium'] ?? controller.pasienData['sodium'] ?? 0;
+                      final dailyLimit = controller.pasienData['dailyLimit'] ?? controller.pasienData['limitNatrium'] ?? 2000;
+                      // Calculate percentage for progress
+                      final double percentage = (dailyLimit > 0) ? (natrium / dailyLimit).clamp(0.0, 1.0) : 0.0;
+                      final bool isWarning = natrium >= dailyLimit;
+
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 24, top: 8),
+                        clipBehavior: Clip.antiAlias,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: isWarning 
+                                ? [Colors.red.shade400, Colors.red.shade600]
+                                : [const Color(0xFF4CAF50), const Color(0xFF2E7D32)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: (isWarning ? Colors.red : const Color(0xFF2E7D32)).withOpacity(0.3),
+                              blurRadius: 12,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: Stack(
+                          children: [
+                            // Watermark Icon
+                            Positioned(
+                              right: -20,
+                              bottom: -20,
+                              child: Icon(
+                                Icons.water_drop_rounded,
+                                size: 120,
+                                color: Colors.white.withOpacity(0.15),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.2),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: const Icon(
+                                          Icons.science_outlined,
+                                          color: Colors.white,
+                                          size: 24,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      const Expanded(
+                                        child: Text(
+                                          'Asupan Natrium Harian',
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 20),
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        '$natrium',
+                                        style: const TextStyle(
+                                          fontSize: 32,
+                                          fontWeight: FontWeight.w900,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      const Padding(
+                                        padding: EdgeInsets.only(bottom: 6, left: 4),
+                                        child: Text(
+                                          'mg',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white70,
+                                          ),
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        children: [
+                                          const Text(
+                                            'Batas Maksimal',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w500,
+                                              color: Colors.white70,
+                                            ),
+                                          ),
+                                          Text(
+                                            '$dailyLimit mg',
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: LinearProgressIndicator(
+                                      value: percentage,
+                                      backgroundColor: Colors.white.withOpacity(0.2),
+                                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                                      minHeight: 8,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
                     Stack(
                       clipBehavior: Clip.none,
                       alignment: Alignment.topCenter,
@@ -305,47 +441,7 @@ class NakesDetailPasienGativaView
                     }),
                   ],
                 ),
-                const SizedBox(height: 24),
-                // Natrium Box
-                Obx(() {
-                  final natrium = controller.pasienData['natrium'] ?? controller.pasienData['totalNatrium'] ?? controller.pasienData['sodium'] ?? 0;
-                  final dailyLimit = controller.pasienData['dailyLimit'] ?? controller.pasienData['limitNatrium'] ?? 2000;
-                  return Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Asupan Natrium Harian',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        Text(
-                          '$natrium / $dailyLimit mg',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.red,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
+
               ],
             ),
           ),

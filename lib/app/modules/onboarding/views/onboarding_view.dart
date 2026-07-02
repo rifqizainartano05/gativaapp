@@ -44,15 +44,19 @@ class OnboardingView extends GetView<OnboardingController> {
               child: Column(
                 children: [
                   // Tombol Skip
-                  Align(
-                    alignment: Alignment.topRight,
-                    child: TextButton(
-                      onPressed: controller.skip,
-                      child: const Text(
-                        'Lewati',
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontWeight: FontWeight.bold,
+                  Padding(
+                    padding: const EdgeInsets.only(right: 24.0, top: 16.0),
+                    child: Align(
+                      alignment: Alignment.topRight,
+                      child: TextButton(
+                        onPressed: controller.skip,
+                        child: const Text(
+                          'Lewati',
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
                       ),
                     ),

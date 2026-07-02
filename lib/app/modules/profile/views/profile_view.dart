@@ -138,6 +138,17 @@ class ProfileView extends GetView<ProfileController> {
                             ),
                             child: Column(
                               children: [
+                                Obx(() => _buildSimpleMenuTile(
+                                  icon: Icons.medical_services_rounded,
+                                  title: "Tenaga Kesehatan",
+                                  subtitle: controller.nakesName.value == '-' ? "Belum terhubung" : controller.nakesName.value,
+                                  onTap: () => controller.showNakesDialog(),
+                                )),
+                                const Divider(
+                                  height: 1,
+                                  indent: 56,
+                                  color: AppColors.glassBorder,
+                                ),
                                 _buildSimpleMenuTile(
                                   icon: Icons.person_outline_rounded,
                                   title: "Edit Profil",
@@ -450,32 +461,55 @@ class ProfileView extends GetView<ProfileController> {
     );
   }
 
-  Widget _buildInnerStatItem(String title, String value, IconData icon) {
-    return Column(
+  Widget _buildInnerStatItem(String title, String value, IconData icon, {VoidCallback? onTap}) {
+    Widget content = Column(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Icon(icon, color: Colors.white.withOpacity(0.9), size: 24),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-            color: Colors.white,
+        if (value.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: Colors.white,
+            ),
+            textAlign: TextAlign.center,
           ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 11,
-            color: Colors.white.withOpacity(0.8),
-            fontWeight: FontWeight.w600,
+        ],
+        if (title.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.white.withOpacity(0.8),
+              fontWeight: FontWeight.w600,
+            ),
+            textAlign: TextAlign.center,
           ),
-          textAlign: TextAlign.center,
-        ),
+        ],
       ],
     );
+
+    if (onTap != null) {
+      return Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          splashColor: Colors.white.withValues(alpha: 0.2),
+          highlightColor: Colors.white.withValues(alpha: 0.1),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0),
+            child: content,
+          ),
+        ),
+      );
+    }
+    
+    return content;
   }
 
   Widget _buildSimpleMenuTile({

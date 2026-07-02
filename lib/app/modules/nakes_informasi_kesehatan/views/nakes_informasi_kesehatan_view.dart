@@ -265,176 +265,218 @@ class NakesInformasiKesehatanView extends GetView<NakesInformasiKesehatanControl
 
     Get.bottomSheet(
       SafeArea(
-        child: Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
           ),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.zero,
+          child: Padding(
+            padding: EdgeInsets.only(
+              top: 24,
+              left: 24,
+              right: 24,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 24,
             ),
             child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        isEdit ? 'Edit Informasi' : 'Tambah Informasi',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2E7D32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      isEdit ? 'Edit Informasi' : 'Tambah Informasi',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2E7D32),
+                      ),
+                    ),
+                    const Icon(
+                      Icons.medical_information_outlined,
+                      color: Color(0xFFE0E0E0),
+                      size: 40,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: tanggalCtrl,
+                  readOnly: true,
+                  onTap: () async {
+                    DateTime? picked = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2101),
+                    );
+                    if (picked != null) {
+                      const months = [
+                        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+                      ];
+                      tanggalCtrl.text = "${picked.day} ${months[picked.month - 1]} ${picked.year}";
+                    }
+                  },
+                  decoration: InputDecoration(
+                    labelText: 'Tanggal',
+                    hintText: 'Pilih Tanggal',
+                    suffixIcon: const Icon(Icons.calendar_today_rounded),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: alamatCtrl,
+                  decoration: InputDecoration(
+                    labelText: 'Alamat',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: keteranganCtrl,
+                  decoration: InputDecoration(
+                    labelText: 'Keterangan',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Obx(() {
+                  return GestureDetector(
+                    onTap: pickImage,
+                    child: Container(
+                      width: double.infinity,
+                      height: gambarBase64.value.isEmpty ? 120 : 200,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.grey.shade300,
+                          style: BorderStyle.solid,
                         ),
-                      ),
-                      const Icon(
-                        Icons.medical_information_outlined,
-                        color: Color(0xFFE0E0E0),
-                        size: 40,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  TextField(
-                    controller: tanggalCtrl,
-                    decoration: InputDecoration(
-                      labelText: 'Tanggal',
-                      hintText: 'Contoh: 10 Oktober 2023',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: alamatCtrl,
-                    decoration: InputDecoration(
-                      labelText: 'Alamat',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: keteranganCtrl,
-                    decoration: InputDecoration(
-                      labelText: 'Keterangan',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Obx(() {
-                    return GestureDetector(
-                      onTap: pickImage,
-                      child: Container(
-                        width: double.infinity,
-                        height: gambarBase64.value.isEmpty ? 120 : 200,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade50,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: Colors.grey.shade300,
-                            style: BorderStyle.solid,
-                          ),
-                          image: gambarBase64.value.isNotEmpty
-                              ? DecorationImage(
-                                  image: MemoryImage(base64Decode(gambarBase64.value)),
-                                  fit: BoxFit.cover,
-                                )
-                              : null,
-                        ),
-                        child: gambarBase64.value.isEmpty
-                            ? Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.add_photo_alternate_outlined,
-                                    size: 40,
-                                    color: Colors.grey.shade400,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Tekan untuk menambah gambar',
-                                    style: TextStyle(
-                                      color: Colors.grey.shade500,
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
+                        image: gambarBase64.value.isNotEmpty
+                            ? DecorationImage(
+                                image: MemoryImage(base64Decode(gambarBase64.value)),
+                                fit: BoxFit.cover,
                               )
-                            : Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.4),
-                                  borderRadius: BorderRadius.circular(16),
+                            : null,
+                      ),
+                      child: gambarBase64.value.isEmpty
+                          ? Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.add_photo_alternate_outlined,
+                                  size: 40,
+                                  color: Colors.grey.shade400,
                                 ),
-                                child: const Center(
-                                  child: Icon(
-                                    Icons.camera_alt_outlined,
-                                    color: Colors.white,
-                                    size: 40,
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Tekan untuk menambah gambar',
+                                  style: TextStyle(
+                                    color: Colors.grey.shade500,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
                                   ),
+                                ),
+                              ],
+                            )
+                          : Container(
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.4),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: const Center(
+                                child: Icon(
+                                  Icons.camera_alt_outlined,
+                                  color: Colors.white,
+                                  size: 40,
                                 ),
                               ),
-                      ),
-                    );
-                  }),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2E7D32),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                            ),
+                    ),
+                  );
+                }),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          side: const BorderSide(color: Colors.grey),
                         ),
-                      ),
-                      onPressed: () {
-                        final tanggal = tanggalCtrl.text;
-                        final alamat = alamatCtrl.text;
-                        final keterangan = keteranganCtrl.text;
-                        final gb = gambarBase64.value;
-
-                        if (tanggal.isNotEmpty && alamat.isNotEmpty) {
-                          if (isEdit) {
-                            controller.updateInformasi(info!.id, tanggal, alamat, keterangan, gb);
-                          } else {
-                            controller.addInformasi(tanggal, alamat, keterangan, gb);
-                          }
-                          Get.back();
-                        } else {
-                          Get.snackbar(
-                            'Peringatan',
-                            'Tanggal dan alamat harus diisi',
-                            backgroundColor: Colors.white,
-                          );
-                        }
-                      },
-                      child: Text(
-                        isEdit ? 'Simpan Perubahan' : 'Tambah Data',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                        onPressed: () => Get.back(),
+                        child: const Text(
+                          "Batal",
+                          style: TextStyle(
+                            color: Colors.black54,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2E7D32),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () {
+                          final tanggal = tanggalCtrl.text;
+                          final alamat = alamatCtrl.text;
+                          final keterangan = keteranganCtrl.text;
+                          final gb = gambarBase64.value;
+
+                          if (tanggal.isNotEmpty && alamat.isNotEmpty) {
+                            if (isEdit) {
+                              controller.updateInformasi(info!.id, tanggal, alamat, keterangan, gb);
+                            } else {
+                              controller.addInformasi(tanggal, alamat, keterangan, gb);
+                            }
+                            Get.back();
+                          } else {
+                            Get.snackbar(
+                              'Peringatan',
+                              'Tanggal dan alamat harus diisi',
+                              backgroundColor: Colors.white,
+                            );
+                          }
+                        },
+                        child: Text(
+                          isEdit ? 'Simpan' : 'Tambah',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
             ),
           ),
         ),
-      ),
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
     );
   }
 }

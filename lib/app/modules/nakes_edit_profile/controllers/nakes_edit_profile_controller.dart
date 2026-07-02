@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -23,9 +24,26 @@ class NakesEditProfileController extends GetxController {
   final isLoading = false.obs;
   final isFetching = true.obs;
 
+  final Rx<Uint8List?> imageBytes = Rx<Uint8List?>(null);
+
   @override
   void onInit() {
     super.onInit();
+
+    ever(photoBase64, (String b64) {
+      if (b64.isEmpty) {
+        imageBytes.value = null;
+        return;
+      }
+      try {
+        if (b64.contains(',')) b64 = b64.split(',').last;
+        b64 = b64.replaceAll(RegExp(r'\s+'), '');
+        imageBytes.value = base64Decode(b64);
+      } catch (e) {
+        imageBytes.value = null;
+      }
+    });
+
     loadUserData();
   }
 
@@ -42,7 +60,7 @@ class NakesEditProfileController extends GetxController {
         tensiController.text = data['tensi'] ?? '';
         beratBadanController.text = (data['beratBadan'] ?? '').toString();
         tinggiBadanController.text = (data['tinggiBadan'] ?? '').toString();
-        photoBase64.value = data['photoBase64'] ?? '';
+        photoBase64.value = data['photoBase64'] ?? data['strImageBase64'] ?? '';
         universitasController.text = data['universitas'] ?? '';
         mulaiPraktikController.text = data['mulai_praktik'] ?? '';
         jadwalOnlineController.text = data['jadwal_online'] ?? '';
@@ -131,4 +149,5 @@ class NakesEditProfileController extends GetxController {
       isLoading.value = false;
     }
   }
+
 }

@@ -42,15 +42,16 @@ class NakesProfileView extends GetView<NakesProfileController> {
                       color: Colors.white.withOpacity(0.08),
                     ),
                   ),
+
                   Column(
                     children: [
                       Obx(() => CircleAvatar(
                         radius: 50,
                         backgroundColor: Colors.white24,
-                        backgroundImage: controller.photoBase64.value.isNotEmpty
-                            ? MemoryImage(const Base64Decoder().convert(controller.photoBase64.value))
+                        backgroundImage: controller.imageBytes.value != null
+                            ? MemoryImage(controller.imageBytes.value!)
                             : null,
-                        child: controller.photoBase64.value.isEmpty
+                        child: controller.imageBytes.value == null
                             ? const Icon(Icons.person, color: Colors.white, size: 64)
                             : null,
                       )),
@@ -80,7 +81,71 @@ class NakesProfileView extends GetView<NakesProfileController> {
                 ],
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: GestureDetector(
+                onTap: controller.showBarcodeDialog,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFF2E7D32).withOpacity(0.3)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.02),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF2E7D32).withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.qr_code_scanner_rounded,
+                          color: Color(0xFF2E7D32),
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Barcode Akses Dokter",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              "Tampilkan untuk dipindai oleh Pasien",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.grey),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(

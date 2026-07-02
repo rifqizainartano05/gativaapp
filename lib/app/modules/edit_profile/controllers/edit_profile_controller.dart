@@ -94,6 +94,7 @@ class EditProfileController extends GetxController {
             .doc(user.uid)
             .set(dataToUpdate, SetOptions(merge: true));
 
+        Get.back();
         Get.snackbar(
           'Sukses',
           'Profil berhasil diperbarui',

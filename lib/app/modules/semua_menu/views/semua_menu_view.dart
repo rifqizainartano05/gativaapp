@@ -132,18 +132,8 @@ class SemuaMenuView extends GetView<SemuaMenuController> {
                           ),
                           Padding(
                             padding: const EdgeInsets.all(20),
-                            child: GridView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 4,
-                                    childAspectRatio: 0.75,
-                                    crossAxisSpacing: 16,
-                                    mainAxisSpacing: 20,
-                                  ),
-                              itemCount: 6,
-                              itemBuilder: (context, index) {
+                            child: Builder(
+                              builder: (context) {
                                 final items = [
                                   _MenuItem(
                                     icon: Icons.science_outlined,
@@ -182,44 +172,59 @@ class SemuaMenuView extends GetView<SemuaMenuController> {
                                     route: Routes.INFORMASI_KESEHATAN,
                                   ),
                                 ];
-                                final item = items[index];
-                                return GestureDetector(
-                                  behavior: HitTestBehavior.opaque,
-                                  onTap: () {
-                                    if (item.route == Routes.PROFILE) {
-                                      Get.back();
-                                    }
-                                    Get.toNamed(item.route);
+                                
+                                return GridView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  gridDelegate:
+                                      const SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: 4,
+                                        childAspectRatio: 0.75,
+                                        crossAxisSpacing: 16,
+                                        mainAxisSpacing: 20,
+                                      ),
+                                  itemCount: items.length,
+                                  itemBuilder: (context, index) {
+                                    final item = items[index];
+                                    return GestureDetector(
+                                      behavior: HitTestBehavior.opaque,
+                                      onTap: () {
+                                        if (item.route == Routes.PROFILE) {
+                                          Get.back();
+                                        }
+                                        Get.toNamed(item.route);
+                                      },
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.start,
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(14),
+                                            decoration: BoxDecoration(
+                                              color: item.color.withOpacity(0.1),
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: Icon(
+                                              item.icon,
+                                              color: item.color,
+                                              size: 28,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            item.label,
+                                            textAlign: TextAlign.center,
+                                            maxLines: 2,
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black87,
+                                              height: 1.2,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
                                   },
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(14),
-                                        decoration: BoxDecoration(
-                                          color: item.color.withOpacity(0.1),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Icon(
-                                          item.icon,
-                                          color: item.color,
-                                          size: 28,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        item.label,
-                                        textAlign: TextAlign.center,
-                                        maxLines: 2,
-                                        style: const TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.black87,
-                                          height: 1.2,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
                                 );
                               },
                             ),

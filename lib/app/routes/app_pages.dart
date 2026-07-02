@@ -1,5 +1,8 @@
 import 'package:get/get.dart';
 
+import '../modules/scan_dokter_akses/bindings/scan_dokter_akses_binding.dart';
+import '../modules/scan_dokter_akses/views/scan_dokter_akses_view.dart';
+
 import '../modules/anggota/bindings/anggota_binding.dart';
 import '../modules/anggota/views/anggota_view.dart';
 import '../modules/catatan_nakes/bindings/catatan_nakes_binding.dart';
@@ -318,6 +321,11 @@ class AppPages {
       name: _Paths.ROOM_NAKES_CHAT,
       page: () => const RoomNakesChatView(),
       binding: RoomNakesChatBinding(),
+    ),
+    GetPage(
+      name: _Paths.SCAN_DOKTER_AKSES,
+      page: () => const ScanDokterAksesView(),
+      binding: ScanDokterAksesBinding(),
     ),
   ];
 }

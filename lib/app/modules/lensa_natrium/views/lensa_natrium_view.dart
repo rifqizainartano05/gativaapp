@@ -250,13 +250,26 @@ class LensaNatriumView extends GetView<LensaNatriumController> {
                                         ),
                                       ),
                                       const SizedBox(width: 8),
-                                      Text(
-                                        '${item['natrium']} mg natrium',
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.red,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                      Builder(
+                                        builder: (context) {
+                                          final int sodiumMg = (item['natrium'] as num?)?.toInt() ?? (item['sodium'] as num?)?.toInt() ?? 0;
+                                          Color statusColor;
+                                          if (sodiumMg > 1000) {
+                                            statusColor = Colors.red;
+                                          } else if (sodiumMg > 600) {
+                                            statusColor = Colors.orange;
+                                          } else {
+                                            statusColor = Colors.green;
+                                          }
+                                          return Text(
+                                            '${item['natrium']} mg natrium',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: statusColor,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          );
+                                        }
                                       ),
                                     ],
                                   ),

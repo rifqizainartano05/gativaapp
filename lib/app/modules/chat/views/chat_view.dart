@@ -100,7 +100,8 @@ class ChatView extends GetView<ChatController> {
                 final doc = list[index];
                 final name = doc['name'] ?? 'Konsultan';
                 final int antreanCount = int.tryParse(doc['antrean']?.toString() ?? '0') ?? 0;
-                final photoBase64 = doc['photoBase64'] ?? doc['strImageBase64'] ?? '';
+                final double rating = double.tryParse(doc['rating']?.toString() ?? '0') ?? 0.0;
+                final photoBase64 = doc['photoBase64'] ?? '';
                 final String jadwalOnline = doc['jadwal_online'] ?? 'Tidak ada jadwal';
                 bool isOnline = false;
                 try {
@@ -207,6 +208,24 @@ class ChatView extends GetView<ChatController> {
                                     color: Color(0xFF1E293B),
                                   ),
                                 ),
+                                if (rating > 0) ...[
+                                  const SizedBox(height: 2),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(Icons.star_rounded, color: Colors.amber, size: 14),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        rating.toString(),
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.amber,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                                 const SizedBox(height: 4),
                                 Text(
                                   isOnline ? 'Tersedia (Online)' : 'Offline',

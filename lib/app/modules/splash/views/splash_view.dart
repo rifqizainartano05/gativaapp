@@ -73,16 +73,6 @@ class SplashView extends GetView<SplashController> {
                               letterSpacing: 10,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          const Text(
-                            'GARDA PREVENTIVA',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                              letterSpacing: 5,
-                            ),
-                          ),
                           const SizedBox(height: 12),
                           Text(
                             'Kawal Kesehatan Keluarga Bersama',

@@ -67,8 +67,8 @@ class NakesCatalogView extends StatelessWidget {
                     ),
                   ),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-
                       const Text(
                         'Katalog Makanan',
                         style: TextStyle(
@@ -478,22 +478,24 @@ class NakesCatalogView extends StatelessWidget {
 
     Get.bottomSheet(
       SafeArea(
-        child: Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
           ),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              // Hilangkan lengkungan (jangan melengkung)
-              borderRadius: BorderRadius.zero,
+          child: Padding(
+            padding: EdgeInsets.only(
+              top: 24,
+              left: 24,
+              right: 24,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 24,
             ),
+            child: SingleChildScrollView(
             child: Stack(
+              clipBehavior: Clip.none,
               children: [
                 Positioned(
-                  right: -30,
-                  top: -30,
+                  right: -40,
+                  top: -40,
                   child: Icon(
                     Icons.restaurant_menu_rounded,
                     size: 150,
@@ -504,13 +506,24 @@ class NakesCatalogView extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      isEdit ? 'Edit Makanan' : 'Tambah Makanan',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          isEdit ? 'Edit Makanan' : 'Tambah Makanan',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, color: Colors.grey),
+                          onPressed: () => Get.back(),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
                     TextField(
@@ -544,54 +557,79 @@ class NakesCatalogView extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              side: const BorderSide(color: Colors.grey),
+                            ),
+                            onPressed: () => Get.back(),
+                            child: const Text(
+                              "Batal",
+                              style: TextStyle(
+                                color: Colors.black54,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ),
-                        onPressed: () {
-                          final asli = asliCtrl.text;
-                          final alt = altCtrl.text;
-                          final hemat = double.tryParse(hematCtrl.text) ?? 0.0;
-
-                          if (asli.isNotEmpty && alt.isNotEmpty) {
-                            if (isEdit) {
-                              controller.updateFood(food.id, asli, alt, hemat);
-                            } else {
-                              controller.addFood(asli, alt, hemat);
-                            }
-                            Get.back();
-                          } else {
-                            Get.snackbar(
-                              'Peringatan',
-                              'Harap isi semua bidang teks',
-                              backgroundColor: Colors.white,
-                            );
-                          }
-                        },
-                        child: Text(
-                          isEdit ? 'Simpan Perubahan' : 'Tambah Data',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: () {
+                              final asli = asliCtrl.text;
+                              final alt = altCtrl.text;
+                              final hemat = double.tryParse(hematCtrl.text) ?? 0.0;
+    
+                              if (asli.isNotEmpty && alt.isNotEmpty) {
+                                if (isEdit) {
+                                  controller.updateFood(food.id, asli, alt, hemat);
+                                } else {
+                                  controller.addFood(asli, alt, hemat);
+                                }
+                                Get.back();
+                              } else {
+                                Get.snackbar(
+                                  'Peringatan',
+                                  'Harap isi semua bidang teks',
+                                  backgroundColor: Colors.white,
+                                );
+                              }
+                            },
+                            child: Text(
+                              isEdit ? 'Simpan' : 'Tambah',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
                   ],
                 ),
               ],
             ),
           ),
+            ),
+          ),
         ),
-      ),
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
     );
   }
 }

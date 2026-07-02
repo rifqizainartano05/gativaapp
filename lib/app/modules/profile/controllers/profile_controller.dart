@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -21,6 +22,9 @@ class ProfileController extends GetxController {
   final RxString beratBadan = "Belum ada".obs;
   final RxString tinggiBadan = "Belum ada".obs;
   final RxString kondisiKesehatan = "Belum ada".obs;
+  final RxString nakesName = "-".obs;
+  final RxString nakesUid = "".obs;
+  final RxString nakesPhotoBase64 = "".obs;
 
   @override
   void onInit() {
@@ -44,10 +48,16 @@ class ProfileController extends GetxController {
               (data['totalNatrium'] as num?)?.toInt() ??
               0;
           age.value = data['age'] ?? data['usia'] ?? 28;
-          photoBase64.value = data['photoBase64'] ?? data['strImageBase64'] ?? '';
+          photoBase64.value = data['photoBase64'] ?? '';
           beratBadan.value = data['berat_badan']?.toString() ?? 'Belum ada';
           tinggiBadan.value = data['tinggi_badan']?.toString() ?? 'Belum ada';
           kondisiKesehatan.value = data['kondisi'] ?? data['kondisi_kesehatan'] ?? 'Belum ada';
+          nakesName.value = data['nakesName'] ?? '-';
+          
+          if (data['nakesUid'] != null && data['nakesUid'].toString().isNotEmpty) {
+            nakesUid.value = data['nakesUid'];
+            _fetchNakesPhoto(nakesUid.value);
+          }
 
           // Format dailyLimit to int string correctly
           if (data['dailyLimit'] != null) {
@@ -64,6 +74,20 @@ class ProfileController extends GetxController {
       // Data natrium sudah diambil dari userReference (koleksi pasien)
       // Blok kode sebelumnya yang menjumlahkan dari 'label gizi makanan' dihapus
       // sesuai permintaan agar membaca langsung dari data 'natrium' di sub collection pasien.
+    }
+  }
+
+  Future<void> _fetchNakesPhoto(String uid) async {
+    try {
+      final doc = await FirebaseFirestore.instance.collection('mobile').doc('roles').collection('tenaga_kesehatan').doc(uid).get();
+      if (doc.exists) {
+        final data = doc.data();
+        if (data != null) {
+          nakesPhotoBase64.value = data['photoBase64'] ?? '';
+        }
+      }
+    } catch (e) {
+      // ignore
     }
   }
 
@@ -126,24 +150,100 @@ class ProfileController extends GetxController {
     );
   }
 
-  // Dialog Ekspor
-  void showExportDialog() {
-    Get.bottomSheet(
-      SafeArea(
-        child: Container(
-          margin: const EdgeInsets.all(16),
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 20,
-                offset: const Offset(0, -5),
+  void showNakesDialog() {
+    String nameToShow = nakesName.value;
+    if (nameToShow == '-' || nameToShow.isEmpty) {
+      nameToShow = 'Belum Terhubung';
+    }
+    
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Obx(() => Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2E7D32).withOpacity(0.1),
+                  shape: BoxShape.circle,
+                  image: nakesPhotoBase64.value.isNotEmpty
+                      ? DecorationImage(
+                          image: MemoryImage(base64Decode(nakesPhotoBase64.value)),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
+                ),
+                child: nakesPhotoBase64.value.isEmpty
+                    ? const Icon(
+                        Icons.medical_services_rounded,
+                        size: 40,
+                        color: Color(0xFF2E7D32),
+                      )
+                    : null,
+              )),
+              const SizedBox(height: 16),
+              const Text(
+                'Tenaga Kesehatan Anda',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                nameToShow,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Get.back(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2E7D32),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: const Text(
+                    'Tutup',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+
+
+  // Dialog Ekspor
+  void showExportDialog() {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,9 +251,11 @@ class ProfileController extends GetxController {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    "Ekspor Laporan Medis",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+                  const Expanded(
+                    child: Text(
+                      "Ekspor Laporan Medis",
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+                    ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close, color: Colors.grey),
@@ -206,7 +308,7 @@ class ProfileController extends GetxController {
                     },
                   );
                   if (picked != null) {
-                    Get.back(); // Tutup bottom sheet
+                    Get.back(); // Tutup dialog
                     _showDocumentChecklistDialog(); // Buka dialog checklist
                   }
                 },
@@ -215,8 +317,6 @@ class ProfileController extends GetxController {
           ),
         ),
       ),
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
     );
   }
 

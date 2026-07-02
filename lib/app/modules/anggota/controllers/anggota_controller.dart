@@ -45,8 +45,9 @@ class GroupRequest {
   final String id;
   final String name;
   final String status;
+  final String role;
 
-  GroupRequest({required this.id, required this.name, required this.status});
+  GroupRequest({required this.id, required this.name, required this.status, this.role = 'Anggota Keluarga'});
 }
 
 class AnggotaController extends GetxController {
@@ -95,8 +96,32 @@ class AnggotaController extends GetxController {
           .collection('anggota')
           .where('dataType', isEqualTo: 'Anggota')
           .snapshots()
-          .listen((snapshot) {
-            AnggotaMembers.value = snapshot.docs.map((doc) {
+          .listen((snapshot) async {
+            
+            // Get current user data to insert as Pemilik (Owner)
+            var userDoc = await Get.find<AuthService>().getUserReference(user.uid).get();
+            List<AnggotaMember> members = [];
+            
+            if (userDoc.exists) {
+              final userData = userDoc.data() as Map<String, dynamic>?;
+              if (userData != null) {
+                double consumed = (userData['natrium'] ?? userData['sodium'] ?? userData['totalNatrium'] ?? 0).toDouble();
+                double limit = (userData['dailyLimit'] ?? 2000).toDouble();
+                String name = userData['name'] ?? user.displayName ?? "Pemilik";
+                members.add(
+                  AnggotaMember(
+                    id: user.uid,
+                    name: name + " (Saya)",
+                    role: "Pemilik Grup",
+                    consumedSodium: consumed,
+                    dailyLimit: limit,
+                    avatarUrl: name.isNotEmpty ? name[0].toUpperCase() : "P",
+                  )
+                );
+              }
+            }
+
+            members.addAll(snapshot.docs.map((doc) {
               final data = doc.data();
               return AnggotaMember(
                 id: doc.id,
@@ -106,7 +131,9 @@ class AnggotaController extends GetxController {
                 dailyLimit: (data['limit'] ?? 2000).toDouble(),
                 avatarUrl: (data['name'] ?? "U")[0].toString().toUpperCase(),
               );
-            }).toList();
+            }));
+            
+            AnggotaMembers.value = members;
           });
 
       // Dengarkan group_requests (pending requests)
@@ -122,6 +149,7 @@ class AnggotaController extends GetxController {
                 id: doc.id,
                 name: data['name'] ?? 'Unknown',
                 status: data['status'] ?? 'pending',
+                role: data['role'] ?? 'Anggota Keluarga',
               );
             }).toList();
           });
@@ -244,96 +272,123 @@ class AnggotaController extends GetxController {
         Get.dialog(
           Dialog(
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(24),
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.shade50,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.security_rounded,
-                      color: Colors.orange.shade700,
-                      size: 40,
-                    ),
+            clipBehavior: Clip.antiAlias,
+            elevation: 10,
+            child: Stack(
+              children: [
+                // Watermark Icon
+                Positioned(
+                  right: -40,
+                  bottom: -40,
+                  child: Icon(
+                    Icons.security_rounded,
+                    size: 180,
+                    color: Colors.orange.withOpacity(0.05),
                   ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    "Hak Akses Privat",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    "$endpointName mencoba bergabung ke grup Anda. Dengan menyetujui, $endpointName dapat melihat data pantauan natrium harian Anda. Apakah Anda menyetujui?",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.grey.shade700,
-                      fontSize: 13,
-                      height: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {
-                            Nearby().rejectConnection(id);
-                            Get.back();
-                          },
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            side: BorderSide(color: Colors.grey.shade300),
+                      Container(
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.orange.shade100, Colors.orange.shade50],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
-                          child: const Text(
-                            "Tolak",
-                            style: TextStyle(
-                              color: Colors.black87,
-                              fontWeight: FontWeight.bold,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.orange.withOpacity(0.1),
+                              blurRadius: 10,
+                              spreadRadius: 2,
                             ),
-                          ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.security_rounded,
+                          color: Colors.orange.shade700,
+                          size: 44,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Get.back();
-                            Nearby().acceptConnection(
-                              id,
-                              onPayLoadRecieved: (endid, payload) {},
-                              onPayloadTransferUpdate:
-                                  (endid, payloadTransferUpdate) {},
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF2E7D32),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: const Text(
-                            "Setujui",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
+                      const SizedBox(height: 20),
+                      const Text(
+                        "Hak Akses Privat",
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, letterSpacing: -0.5),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        "$endpointName mencoba bergabung ke grup Anda. Dengan menyetujui, $endpointName dapat melihat data pantauan natrium harian Anda. Apakah Anda menyetujui?",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 13,
+                          height: 1.5,
                         ),
+                      ),
+                      const SizedBox(height: 28),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () {
+                                Nearby().rejectConnection(id);
+                                Get.back();
+                              },
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                side: BorderSide(color: Colors.grey.shade300),
+                              ),
+                              child: const Text(
+                                "Tolak",
+                                style: TextStyle(
+                                  color: Colors.black87,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Get.back();
+                                Nearby().acceptConnection(
+                                  id,
+                                  onPayLoadRecieved: (endid, payload) {},
+                                  onPayloadTransferUpdate:
+                                      (endid, payloadTransferUpdate) {},
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFE65100), // Orange Dark
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: const Text(
+                                "Setujui",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
           barrierDismissible: false,
@@ -367,6 +422,34 @@ class AnggotaController extends GetxController {
           .doc(request.id)
           .update({'status': 'approved'});
 
+      // Get member's real data
+      final memberDoc = await Get.find<AuthService>().getUserReference(request.id).get();
+      double memberConsumed = 0;
+      double memberLimit = 2000;
+      if (memberDoc.exists) {
+        final data = memberDoc.data() as Map<String, dynamic>?;
+        if (data != null) {
+          memberConsumed = (data['natrium'] ?? data['sodium'] ?? data['totalNatrium'] ?? 0).toDouble();
+          memberLimit = (data['dailyLimit'] ?? 2000).toDouble();
+        }
+      }
+
+      // Get owner's (current user) real data
+      final ownerDoc = await Get.find<AuthService>().getUserReference(user.uid).get();
+      double ownerConsumed = 0;
+      double ownerLimit = 2000;
+      if (ownerDoc.exists) {
+        final data = ownerDoc.data() as Map<String, dynamic>?;
+        if (data != null) {
+          ownerConsumed = (data['natrium'] ?? data['sodium'] ?? data['totalNatrium'] ?? 0).toDouble();
+          ownerLimit = (data['dailyLimit'] ?? 2000).toDouble();
+        }
+      }
+
+      // Role determination
+      String memberRole = request.role; // e.g. "Pemilik" or "Anggota Keluarga"
+      String ownerRole = memberRole == 'Pemilik' ? 'Anggota Keluarga' : 'Pemilik Grup';
+
       // 2. Tambahkan member ke sub-collection anggota owner
       await Get.find<AuthService>()
           .getUserReference(user.uid)
@@ -375,9 +458,9 @@ class AnggotaController extends GetxController {
           .set({
             'dataType': 'Anggota',
             'name': request.name,
-            'role': 'Anggota Keluarga',
-            'sodiumConsumed': 0, // Nilai default, nantinya bisa disinkronkan
-            'limit': 2000,
+            'role': memberRole,
+            'sodiumConsumed': memberConsumed, 
+            'limit': memberLimit,
             'joinedAt': FieldValue.serverTimestamp(),
           });
 
@@ -389,9 +472,9 @@ class AnggotaController extends GetxController {
           .set({
             'dataType': 'Anggota',
             'name': currentUserName,
-            'role': 'Pemilik Grup',
-            'sodiumConsumed': 0,
-            'limit': 2000,
+            'role': ownerRole,
+            'sodiumConsumed': ownerConsumed,
+            'limit': ownerLimit,
             'joinedAt': FieldValue.serverTimestamp(),
           });
 

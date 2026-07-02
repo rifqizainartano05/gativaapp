@@ -69,44 +69,49 @@ class ScanBarcodeView extends GetView<ScanBarcodeController> {
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: Colors.white.withOpacity(0.2)),
               ),
-              child: Row(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.qr_code_scanner_rounded,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Arahkan ke Barcode",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          shape: BoxShape.circle,
                         ),
-                        SizedBox(height: 4),
-                        Text(
-                          "Pindai barcode undangan yang dibagikan oleh anggota lain untuk bergabung.",
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 11,
-                            height: 1.4,
-                          ),
+                        child: const Icon(
+                          Icons.qr_code_scanner_rounded,
+                          color: Colors.white,
+                          size: 24,
                         ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(width: 16),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Arahkan ke Barcode",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              "Pindai barcode undangan yang dibagikan oleh anggota lain untuk bergabung.",
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 11,
+                                height: 1.4,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -173,19 +178,18 @@ class _ScannerOverlayState extends State<_ScannerOverlay>
 
         return Stack(
           children: [
-            // Gelap di luar kotak
-            // Gelap di luar kotak menggunakan CustomPaint (tanpa blur atau bug render)
+            // Gelap di luar kotak menggunakan CustomPaint
             Positioned.fill(
               child: CustomPaint(
                 painter: _ScannerOverlayPainter(
                   scanAreaSize: scanAreaSize,
                   borderRadius: 24,
-                  overlayColor: Colors.black.withOpacity(0.7),
+                  overlayColor: Colors.black.withOpacity(0.5), // Lighter overlay
                 ),
               ),
             ),
 
-            // Border Kaca di sekitar kotak (kurang terang / transparan)
+            // Border Kaca di sekitar kotak
             Center(
               child: Container(
                 width: scanAreaSize,
@@ -193,11 +197,11 @@ class _ScannerOverlayState extends State<_ScannerOverlay>
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.3), // jangan terang banget
+                    color: Colors.white.withOpacity(0.3), // Sedikit lebih terang bordernya
                     width: 2,
                   ),
-                  // Removed glowing box shadow to avoid the solid white box effect
                 ),
+                // Icon dihapus sesuai permintaan
               ),
             ),
 

@@ -107,7 +107,7 @@ class DetailDokterView extends GetView<DetailDokterController> {
                 }
 
                 final isOnline = controller.isOnline.value;
-                final photoBase64 = data['photoBase64'] ?? data['strImageBase64'] ?? '';
+                final photoBase64 = data['photoBase64'] ?? '';
 
                 return SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
@@ -261,7 +261,7 @@ class DetailDokterView extends GetView<DetailDokterController> {
                                 ],
 
                                 ...data.entries.where((e) {
-                                  final excludedKeys = ['photoBase64', 'strImageBase64', 'id', 'name', 'nama', 'username', 'role', 'universitas', 'lulusan', 'pengalaman', 'mulai_praktik', 'jadwal_online', 'detail_tenaga_kesehatan', 'strNumber', 'age', 'email', 'createdAt', 'created_at'];
+                                  final excludedKeys = ['photoBase64', 'strImageBase64', 'id', 'name', 'nama', 'username', 'role', 'universitas', 'lulusan', 'pengalaman', 'mulai_praktik', 'jadwal_online', 'detail_tenaga_kesehatan', 'strNumber', 'age', 'email', 'createdAt', 'created_at', 'kode_akses', 'status'];
                                   return !excludedKeys.contains(e.key) && e.value != null && e.value.toString().isNotEmpty;
                                 }).map((e) {
                                   // Format key to Title Case

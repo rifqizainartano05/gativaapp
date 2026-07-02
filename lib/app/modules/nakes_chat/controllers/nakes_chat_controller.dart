@@ -52,9 +52,17 @@ class NakesChatController extends GetxController {
 
     isLoadingDoctors.value = true;
     try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        isLoadingDoctors.value = false;
+        return;
+      }
+
       final snapshot = await FirebaseFirestore.instance
           .collection('mobile')
           .doc('roles')
+          .collection('tenaga_kesehatan')
+          .doc(user.uid)
           .collection('pasien')
           .get();
 

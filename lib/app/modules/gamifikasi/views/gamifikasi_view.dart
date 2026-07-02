@@ -309,396 +309,429 @@ class GamifikasiView extends GetView<GamifikasiController> {
   }
 
   void _showMissionDetails(BuildContext context, dynamic mission) {
-    Get.bottomSheet(
-      Container(
-        padding: EdgeInsets.only(
-          top: 24,
-          left: 24,
-          right: 24,
-          bottom:
-              MediaQuery.of(context).viewInsets.bottom +
-              MediaQuery.of(context).padding.bottom +
-              24,
-        ),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.zero,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.withOpacity(0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.star_rounded,
-                      color: Colors.amber,
-                      size: 32,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+    final TextEditingController answerController = TextEditingController();
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
                       children: [
-                        Text(
-                          mission.title,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20,
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.star_rounded,
+                            color: Colors.amber,
+                            size: 32,
                           ),
                         ),
-                        Text(
-                          '+${mission.rewardPoints} Poin',
-                          style: const TextStyle(
-                            color: Color(0xFF2E7D32),
-                            fontWeight: FontWeight.bold,
-                          ),
+                        const SizedBox(width: 16),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              width: 130,
+                              child: Text(
+                                mission.title,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Text(
+                              '+${mission.rewardPoints} Poin',
+                              style: const TextStyle(
+                                color: Color(0xFF2E7D32),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                mission.description,
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.black87,
-                  height: 1.5,
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.grey),
+                      onPressed: () => Get.back(),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 24),
-              if (mission.question != null && !mission.isCompleted) ...[
+                const SizedBox(height: 16),
                 Text(
-                  mission.question!,
+                  mission.description,
                   style: const TextStyle(
                     fontSize: 14,
-                    fontWeight: FontWeight.bold,
                     color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  decoration: InputDecoration(
-                    hintText: "Tulis jawaban Anda...",
-                    filled: true,
-                    fillColor: Colors.grey.shade100,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
-                    ),
+                    height: 1.5,
                   ),
                 ),
                 const SizedBox(height: 24),
-              ],
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: mission.isCompleted
-                      ? null
-                      : () {
-                          Get.back();
-                          controller.completeMission(mission.id);
+                if (mission.question != null && !mission.isCompleted) ...[
+                  Text(
+                    mission.question!,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: answerController,
+                    decoration: InputDecoration(
+                      hintText: "Tulis jawaban Anda...",
+                      filled: true,
+                      fillColor: Colors.grey.shade100,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+                Row(
+                  children: [
+                    if (!mission.isCompleted) ...[
+                      Expanded(
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            side: const BorderSide(color: Colors.grey),
+                          ),
+                          onPressed: () => Get.back(),
+                          child: const Text(
+                            "Batal",
+                            style: TextStyle(
+                              color: Colors.black54,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                    ],
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: mission.isCompleted
+                            ? null
+                            : () {
+                                if (mission.question != null && answerController.text.trim().isEmpty) {
+                                  Get.snackbar(
+                                    'Perhatian',
+                                    'Harap isi jawaban dari pertanyaan misi ini terlebih dahulu!',
+                                    snackPosition: SnackPosition.BOTTOM,
+                                    backgroundColor: Colors.orange,
+                                    colorText: Colors.white,
+                                  );
+                                  return;
+                                }
 
-                          // Tindakan navigasi berdasarkan level/tugas
-                          if (mission.level == 2 ||
-                              mission.level == 13 ||
-                              mission.level == 5) {
-                            final TextEditingController nameController =
-                                TextEditingController();
-                            Get.dialog(
-                              Dialog(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                backgroundColor: Colors.transparent,
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(24),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
-                                        blurRadius: 20,
-                                        offset: const Offset(0, 10),
+                                Get.back();
+
+                                // Tindakan navigasi berdasarkan level/tugas
+                                if (mission.level == 2 ||
+                                    mission.level == 13 ||
+                                    mission.level == 5) {
+                                  final TextEditingController nameController =
+                                      TextEditingController();
+                                  Get.dialog(
+                                    Dialog(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
                                       ),
-                                    ],
-                                  ),
-                                  child: Stack(
-                                    children: [
-                                      // Watermark Icon
-                                      Positioned(
-                                        right: -20,
-                                        bottom: -20,
-                                        child: Icon(
-                                          Icons.qr_code_scanner_rounded,
-                                          size: 150,
-                                          color: const Color(
-                                            0xFF2E7D32,
-                                          ).withOpacity(0.05),
+                                      backgroundColor: Colors.transparent,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(24),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withOpacity(0.1),
+                                              blurRadius: 20,
+                                              offset: const Offset(0, 10),
+                                            ),
+                                          ],
                                         ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.all(24.0),
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                                        child: Stack(
                                           children: [
-                                            Row(
-                                              children: [
-                                                Container(
-                                                  padding: const EdgeInsets.all(
-                                                    12,
-                                                  ),
-                                                  decoration: BoxDecoration(
-                                                    color: const Color(
-                                                      0xFF2E7D32,
-                                                    ).withOpacity(0.1),
-                                                    shape: BoxShape.circle,
-                                                  ),
-                                                  child: const Icon(
-                                                    Icons.fastfood_rounded,
-                                                    color: Color(0xFF2E7D32),
-                                                    size: 28,
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 16),
-                                                const Expanded(
-                                                  child: Text(
-                                                    'Identifikasi Produk',
-                                                    style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 20,
-                                                      color: Colors.black87,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 24),
-                                            const Text(
-                                              'Masukkan nama kemasan yang akan dipindai agar mudah dicatat nantinya:',
-                                              style: TextStyle(
-                                                color: Colors.black54,
-                                                fontSize: 14,
-                                                height: 1.4,
+                                            // Watermark Icon
+                                            Positioned(
+                                              right: -20,
+                                              bottom: -20,
+                                              child: Icon(
+                                                Icons.qr_code_scanner_rounded,
+                                                size: 150,
+                                                color: const Color(
+                                                  0xFF2E7D32,
+                                                ).withOpacity(0.05),
                                               ),
                                             ),
-                                            const SizedBox(height: 16),
-                                            TextField(
-                                              controller: nameController,
-                                              decoration: InputDecoration(
-                                                hintText:
-                                                    'Contoh: Chitato Sapi Panggang',
-                                                hintStyle: TextStyle(
-                                                  color: Colors.grey.shade400,
-                                                ),
-                                                filled: true,
-                                                fillColor: Colors.grey.shade50,
-                                                prefixIcon: const Icon(
-                                                  Icons.edit_note_rounded,
-                                                  color: Colors.grey,
-                                                ),
-                                                border: OutlineInputBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(16),
-                                                  borderSide: BorderSide(
-                                                    color: Colors.grey.shade300,
-                                                  ),
-                                                ),
-                                                enabledBorder:
-                                                    OutlineInputBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            16,
-                                                          ),
-                                                      borderSide: BorderSide(
-                                                        color: Colors
-                                                            .grey
-                                                            .shade300,
-                                                      ),
-                                                    ),
-                                                focusedBorder:
-                                                    OutlineInputBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            16,
-                                                          ),
-                                                      borderSide:
-                                                          const BorderSide(
-                                                            color: Color(
-                                                              0xFF2E7D32,
-                                                            ),
-                                                            width: 2,
-                                                          ),
-                                                    ),
-                                                contentPadding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 16,
-                                                      vertical: 16,
-                                                    ),
-                                              ),
-                                            ),
-                                            const SizedBox(height: 32),
-                                            Row(
-                                              children: [
-                                                Expanded(
-                                                  child: TextButton(
-                                                    onPressed: () => Get.back(),
-                                                    style: TextButton.styleFrom(
-                                                      padding:
-                                                          const EdgeInsets.symmetric(
-                                                            vertical: 16,
-                                                          ),
-                                                      shape: RoundedRectangleBorder(
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                              12,
-                                                            ),
-                                                      ),
-                                                    ),
-                                                    child: const Text(
-                                                      'Batal',
-                                                      style: TextStyle(
-                                                        color: Colors.grey,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        fontSize: 16,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 16),
-                                                Expanded(
-                                                  child: ElevatedButton(
-                                                    onPressed: () {
-                                                      if (nameController.text
-                                                          .trim()
-                                                          .isEmpty) {
-                                                        Get.snackbar(
-                                                          'Perhatian',
-                                                          'Nama kemasan tidak boleh kosong',
-                                                          snackPosition:
-                                                              SnackPosition
-                                                                  .BOTTOM,
-                                                          backgroundColor:
-                                                              Colors.orange,
-                                                          colorText:
-                                                              Colors.white,
-                                                        );
-                                                        return;
-                                                      }
-                                                      Get.back();
-                                                      Get.toNamed(
-                                                        '/scanner',
-                                                        arguments:
-                                                            nameController.text
-                                                                .trim(),
-                                                      );
-                                                    },
-                                                    style: ElevatedButton.styleFrom(
-                                                      backgroundColor:
-                                                          const Color(
+                                            Padding(
+                                              padding: const EdgeInsets.all(24.0),
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Row(
+                                                    children: [
+                                                      Container(
+                                                        padding: const EdgeInsets.all(
+                                                          12,
+                                                        ),
+                                                        decoration: BoxDecoration(
+                                                          color: const Color(
                                                             0xFF2E7D32,
-                                                          ),
-                                                      foregroundColor:
-                                                          Colors.white,
-                                                      padding:
-                                                          const EdgeInsets.symmetric(
-                                                            vertical: 16,
-                                                          ),
-                                                      elevation: 0,
-                                                      shape: RoundedRectangleBorder(
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                              12,
-                                                            ),
+                                                          ).withOpacity(0.1),
+                                                          shape: BoxShape.circle,
+                                                        ),
+                                                        child: const Icon(
+                                                          Icons.fastfood_rounded,
+                                                          color: Color(0xFF2E7D32),
+                                                          size: 28,
+                                                        ),
                                                       ),
-                                                    ),
-                                                    child: const Text(
-                                                      'Pindai',
-                                                      style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        fontSize: 16,
+                                                      const SizedBox(width: 16),
+                                                      const Expanded(
+                                                        child: Text(
+                                                          'Identifikasi Produk',
+                                                          style: TextStyle(
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            fontSize: 20,
+                                                            color: Colors.black87,
+                                                          ),
+                                                        ),
                                                       ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 24),
+                                                  const Text(
+                                                    'Masukkan nama kemasan yang akan dipindai agar mudah dicatat nantinya:',
+                                                    style: TextStyle(
+                                                      color: Colors.black54,
+                                                      fontSize: 14,
+                                                      height: 1.4,
                                                     ),
                                                   ),
-                                                ),
-                                              ],
+                                                  const SizedBox(height: 16),
+                                                  TextField(
+                                                    controller: nameController,
+                                                    decoration: InputDecoration(
+                                                      hintText:
+                                                          'Contoh: Chitato Sapi Panggang',
+                                                      hintStyle: TextStyle(
+                                                        color: Colors.grey.shade400,
+                                                      ),
+                                                      filled: true,
+                                                      fillColor: Colors.grey.shade50,
+                                                      prefixIcon: const Icon(
+                                                        Icons.edit_note_rounded,
+                                                        color: Colors.grey,
+                                                      ),
+                                                      border: OutlineInputBorder(
+                                                        borderRadius:
+                                                            BorderRadius.circular(16),
+                                                        borderSide: BorderSide(
+                                                          color: Colors.grey.shade300,
+                                                        ),
+                                                      ),
+                                                      enabledBorder:
+                                                          OutlineInputBorder(
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  16,
+                                                                ),
+                                                            borderSide: BorderSide(
+                                                              color: Colors
+                                                                  .grey
+                                                                  .shade300,
+                                                            ),
+                                                          ),
+                                                      focusedBorder:
+                                                          OutlineInputBorder(
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  16,
+                                                                ),
+                                                            borderSide:
+                                                                const BorderSide(
+                                                                  color: Color(
+                                                                    0xFF2E7D32,
+                                                                  ),
+                                                                  width: 2,
+                                                                ),
+                                                          ),
+                                                      contentPadding:
+                                                          const EdgeInsets.symmetric(
+                                                            horizontal: 16,
+                                                            vertical: 16,
+                                                          ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 32),
+                                                  Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child: TextButton(
+                                                          onPressed: () => Get.back(),
+                                                          style: TextButton.styleFrom(
+                                                            padding:
+                                                                const EdgeInsets.symmetric(
+                                                                  vertical: 16,
+                                                                ),
+                                                            shape: RoundedRectangleBorder(
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    12,
+                                                                  ),
+                                                            ),
+                                                          ),
+                                                          child: const Text(
+                                                            'Batal',
+                                                            style: TextStyle(
+                                                              color: Colors.grey,
+                                                              fontWeight:
+                                                                  FontWeight.bold,
+                                                              fontSize: 16,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 16),
+                                                      Expanded(
+                                                        child: ElevatedButton(
+                                                          onPressed: () {
+                                                            if (nameController.text
+                                                                .trim()
+                                                                .isEmpty) {
+                                                              Get.snackbar(
+                                                                'Perhatian',
+                                                                'Nama kemasan tidak boleh kosong',
+                                                                snackPosition:
+                                                                    SnackPosition
+                                                                        .BOTTOM,
+                                                                backgroundColor:
+                                                                    Colors.orange,
+                                                                colorText:
+                                                                    Colors.white,
+                                                              );
+                                                              return;
+                                                            }
+                                                            Get.back();
+                                                            Get.toNamed(
+                                                              '/scanner',
+                                                              arguments:
+                                                                  nameController.text
+                                                                      .trim(),
+                                                            )?.then((_) {
+                                                              // Selesaikan misi setelah kembali dari scanner (pengerjaan asli)
+                                                              controller.completeMission(mission.id);
+                                                            });
+                                                          },
+                                                          style: ElevatedButton.styleFrom(
+                                                            backgroundColor:
+                                                                const Color(
+                                                                  0xFF2E7D32,
+                                                                ),
+                                                            foregroundColor:
+                                                                Colors.white,
+                                                            padding:
+                                                                const EdgeInsets.symmetric(
+                                                                  vertical: 16,
+                                                                ),
+                                                            elevation: 0,
+                                                            shape: RoundedRectangleBorder(
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    12,
+                                                                  ),
+                                                            ),
+                                                          ),
+                                                          child: const Text(
+                                                            'Pindai',
+                                                            style: TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight.bold,
+                                                              fontSize: 16,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
                                             ),
                                           ],
                                         ),
                                       ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
-                          } else if (mission.level == 4 ||
-                              mission.level == 18) {
-                            Get.toNamed('/nakes-edukasi');
-                          } else if (mission.level == 12) {
-                            Get.toNamed('/riwayat');
-                          } else if (mission.level == 1) {
-                            Get.toNamed('/lensa-natrium');
-                          } else {
-                            Get.toNamed('/main-navigation');
-                          }
-                        },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2E7D32),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 20,
-                    ), // Tambah padding agar tidak terlalu kecil
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ), // Melengkung
-                  ),
-                  child: Text(
-                    mission.isCompleted ? 'Selesai' : 'Kerjakan Tugas',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                                    ),
+                                  );
+                                } else if (mission.level == 4 ||
+                                    mission.level == 18) {
+                                  Get.toNamed('/nakes-edukasi')?.then((_) => controller.completeMission(mission.id));
+                                } else if (mission.level == 12) {
+                                  Get.toNamed('/riwayat')?.then((_) => controller.completeMission(mission.id));
+                                } else if (mission.level == 1) {
+                                  Get.toNamed('/lensa-natrium')?.then((_) => controller.completeMission(mission.id));
+                                } else {
+                                  // Jika hanya menjawab pertanyaan atau tugas lain, langsung selesaikan
+                                  controller.completeMission(mission.id);
+                                  Get.toNamed('/main-navigation');
+                                }
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2E7D32),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 14,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          mission.isCompleted ? 'Selesai' : 'Mulai Tugas',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ),
-              const SizedBox(
-                height: 32,
-              ), // Tambah jarak agar tidak mepet dengan navigasi bar hp
-            ],
+              ],
+            ),
           ),
         ),
       ),
-      isScrollControlled: true,
     );
   }
 }

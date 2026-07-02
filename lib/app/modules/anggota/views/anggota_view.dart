@@ -41,81 +41,80 @@ class AnggotaView extends StatelessWidget {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) {
         return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+            ),
+            padding: EdgeInsets.only(
+              top: 24,
+              left: 24,
+              right: 24,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+            ),
             child: Obx(
-              () => Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(99),
+            () => Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      "Pilih Cara Undang",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.textPrimary,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 18),
-                  const Text(
-                    "Pilih Cara Undang",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.textPrimary,
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.grey),
+                      onPressed: () => Get.back(),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
                     ),
-                  ),
-                  const SizedBox(height: 14),
-                  _InviteOptionTile(
-                    icon: Icons.qr_code_2_rounded,
-                    title: controller.isCreatingInvite.value
-                        ? "Membuat Barcode..."
-                        : "Tampilkan Barcode Undangan",
-                    subtitle: "Minta anggota memindai layar Anda",
-                    onTap: controller.isCreatingInvite.value
-                        ? null
-                        : () async {
-                            Get.back();
-                            String? qrData = await controller
-                                .generateQRInvite();
-                            if (qrData != null && context.mounted) {
-                              _showQRDialog(context, qrData);
-                            }
-                          },
-                  ),
-                  const SizedBox(height: 10),
-                  _InviteOptionTile(
-                    icon: Icons.radar_rounded,
-                    title: "Undang Perangkat Sekitar",
-                    subtitle: "Bluetooth dan Wi-Fi jarak dekat",
-                    onTap: () {
-                      Get.back();
-                      _showInviteDialog(context);
-                    },
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16),
-                    child: Divider(color: AppColors.glassBorder, height: 1),
-                  ),
-                  _InviteOptionTile(
-                    icon: Icons.qr_code_scanner_rounded,
-                    title: "Pindai Undangan",
-                    subtitle: "Gabung ke grup dengan memindai barcode",
-                    onTap: () {
-                      Get.back();
-                      Get.toNamed('/scan-barcode');
-                    },
-                  ),
-                ],
-              ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                _InviteOptionTile(
+                  icon: Icons.qr_code_2_rounded,
+                  title: controller.isCreatingInvite.value
+                      ? "Membuat Barcode..."
+                      : "Tampilkan Barcode Undangan",
+                  subtitle: "Minta anggota memindai layar Anda",
+                  onTap: controller.isCreatingInvite.value
+                      ? null
+                      : () async {
+                          Get.back();
+                          String? qrData = await controller
+                              .generateQRInvite();
+                          if (qrData != null && context.mounted) {
+                            _showQRDialog(context, qrData);
+                          }
+                        },
+                ),
+
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Divider(color: AppColors.glassBorder, height: 1),
+                ),
+                _InviteOptionTile(
+                  icon: Icons.qr_code_scanner_rounded,
+                  title: "Pindai Undangan",
+                  subtitle: "Gabung ke grup dengan memindai barcode",
+                  onTap: () {
+                    Get.back();
+                    Get.toNamed('/scan-barcode');
+                  },
+                ),
+              ],
             ),
           ),
+        ),
         );
       },
     );
@@ -714,6 +713,7 @@ class AnggotaView extends StatelessWidget {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Peringatan text has been removed based on user request
                           if (pemilik.isNotEmpty) ...[
                             const Padding(
                               padding: EdgeInsets.only(bottom: 12.0, left: 4.0),
@@ -1142,20 +1142,21 @@ class _AnimatedAnggotaCardState extends State<AnimatedAnggotaCard>
                   Positioned.fill(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: widget.statusColor.withOpacity(
-                          0.9,
-                        ), // Efek Kabut Pekat
-                        borderRadius: BorderRadius.circular(
-                          18,
-                        ), // Agar sudut membulat pas kotak
+                        color: widget.statusColor.withOpacity(0.9), // Efek Kabut Pekat
+                        borderRadius: BorderRadius.circular(18), // Agar sudut membulat pas kotak
                       ),
                       child: Center(
-                        child: Icon(
-                          widget.statusIcon,
-                          size: 100,
-                          color: Colors.white.withOpacity(
-                            0.9,
-                          ), // Icon Solid Putih di tengah kabut merah
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              widget.statusIcon,
+                              size: 60,
+                              color: Colors.white.withOpacity(0.9), // Icon Solid Putih di tengah kabut merah
+                            ),
+                            const SizedBox(height: 12),
+                            remindButton,
+                          ],
                         ),
                       ),
                     ),

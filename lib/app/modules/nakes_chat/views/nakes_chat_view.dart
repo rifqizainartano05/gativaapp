@@ -79,7 +79,7 @@ class NakesChatView extends GetView<NakesChatController> {
                       const SizedBox(width: 16),
                       const Expanded(
                         child: Text(
-                          'Pilih Pasien',
+                          'Live Chat',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.white,

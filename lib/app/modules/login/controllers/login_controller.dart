@@ -89,9 +89,110 @@ class LoginController extends GetxController {
 
         isLoading.value = false;
         if (authService.userRole.value == 'Pasien') {
-          Get.offAllNamed(Routes.MAIN_NAVIGATION);
+          try {
+            final pasienDoc = await authService.getUserReference(user.uid).get();
+            final data = pasienDoc.data() as Map<String, dynamic>?;
+            if (data != null && data['nakesUid'] == null) {
+              Get.offAllNamed(Routes.SCAN_DOKTER_AKSES);
+            } else {
+              Get.offAllNamed(Routes.MAIN_NAVIGATION);
+            }
+          } catch (e) {
+            Get.offAllNamed(Routes.MAIN_NAVIGATION);
+          }
         } else if (authService.userRole.value == 'Tenaga Kesehatan') {
-          Get.offAllNamed(Routes.NAKES_DASHBOARD);
+          try {
+            final nakesDoc = await authService.getUserReference(user.uid).get();
+            final data = nakesDoc.data() as Map<String, dynamic>?;
+            
+            String status = 'menunggu';
+            if (data != null && data['status'] != null) {
+              // Murni HANYA membaca field 'status' dan menangani kapitalisasi ("Disetujui")
+              status = data['status'].toString().toLowerCase().trim();
+            }
+            
+            if (status == 'disetujui') {
+              Get.offAllNamed(Routes.NAKES_DASHBOARD);
+            } else if (status == 'ditolak') {
+              await FirebaseAuth.instance.signOut();
+              Get.dialog(
+                Dialog(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  backgroundColor: Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.cancel_rounded, size: 60, color: Colors.red.shade400),
+                        const SizedBox(height: 16),
+                        const Text('Akses Ditolak', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Akun pendaftaran Anda ditolak oleh admin. Anda tidak bisa login.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 14, color: Colors.grey),
+                        ),
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () => Get.back(),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red.shade400,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: const Text('Tutup', style: TextStyle(color: Colors.white)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            } else {
+              // status == 'menunggu'
+              await FirebaseAuth.instance.signOut();
+              Get.dialog(
+                Dialog(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  backgroundColor: Colors.white,
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.hourglass_empty_rounded, size: 60, color: Colors.orange.shade400),
+                        const SizedBox(height: 16),
+                        const Text('Menunggu Persetujuan', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Akun Anda saat ini berstatus menunggu persetujuan admin. Anda tidak bisa login sampai akun disetujui.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 14, color: Colors.grey),
+                        ),
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () => Get.back(),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange.shade400,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: const Text('Tutup', style: TextStyle(color: Colors.white)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                barrierDismissible: false,
+              );
+            }
+          } catch (e) {
+            Get.offAllNamed(Routes.MAIN_NAVIGATION);
+          }
         } else {
           // Fallback if role is unknown
           Get.offAllNamed(Routes.MAIN_NAVIGATION);

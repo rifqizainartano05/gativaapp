@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -84,7 +83,10 @@ class NakesDashboardView extends GetView<NakesDashboardController> {
         Expanded(
           child: SingleChildScrollView(
             child: Column(
-              children: [_buildPatientComplianceStats(), _buildGridMenu()],
+              children: [
+                const SizedBox(height: 16),
+                _buildGridMenu(),
+              ],
             ),
           ),
         ),
@@ -150,10 +152,10 @@ class NakesDashboardView extends GetView<NakesDashboardController> {
                   Obx(() => CircleAvatar(
                     radius: 28,
                     backgroundColor: Colors.white24,
-                    backgroundImage: controller.photoBase64.value.isNotEmpty
-                        ? MemoryImage(const Base64Decoder().convert(controller.photoBase64.value))
+                    backgroundImage: controller.imageBytes.value != null
+                        ? MemoryImage(controller.imageBytes.value!)
                         : null,
-                    child: controller.photoBase64.value.isEmpty 
+                    child: controller.imageBytes.value == null 
                         ? const Icon(Icons.person, color: Colors.white, size: 32)
                         : null,
                   )),
@@ -183,37 +185,64 @@ class NakesDashboardView extends GetView<NakesDashboardController> {
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
-                        Icons.people_alt_rounded,
-                        color: Colors.white,
+                        Icons.star_rounded,
+                        color: Colors.amber,
                         size: 28,
                       ),
                     ),
                     const SizedBox(width: 16),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Total Pasien GATIVA',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Obx(
-                          () => Text(
-                            controller.isLoading.value
-                                ? '...'
-                                : '${controller.totalPatients.value} Orang',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Rating Nakes',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 4),
+                          Obx(() {
+                            if (controller.isLoading.value) {
+                              return const Text(
+                                '...',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              );
+                            }
+                            final double rating = controller.averageRating.value;
+                            return Row(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  rating.toStringAsFixed(1),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 4),
+                                  child: Text(
+                                    '/ 5.0',
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.7),
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          }),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -222,158 +251,6 @@ class NakesDashboardView extends GetView<NakesDashboardController> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildPatientComplianceStats() {
-    return Container(
-      margin: const EdgeInsets.only(top: 24, left: 24, right: 24, bottom: 8),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            right: -20,
-            bottom: -20,
-            child: Icon(
-              Icons.bar_chart_rounded,
-              size: 120,
-              color: Colors.black.withOpacity(0.03),
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Obx(() {
-                final int patuh = controller.patuhCount.value;
-                final int kurang = controller.kurangPatuhCount.value;
-                final int bahaya = controller.tidakPatuhCount.value;
-                final int total = patuh + kurang + bahaya;
-
-                if (controller.isLoading.value) {
-                  return const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(16),
-                      child: CircularProgressIndicator(),
-                    ),
-                  );
-                }
-
-                return Column(
-                  children: [
-                    // Visual Grafik Donut
-                    SizedBox(
-                      height: 160,
-                      child: Stack(
-                        children: [
-                          Center(
-                            child: SizedBox(
-                              width: 140,
-                              height: 140,
-                              child: CustomPaint(
-                                painter: DonutChartPainter(
-                                  patuh: patuh,
-                                  kurang: kurang,
-                                  bahaya: bahaya,
-                                ),
-                              ),
-                            ),
-                          ),
-                          Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  '$total',
-                                  style: const TextStyle(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                                const Text(
-                                  'Pasien',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    // Keterangan Legend
-                    _buildLegendItem(
-                      color: const Color(0xFF4CAF50),
-                      title: 'Patuh (Aman)',
-                      count: patuh,
-                    ),
-                    const SizedBox(height: 8),
-                    _buildLegendItem(
-                      color: const Color(0xFFFF9800),
-                      title: 'Kurang Patuh (Peringatan)',
-                      count: kurang,
-                    ),
-                    const SizedBox(height: 8),
-                    _buildLegendItem(
-                      color: const Color(0xFFF44336),
-                      title: 'Tidak Patuh (Bahaya)',
-                      count: bahaya,
-                    ),
-                  ],
-                );
-              }),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLegendItem({
-    required Color color,
-    required String title,
-    required int count,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            Container(
-              width: 12,
-              height: 12,
-              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 14, color: Colors.black87),
-            ),
-          ],
-        ),
-        Text(
-          '$count Pasien',
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
-        ),
-      ],
     );
   }
 
@@ -495,80 +372,3 @@ class NakesDashboardView extends GetView<NakesDashboardController> {
   }
 }
 
-class DonutChartPainter extends CustomPainter {
-  final int patuh;
-  final int kurang;
-  final int bahaya;
-
-  DonutChartPainter({
-    required this.patuh,
-    required this.kurang,
-    required this.bahaya,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final double total = (patuh + kurang + bahaya).toDouble();
-    final Paint paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 20
-      ..strokeCap = StrokeCap.round;
-
-    final Rect rect = Rect.fromCenter(
-      center: Offset(size.width / 2, size.height / 2),
-      width: size.width,
-      height: size.height,
-    );
-
-    if (total == 0) {
-      paint.color = Colors.grey.shade200;
-      canvas.drawArc(rect, 0, 3.1415926535897932 * 2, false, paint);
-      return;
-    }
-
-    double startAngle = -3.1415926535897932 / 2; // Start from top
-    final double sweepPatuh = (patuh / total) * 2 * 3.1415926535897932;
-    final double sweepKurang = (kurang / total) * 2 * 3.1415926535897932;
-    final double sweepBahaya = (bahaya / total) * 2 * 3.1415926535897932;
-
-    const double gap = 0.1; // Small gap between segments
-
-    if (patuh > 0) {
-      paint.color = const Color(0xFF4CAF50);
-      canvas.drawArc(
-        rect,
-        startAngle,
-        sweepPatuh - (total > patuh ? gap : 0),
-        false,
-        paint,
-      );
-      startAngle += sweepPatuh;
-    }
-
-    if (kurang > 0) {
-      paint.color = const Color(0xFFFF9800);
-      canvas.drawArc(
-        rect,
-        startAngle,
-        sweepKurang - (total > kurang ? gap : 0),
-        false,
-        paint,
-      );
-      startAngle += sweepKurang;
-    }
-
-    if (bahaya > 0) {
-      paint.color = const Color(0xFFF44336);
-      canvas.drawArc(
-        rect,
-        startAngle,
-        sweepBahaya - (total > bahaya ? gap : 0),
-        false,
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-}

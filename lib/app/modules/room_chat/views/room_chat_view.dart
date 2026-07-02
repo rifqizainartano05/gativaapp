@@ -3,9 +3,79 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../routes/app_pages.dart';
 import '../controllers/room_chat_controller.dart';
+import '../../chat/controllers/chat_controller.dart';
 
 class RoomChatView extends GetView<RoomChatController> {
   const RoomChatView({super.key});
+
+  void _showRatingDialog(BuildContext context, String doctorId) {
+    int rating = 0;
+    Get.dialog(
+      StatefulBuilder(
+        builder: (context, setState) {
+          return Dialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text("Beri Penilaian", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  const Text(
+                    "Seberapa puas Anda dengan layanan konsultan kami?",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.black54, fontSize: 13),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (index) {
+                      return IconButton(
+                        icon: Icon(
+                          index < rating ? Icons.star_rounded : Icons.star_border_rounded,
+                          color: Colors.amber,
+                          size: 36,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            rating = index + 1;
+                          });
+                        },
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (rating > 0) {
+                        Get.back();
+                        if (Get.isRegistered<ChatController>()) {
+                          Get.find<ChatController>().updateDoctorRating(doctorId, rating);
+                          Get.snackbar(
+                            "Terima Kasih", 
+                            "Rating Anda berhasil dikirim",
+                            backgroundColor: Colors.white,
+                            colorText: Colors.black,
+                          );
+                        }
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2E7D32),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      minimumSize: const Size(double.infinity, 48),
+                    ),
+                    child: const Text("Kirim", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+      )
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -145,6 +215,12 @@ class RoomChatView extends GetView<RoomChatController> {
                                           hintStyle: TextStyle(fontSize: 14, color: Colors.black45),
                                         ),
                                         onSubmitted: (val) {
+                                          if (val.trim().toLowerCase().contains("terima kasih") || val.trim().toLowerCase().contains("terimakasih")) {
+                                            if (doc != null && doc['id'] != null && !controller.hasShownRating.value) {
+                                              controller.hasShownRating.value = true;
+                                              _showRatingDialog(context, doc['id']);
+                                            }
+                                          }
                                           controller.sendMessage(val);
                                           textController.clear();
                                         },
@@ -155,7 +231,14 @@ class RoomChatView extends GetView<RoomChatController> {
                                   InkWell(
                                     onTap: () {
                                       if (textController.text.trim().isNotEmpty) {
-                                        controller.sendMessage(textController.text);
+                                        final val = textController.text;
+                                        if (val.trim().toLowerCase().contains("terima kasih") || val.trim().toLowerCase().contains("terimakasih")) {
+                                          if (doc != null && doc['id'] != null && !controller.hasShownRating.value) {
+                                            controller.hasShownRating.value = true;
+                                            _showRatingDialog(context, doc['id']);
+                                          }
+                                        }
+                                        controller.sendMessage(val);
                                         textController.clear();
                                       }
                                     },
@@ -259,7 +342,7 @@ class RoomChatView extends GetView<RoomChatController> {
                         children: [
                           Builder(
                             builder: (context) {
-                              final photoBase64 = doc['photoBase64'] ?? doc['strImageBase64'] ?? '';
+                              final photoBase64 = doc['photoBase64'] ?? '';
                               return CircleAvatar(
                                 radius: 16,
                                 backgroundColor: Colors.white24,

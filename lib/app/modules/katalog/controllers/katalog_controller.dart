@@ -52,12 +52,9 @@ class KatalogController extends GetxController {
 
     final int hematNatrium = item['hemat_natrium_mg'].toInt();
     
-    Get.dialog(
-      Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        backgroundColor: Colors.transparent,
-        child: Container(
-          decoration: BoxDecoration(
+    Get.bottomSheet(
+      Container(
+        decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
@@ -187,7 +184,8 @@ class KatalogController extends GetxController {
             ],
           ),
         ),
-      ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
     );
   }
 

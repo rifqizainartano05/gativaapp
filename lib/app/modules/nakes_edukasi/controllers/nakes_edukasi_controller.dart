@@ -78,6 +78,7 @@ class NakesEdukasiController extends GetxController {
             'kategori': category,
             'deskripsi': content,
             'gambar': '',
+            'createdAt': FieldValue.serverTimestamp(),
           });
       Get.snackbar(
         'Sukses',

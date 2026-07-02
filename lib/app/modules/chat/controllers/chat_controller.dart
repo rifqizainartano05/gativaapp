@@ -54,12 +54,34 @@ class ChatController extends GetxController {
         .doc('roles')
         .collection('tenaga_kesehatan')
         .snapshots()
-        .listen((snapshot) {
-      nakesList.value = snapshot.docs.map((doc) {
+        .listen((snapshot) async {
+      List<Map<String, dynamic>> temp = [];
+      for (var doc in snapshot.docs) {
         final data = doc.data();
         data['id'] = doc.id;
-        return data;
-      }).toList();
+        
+        try {
+          final pasienSnapshot = await doc.reference.collection('pasien').get();
+          double totalRating = 0;
+          int ratingCount = 0;
+          for (var pDoc in pasienSnapshot.docs) {
+            final pData = pDoc.data();
+            if (pData.containsKey('rating')) {
+              totalRating += (pData['rating'] as num).toDouble();
+              ratingCount++;
+            }
+          }
+          if (ratingCount > 0) {
+            data['rating'] = (totalRating / ratingCount).toStringAsFixed(1);
+          } else {
+            data['rating'] = '0';
+          }
+        } catch (e) {
+          data['rating'] = '0';
+        }
+        temp.add(data);
+      }
+      nakesList.value = temp;
       isLoading.value = false;
     }, onError: (e) {
       Get.snackbar('Error', 'Gagal memuat daftar dokter: $e');
@@ -69,6 +91,24 @@ class ChatController extends GetxController {
 
   Future<void> openChatWithDoctor(Map<String, dynamic> doctor) async {
     Get.toNamed(Routes.ROOM_CHAT, arguments: doctor);
+  }
+
+  Future<void> updateDoctorRating(String doctorId, int rating) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) return;
+      
+      await FirebaseFirestore.instance
+          .collection('mobile')
+          .doc('roles')
+          .collection('tenaga_kesehatan')
+          .doc(doctorId)
+          .collection('pasien')
+          .doc(user.uid)
+          .set({'rating': rating}, SetOptions(merge: true));
+    } catch (e) {
+      Get.snackbar('Error', 'Gagal mengirim rating: $e');
+    }
   }
 
   @override

@@ -6,8 +6,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../routes/app_pages.dart';
-import '../../../services/auth_service.dart';
-
 class RegisterController extends GetxController {
   final nameController = TextEditingController();
   final emailController = TextEditingController();
@@ -149,7 +147,7 @@ class RegisterController extends GetxController {
       }
       if (strImageBase64.value.isEmpty) {
         Get.snackbar(
-          'Foto STR',
+          'Gagal',
           'Harap unggah foto bukti STR',
           backgroundColor: Colors.red.withOpacity(0.1),
           colorText: Colors.red,
@@ -192,20 +190,186 @@ class RegisterController extends GetxController {
         } else {
           userData['strNumber'] = strController.text.trim();
           userData['strImageBase64'] = strImageBase64.value;
+          userData['status'] = 'menunggu'; // Set awal ke menunggu
         }
 
         String subCollectionName = selectedRole.value == 'Pasien'
             ? 'pasien'
             : 'tenaga_kesehatan';
 
-        // Save all data to the role document directly
-        await FirebaseFirestore.instance
+        final userDocRef = FirebaseFirestore.instance
             .collection('mobile')
             .doc('roles')
             .collection(subCollectionName)
-            .doc(user.uid)
-            .set(userData);
+            .doc(user.uid);
 
+        // Save all data to the role document directly (status 'menunggu' untuk nakes)
+        await userDocRef.set(userData);
+
+        if (selectedRole.value == 'Tenaga Kesehatan') {
+          isLoading.value = false; // Matikan loading agar popup terlihat jelas
+
+          // Meminta kode akses admin setelah data tersimpan (status masih menunggu)
+          final TextEditingController codeController = TextEditingController();
+          String? verificationStatus = await Get.dialog<String>(
+            Dialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              backgroundColor: Colors.white,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  // Watermark Icon
+                  Positioned(
+                    right: -20,
+                    bottom: -20,
+                    child: Transform.rotate(
+                      angle: -0.2,
+                      child: Icon(
+                        Icons.admin_panel_settings_rounded,
+                        size: 150,
+                        color: const Color(0xFF2E7D32).withOpacity(0.05),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2E7D32).withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.verified_user_rounded,
+                            color: Color(0xFF2E7D32),
+                            size: 32,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Verifikasi Admin',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Masukkan kode akses dari admin untuk mendaftar sebagai Tenaga Kesehatan.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 14, color: Colors.grey),
+                        ),
+                        const SizedBox(height: 24),
+                        TextField(
+                          controller: codeController,
+                          decoration: InputDecoration(
+                            hintText: 'Kode Akses Admin (Wajib)',
+                            filled: true,
+                            fillColor: Colors.grey.shade100,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextButton(
+                                onPressed: () => Get.back(result: null),
+                                child: const Text('Batal', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: () async {
+                                  final inputCode = codeController.text.trim();
+                                  
+                                  if (inputCode.isEmpty) {
+                                    Get.snackbar(
+                                      'Gagal',
+                                      'Kode akses wajib diisi.',
+                                      backgroundColor: Colors.red.withOpacity(0.1),
+                                      colorText: Colors.red,
+                                    );
+                                    return;
+                                  }
+                                  
+                                  try {
+                                    // Coba query sebagai String di dalam sub collection tenaga_kesehatan
+                                    var snapshot = await FirebaseFirestore.instance
+                                        .collection('mobile')
+                                        .doc('roles')
+                                        .collection('tenaga_kesehatan')
+                                        .where('kode_akses', isEqualTo: inputCode)
+                                        .limit(1)
+                                        .get();
+                                        
+                                    // Jika tidak ketemu, coba query sebagai integer
+                                    if (snapshot.docs.isEmpty) {
+                                      int? codeInt = int.tryParse(inputCode);
+                                      if (codeInt != null) {
+                                        snapshot = await FirebaseFirestore.instance
+                                            .collection('mobile')
+                                            .doc('roles')
+                                            .collection('tenaga_kesehatan')
+                                            .where('kode_akses', isEqualTo: codeInt)
+                                            .limit(1)
+                                            .get();
+                                      }
+                                    }
+                                    
+                                    if (snapshot.docs.isNotEmpty) {
+                                      // Jika kode ditemukan, biarkan lanjut
+                                      // Status tetap menunggu, tidak diubah ke disetujui
+                                      // agar setelah verifikasi email dan saat login, statusnya tetap menunggu persetujuan admin.
+                                      Get.back(result: 'menunggu'); 
+                                    } else {
+                                      Get.snackbar(
+                                        'Gagal',
+                                        'Kode akses admin tidak valid (tidak ditemukan).',
+                                        backgroundColor: Colors.red.withOpacity(0.1),
+                                        colorText: Colors.red,
+                                      );
+                                    }
+                                  } catch (e) {
+                                    Get.snackbar(
+                                      'Error',
+                                      'Gagal memeriksa kode: $e',
+                                      backgroundColor: Colors.red.withOpacity(0.1),
+                                      colorText: Colors.red,
+                                      duration: const Duration(seconds: 5),
+                                    );
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF2E7D32),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                ),
+                                child: const Text('Lanjutkan', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            barrierDismissible: false,
+          );
+
+          // Jika Batal (null), hentikan dan jangan ke halaman verifikasi email (user sudah dibuat dgn status menunggu)
+          if (verificationStatus == null) return;
+        }
+
+        isLoading.value = true;
         // Send email verification
         if (!user.emailVerified) {
           await user.sendEmailVerification();
@@ -213,6 +377,7 @@ class RegisterController extends GetxController {
       }
 
       isLoading.value = false;
+      // Semua role diarahkan ke VERIFIKASI_EMAIL terlebih dahulu
       Get.offAllNamed(Routes.VERIFIKASI_EMAIL);
     } on FirebaseAuthException catch (e) {
       isLoading.value = false;

@@ -48,6 +48,14 @@ class LensaNatriumDetailView extends GetView<LensaNatriumDetailController> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            // Karena dari scanner, kita ingin kembali ke Lensa Natrium
+            // dan bukan ke tampilan scanner
+            Get.offNamedUntil('/lensa-natrium', (route) => route.settings.name == '/main-navigation' || route.isFirst);
+          },
+        ),
         title: const Text(
           'Detail Jajanan',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),

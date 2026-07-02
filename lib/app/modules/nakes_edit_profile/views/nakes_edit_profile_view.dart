@@ -108,15 +108,11 @@ class NakesEditProfileView extends GetView<NakesEditProfileController> {
                           color: const Color(0xFF2E7D32).withOpacity(0.1),
                           shape: BoxShape.circle,
                         ),
-                        child: controller.photoBase64.value.isNotEmpty
+                        child: controller.imageBytes.value != null
                             ? CircleAvatar(
                                 radius: 50,
                                 backgroundColor: Colors.white,
-                                backgroundImage: MemoryImage(
-                                  const Base64Decoder().convert(
-                                    controller.photoBase64.value,
-                                  ),
-                                ),
+                                backgroundImage: MemoryImage(controller.imageBytes.value!),
                               )
                             : const CircleAvatar(
                                 radius: 50,
