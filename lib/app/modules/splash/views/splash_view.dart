@@ -67,20 +67,30 @@ class SplashView extends GetView<SplashController> {
                           const Text(
                             'GATIVA',
                             style: TextStyle(
-                              fontSize: 40,
+                              fontSize: 44,
                               fontWeight: FontWeight.w900,
                               color: Colors.white,
-                              letterSpacing: 8,
+                              letterSpacing: 10,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 4),
                           const Text(
-                            'Kawal Kesehatan Bersama',
+                            'GARDA PREVENTIVA',
                             style: TextStyle(
                               fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                              letterSpacing: 5,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Kawal Kesehatan Keluarga Bersama',
+                            style: TextStyle(
+                              fontSize: 13,
                               fontWeight: FontWeight.w500,
-                              color: Colors.white70,
-                              letterSpacing: 1.5,
+                              color: Colors.white.withOpacity(0.85),
+                              letterSpacing: 1.2,
                             ),
                           ),
                         ],
