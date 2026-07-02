@@ -66,9 +66,7 @@ class ScannerController extends GetxController {
   void onClose() {
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
-        systemNavigationBarColor: Color(
-          0xFFF4F6F8,
-        ), // Atau transparan / default
+        systemNavigationBarColor: Color(0xFFFFFFFF),
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
     );
@@ -129,7 +127,7 @@ class ScannerController extends GetxController {
       // Regex untuk mendeteksi Sodium/Natrium/Garam dan angkanya
       // Skip semua karakter non-angka hingga menemukan angka pertama.
       RegExp regExp = RegExp(
-        r'(?:natrium|sodium|garam)[^\d]*?([0-9]+(?:\.[0-9]+)?)',
+        r'(?:monatrium|natrium|sodium|garam)[^\d]*?([0-9]+(?:\.[0-9]+)?)',
         caseSensitive: false,
       );
       final match = regExp.firstMatch(allText);
@@ -161,7 +159,6 @@ class ScannerController extends GetxController {
       scannedFoodName.value = "Error Kamera";
     } finally {
       isScanning.value = false;
-      hasResult.value = true;
 
       try {
         await cameraController?.pausePreview();
@@ -169,7 +166,15 @@ class ScannerController extends GetxController {
         print("Cannot pause preview: $e");
       }
 
-      startCountdown();
+      Get.toNamed('/scanner-result', arguments: {
+        'foodName': scannedFoodName.value,
+        'servingSize': scannedServingSize.value,
+        'sodiumPerServing': scannedSodiumPerServing.value,
+        'servingsPerPack': scannedServingsPerPack.value,
+      })?.then((_) {
+        // Resume preview when returning from result page
+        resetScan();
+      });
     }
   }
 
@@ -187,7 +192,6 @@ class ScannerController extends GetxController {
 
   void resetScan() async {
     _closeTimer?.cancel();
-    hasResult.value = false;
     // Nyalakan ulang preview kamera
     try {
       await cameraController?.resumePreview();

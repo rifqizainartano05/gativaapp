@@ -100,18 +100,99 @@ class LoginController extends GetxController {
     } on FirebaseAuthException catch (e) {
       isLoading.value = false;
       String message = 'Terjadi kesalahan saat masuk.';
-      if (e.code == 'user-not-found') {
-        message = 'Tidak ada pengguna dengan email ini.';
-      } else if (e.code == 'wrong-password') {
-        message = 'Kata sandi salah.';
+      if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
+        message = 'Email dan password tidak sesuai.';
       } else if (e.code == 'invalid-email') {
         message = 'Format email tidak valid.';
       }
-      Get.snackbar(
-        'Gagal Masuk',
-        message,
-        backgroundColor: Colors.red.withOpacity(0.1),
-        colorText: Colors.red,
+      
+      Get.dialog(
+        Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          backgroundColor: Colors.white,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // Watermark Icon
+              Positioned(
+                right: -20,
+                bottom: -20,
+                child: Transform.rotate(
+                  angle: -0.2,
+                  child: Icon(
+                    Icons.error_outline_rounded,
+                    size: 150,
+                    color: Colors.red.withOpacity(0.05),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.warning_amber_rounded,
+                        color: Colors.red,
+                        size: 32,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Gagal Masuk',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      message,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black54,
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () => Get.back(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2E7D32),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text(
+                          'Mengerti',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       );
     } catch (e) {
       isLoading.value = false;

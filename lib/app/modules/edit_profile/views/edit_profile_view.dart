@@ -182,12 +182,13 @@ class EditProfileView extends GetView<EditProfileController> {
                         ),
                       ),
 
+
                       const SizedBox(height: 24),
 
                       _buildSectionTitle(
                         'Riwayat Medis',
                         subtitle:
-                            'Bantu kami memberikan rekomendasi asupan natrium yang tepat.',
+                            'Data riwayat medis diambil dari riwayat Anda.',
                       ),
                       _buildCard(
                         child: Column(

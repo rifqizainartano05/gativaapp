@@ -152,10 +152,7 @@ class AnggotaController extends GetxController {
       discoveredDevices.clear();
       isScanningDevices.value = true;
 
-      // Simulate radar scanning delay for UX, even if Nearby starts instantly
-      await Future.delayed(const Duration(seconds: 2));
-      isScanningDevices.value = false;
-
+      // Mulai discovery, radar akan terus berputar hingga dihentikan atau menampilkan list jika ada yang ditemukan
       await Nearby().startDiscovery(
         currentUserName,
         strategy,

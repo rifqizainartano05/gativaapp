@@ -257,6 +257,23 @@ class KatalogView extends GetView<KatalogController> {
                                 ),
                               ],
                             ),
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: () => controller.kurangiNatrium(item),
+                                icon: const Icon(Icons.add_task_rounded, size: 20),
+                                label: const Text('Catat Penghematan'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF2E7D32),
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ),

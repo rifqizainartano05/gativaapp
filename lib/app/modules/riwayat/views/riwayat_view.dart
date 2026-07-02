@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../controllers/riwayat_controller.dart';
 
 // Inlined AppColors to prevent missing import errors
@@ -126,8 +127,9 @@ class RiwayatView extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // BESPOKE GLOWING BAR CHART
+                    // BESPOKE GLOWING BAR CHART -> FL CHART LINE CHART
                     Container(
+                      margin: const EdgeInsets.only(top: 24), // Added margin top to separate from green box
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -143,7 +145,6 @@ class RiwayatView extends StatelessWidget {
                       ),
                       child: Column(
                         children: [
-                          // Filter Dropdown
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -155,44 +156,7 @@ class RiwayatView extends StatelessWidget {
                                       fontSize: 16,
                                     ),
                               ),
-                              Obx(() {
-                                return Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 0,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFF4F6F8),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: DropdownButtonHideUnderline(
-                                    child: DropdownButton<String>(
-                                      value: controller.filterRange.value,
-                                      dropdownColor: Colors.white,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.primary,
-                                        fontSize: 13,
-                                      ),
-                                      icon: const Icon(
-                                        Icons.arrow_drop_down,
-                                        color: AppColors.primary,
-                                        size: 20,
-                                      ),
-                                      items: controller.filterRanges.map((val) {
-                                        return DropdownMenuItem<String>(
-                                          value: val,
-                                          child: Text(val),
-                                        );
-                                      }).toList(),
-                                      onChanged: (newVal) {
-                                        if (newVal != null)
-                                          controller.filterRange.value = newVal;
-                                      },
-                                    ),
-                                  ),
-                                );
-                              }),
+                              // Dropdown removed
                             ],
                           ),
                           const SizedBox(height: 24),
@@ -251,24 +215,52 @@ class RiwayatView extends StatelessWidget {
                           ),
                           const SizedBox(height: 24),
 
+
                           Obx(() {
-                            final chartData = controller.getWeeklyChartData();
-                            return SizedBox(
-                              height: 140,
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceAround,
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  _buildChartBar('Sen', chartData[0], context),
-                                  _buildChartBar('Sel', chartData[1], context),
-                                  _buildChartBar('Rab', chartData[2], context),
-                                  _buildChartBar('Kam', chartData[3], context),
-                                  _buildChartBar('Jum', chartData[4], context),
-                                  _buildChartBar('Sab', chartData[5], context),
-                                  _buildChartBar('Min', chartData[6], context),
-                                ],
-                              ),
+                            final radialData = controller.getRadialData();
+                            
+                            double dailyLimit = controller.dailyLimit.value > 0 ? controller.dailyLimit.value : 2000.0;
+                            
+                            // Hitung batas bulanan dan tahunan secara otomatis
+                            final now = DateTime.now();
+                            int daysInMonth = DateTime(now.year, now.month + 1, 0).day;
+                            int daysInYear = (now.year % 4 == 0 && now.year % 100 != 0) || (now.year % 400 == 0) ? 366 : 365;
+
+                            double harianPercent = radialData['harian']! / dailyLimit;
+                            double bulananPercent = radialData['bulanan']! / (dailyLimit * daysInMonth);
+                            double tahunanPercent = radialData['tahunan']! / (dailyLimit * daysInYear);
+
+                            return Column(
+                              children: [
+                                const SizedBox(height: 10),
+                                SizedBox(
+                                  height: 220,
+                                  width: 220,
+                                  child: CustomPaint(
+                                    size: const Size(220, 220),
+                                    painter: RadialProgressPainter(
+                                      harianPercent: harianPercent,
+                                      bulananPercent: bulananPercent,
+                                      tahunanPercent: tahunanPercent,
+                                      harianColor: const Color(0xFFff7285),
+                                      bulananColor: const Color(0xFF00c689), // Greenish for month like in image
+                                      tahunanColor: const Color(0xFF00a8cc), // Cyan/Blue for year like in image
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 32),
+                                // Legend
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    _buildLegendItem(const Color(0xFFff7285), 'Harian'),
+                                    const SizedBox(width: 16),
+                                    _buildLegendItem(const Color(0xFF00c689), 'Bulanan'),
+                                    const SizedBox(width: 16),
+                                    _buildLegendItem(const Color(0xFF00a8cc), 'Tahunan'),
+                                  ],
+                                ),
+                              ],
                             );
                           }),
                         ],
@@ -479,60 +471,85 @@ class RiwayatView extends StatelessWidget {
     );
   }
 
-  // Bespoke Glowing Bar Helper
-  Widget _buildChartBar(String day, double ratio, BuildContext context) {
-    Color barColor = ratio < 0.6
-        ? AppColors.safe
-        : ratio < 0.9
-        ? AppColors.warning
-        : AppColors.danger;
+  // Removed manual _buildChartBar
 
-    double barHeight = (ratio * 100).clamp(10.0, 100.0);
-
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
+  Widget _buildLegendItem(Color color, String label) {
+    return Row(
       children: [
-        if (ratio >= 0.9)
-          Container(
-            width: 14,
-            height: 2,
-            decoration: BoxDecoration(
-              color: barColor,
-              boxShadow: [
-                BoxShadow(color: barColor, blurRadius: 6, spreadRadius: 2),
-              ],
-            ),
-          ),
-        const SizedBox(height: 4),
-        Container(
-          width: 14,
-          height: barHeight,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [barColor.withOpacity(0.2), barColor],
-              begin: Alignment.bottomCenter,
-              end: Alignment.topCenter,
-            ),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-            boxShadow: [
-              BoxShadow(
-                color: barColor.withOpacity(0.15),
-                blurRadius: 4,
-                offset: const Offset(0, -2),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          day,
-          style: const TextStyle(
-            fontSize: 10,
-            color: AppColors.textSecondary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        Container(width: 12, height: 12, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(3))),
+        const SizedBox(width: 6),
+        Text(label, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.bold)),
       ],
     );
+  }
+}
+
+class RadialProgressPainter extends CustomPainter {
+  final double harianPercent;
+  final double bulananPercent;
+  final double tahunanPercent;
+  final Color harianColor;
+  final Color bulananColor;
+  final Color tahunanColor;
+
+  RadialProgressPainter({
+    required this.harianPercent,
+    required this.bulananPercent,
+    required this.tahunanPercent,
+    required this.harianColor,
+    required this.bulananColor,
+    required this.tahunanColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    double strokeWidth = 18.0;
+    double spacing = 8.0;
+    
+    Paint bgPaint = Paint()
+      ..color = Colors.grey.withOpacity(0.12)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+
+    Paint fgPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
+
+    Offset center = Offset(size.width / 2, size.height / 2);
+    
+    // Outer (Tahunan - Lingkaran Ketiga)
+    double radius3 = (size.width / 2) - (strokeWidth / 2);
+    _drawArc(canvas, center, radius3, tahunanPercent, bgPaint, fgPaint..color = tahunanColor);
+    
+    // Middle (Bulanan - Lingkaran Kedua)
+    double radius2 = radius3 - strokeWidth - spacing;
+    _drawArc(canvas, center, radius2, bulananPercent, bgPaint, fgPaint..color = bulananColor);
+
+    // Inner (Harian - Lingkaran Pertama)
+    double radius1 = radius2 - strokeWidth - spacing;
+    _drawArc(canvas, center, radius1, harianPercent, bgPaint, fgPaint..color = harianColor);
+  }
+
+  void _drawArc(Canvas canvas, Offset center, double radius, double percent, Paint bgPaint, Paint fgPaint) {
+    Rect rect = Rect.fromCircle(center: center, radius: radius);
+    double startAngle = -1.5708; // -pi/2 (top)
+    double sweepAngle = 6.2832 * percent.clamp(0.0, 1.0);
+    
+    // Draw background full circle
+    canvas.drawArc(rect, startAngle, 6.2832, false, bgPaint);
+    
+    // Draw progress arc
+    if (percent > 0) {
+      canvas.drawArc(rect, startAngle, sweepAngle, false, fgPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant RadialProgressPainter oldDelegate) {
+    return oldDelegate.harianPercent != harianPercent ||
+        oldDelegate.bulananPercent != bulananPercent ||
+        oldDelegate.tahunanPercent != tahunanPercent;
   }
 }

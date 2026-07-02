@@ -21,7 +21,7 @@ class RegisterView extends GetView<RegisterController> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          systemOverlayStyle: SystemUiOverlayStyle.dark,
+          systemOverlayStyle: SystemUiOverlayStyle.dark.copyWith(systemNavigationBarColor: Colors.white, systemNavigationBarIconBrightness: Brightness.dark),
           leading: IconButton(
             icon: const Icon(
               Icons.arrow_back_ios_new_rounded,

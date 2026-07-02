@@ -72,10 +72,16 @@ import '../modules/riwayat/bindings/riwayat_binding.dart';
 import '../modules/riwayat/views/riwayat_view.dart';
 import '../modules/riwayat_login/bindings/riwayat_login_binding.dart';
 import '../modules/riwayat_login/views/riwayat_login_view.dart';
+import '../modules/room_chat/bindings/room_chat_binding.dart';
+import '../modules/room_chat/views/room_chat_view.dart';
+import '../modules/room_nakes_chat/bindings/room_nakes_chat_binding.dart';
+import '../modules/room_nakes_chat/views/room_nakes_chat_view.dart';
 import '../modules/scan_barcode/bindings/scan_barcode_binding.dart';
 import '../modules/scan_barcode/views/scan_barcode_view.dart';
 import '../modules/scanner/bindings/scanner_binding.dart';
 import '../modules/scanner/views/scanner_view.dart';
+import '../modules/scanner_result/bindings/scanner_result_binding.dart';
+import '../modules/scanner_result/views/scanner_result_view.dart';
 import '../modules/semua_menu/bindings/semua_menu_binding.dart';
 import '../modules/semua_menu/views/semua_menu_view.dart';
 import '../modules/splash/bindings/splash_binding.dart';
@@ -297,6 +303,21 @@ class AppPages {
       name: _Paths.TENTANG_APLIKASI,
       page: () => const TentangAplikasiView(),
       binding: TentangAplikasiBinding(),
+    ),
+    GetPage(
+      name: _Paths.SCANNER_RESULT,
+      page: () => const ScannerResultView(),
+      binding: ScannerResultBinding(),
+    ),
+    GetPage(
+      name: _Paths.ROOM_CHAT,
+      page: () => const RoomChatView(),
+      binding: RoomChatBinding(),
+    ),
+    GetPage(
+      name: _Paths.ROOM_NAKES_CHAT,
+      page: () => const RoomNakesChatView(),
+      binding: RoomNakesChatBinding(),
     ),
   ];
 }

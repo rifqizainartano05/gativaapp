@@ -140,7 +140,7 @@ class AnggotaView extends StatelessWidget {
             padding: const EdgeInsets.all(24.0),
             child: Obx(() {
               // STATE 1: SEDANG MENCARI (RADAR EFEK)
-              if (controller.isScanningDevices.value) {
+              if (controller.isScanningDevices.value && controller.discoveredDevices.isEmpty) {
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -439,7 +439,7 @@ class AnggotaView extends StatelessWidget {
     final AnggotaController controller = Get.put(AnggotaController());
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
+      value: SystemUiOverlayStyle.light.copyWith(systemNavigationBarColor: Colors.white, systemNavigationBarIconBrightness: Brightness.dark),
       child: Scaffold(
         backgroundColor: const Color(0xFFF8F9FA),
         body: Column(
@@ -680,38 +680,56 @@ class AnggotaView extends StatelessWidget {
                     // Members Cards
                     Obx(() {
                       final members = controller.AnggotaMembers;
-                      return ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: members.length,
-                        itemBuilder: (context, idx) {
-                          final member = members[idx];
-                          double ratio = member.usagePercentage;
-                          Color statusColor = member.statusColor;
-                          bool sending =
-                              controller.isSendingReminder[member.id] ?? false;
+                      final pemilik = members.where((m) => m.role.toLowerCase().contains('pemilik')).toList();
+                      final anggota = members.where((m) => !m.role.toLowerCase().contains('pemilik')).toList();
 
-                          IconData statusIcon;
-                          if (ratio >= 0.9) {
-                            statusIcon =
-                                Icons.dangerous_rounded; // Danger (Merah)
-                          } else if (ratio >= 0.6) {
-                            statusIcon = Icons
-                                .warning_amber_rounded; // Waspada (Kuning/Orange)
-                          } else {
-                            statusIcon =
-                                Icons.check_circle_rounded; // Aman (Hijau)
-                          }
+                      Widget buildCard(member) {
+                        double ratio = member.usagePercentage;
+                        Color statusColor = member.statusColor;
+                        bool sending =
+                            controller.isSendingReminder[member.id] ?? false;
 
-                          return AnimatedAnggotaCard(
-                            member: member,
-                            statusColor: statusColor,
-                            ratio: ratio,
-                            statusIcon: statusIcon,
-                            sending: sending,
-                            onRemind: () => controller.sendReminder(member),
-                          );
-                        },
+                        IconData statusIcon;
+                        if (ratio >= 0.9) {
+                          statusIcon =
+                              Icons.dangerous_rounded; // Danger (Merah)
+                        } else if (ratio >= 0.6) {
+                          statusIcon = Icons
+                              .warning_amber_rounded; // Waspada (Kuning/Orange)
+                        } else {
+                          statusIcon =
+                              Icons.check_circle_rounded; // Aman (Hijau)
+                        }
+
+                        return AnimatedAnggotaCard(
+                          member: member,
+                          statusColor: statusColor,
+                          ratio: ratio,
+                          statusIcon: statusIcon,
+                          sending: sending,
+                          onRemind: () => controller.sendReminder(member),
+                        );
+                      }
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (pemilik.isNotEmpty) ...[
+                            const Padding(
+                              padding: EdgeInsets.only(bottom: 12.0, left: 4.0),
+                              child: Text("Pemilik Grup", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary)),
+                            ),
+                            ...pemilik.map((m) => buildCard(m)),
+                            const SizedBox(height: 16),
+                          ],
+                          if (anggota.isNotEmpty) ...[
+                            const Padding(
+                              padding: EdgeInsets.only(bottom: 12.0, left: 4.0),
+                              child: Text("Anggota", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary)),
+                            ),
+                            ...anggota.map((m) => buildCard(m)),
+                          ],
+                        ]
                       );
                     }),
                   ],
@@ -847,33 +865,83 @@ class _AnimatedAnggotaCardState extends State<AnimatedAnggotaCard>
     bool isWarning = widget.ratio >= 0.6 && widget.ratio < 0.9;
     bool isSafe = widget.ratio < 0.6;
 
-    // Tombol Ingatkan diekstrak agar bisa dimunculkan di atas lapisan kabut
-    Widget remindButton = SizedBox(
-      height: 32,
-      child: ElevatedButton.icon(
-        onPressed: widget.sending ? null : widget.onRemind,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: isDanger ? Colors.white : widget.statusColor,
-          foregroundColor: isDanger ? widget.statusColor : Colors.white,
-          elevation: isDanger
-              ? 4
-              : 0, // Beri bayangan agar menonjol di atas kabut
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-        icon: widget.sending
-            ? SizedBox(
-                width: 12,
-                height: 12,
-                child: CircularProgressIndicator(
-                  strokeWidth: 1.5,
-                  color: isDanger ? widget.statusColor : Colors.white,
+    Widget remindButton = Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: widget.sending ? null : () {
+          HapticFeedback.vibrate(); // Getaran asli pada HP
+          widget.onRemind();
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Ink(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: isDanger 
+                ? [Colors.white, Colors.grey.shade100] 
+                : [widget.statusColor, widget.statusColor.withOpacity(0.8)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: (isDanger ? Colors.white : widget.statusColor).withOpacity(0.4),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+            border: Border.all(
+              color: Colors.white.withOpacity(0.2),
+              width: 1,
+            ),
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Efek watermark icon di dalam tombol
+              Positioned(
+                right: -5,
+                bottom: -5,
+                child: Icon(
+                  Icons.campaign_rounded,
+                  size: 36,
+                  color: (isDanger ? widget.statusColor : Colors.white).withOpacity(0.15),
                 ),
-              )
-            : const Icon(Icons.campaign_outlined, size: 14),
-        label: const Text(
-          'INGATKAN!',
-          style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    widget.sending
+                        ? SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: isDanger ? widget.statusColor : Colors.white,
+                            ),
+                          )
+                        : Icon(
+                            Icons.notifications_active_rounded, 
+                            size: 16, 
+                            color: isDanger ? widget.statusColor : Colors.white,
+                          ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'INGATKAN',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
+                        color: isDanger ? widget.statusColor : Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

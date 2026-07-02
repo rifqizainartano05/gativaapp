@@ -44,6 +44,9 @@ abstract class Routes {
   static const NAKES_TENTANG_APLIKASI = _Paths.NAKES_TENTANG_APLIKASI;
   static const NAKES_BANTUAN_FAQ = _Paths.NAKES_BANTUAN_FAQ;
   static const TENTANG_APLIKASI = _Paths.TENTANG_APLIKASI;
+  static const SCANNER_RESULT = _Paths.SCANNER_RESULT;
+  static const ROOM_CHAT = _Paths.ROOM_CHAT;
+  static const ROOM_NAKES_CHAT = _Paths.ROOM_NAKES_CHAT;
 }
 
 abstract class _Paths {
@@ -89,4 +92,7 @@ abstract class _Paths {
   static const NAKES_TENTANG_APLIKASI = '/nakes-tentang-aplikasi';
   static const NAKES_BANTUAN_FAQ = '/nakes-bantuan-faq';
   static const TENTANG_APLIKASI = '/tentang-aplikasi';
+  static const SCANNER_RESULT = '/scanner-result';
+  static const ROOM_CHAT = '/room-chat';
+  static const ROOM_NAKES_CHAT = '/room-nakes-chat';
 }

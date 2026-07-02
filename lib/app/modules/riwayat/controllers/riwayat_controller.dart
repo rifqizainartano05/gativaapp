@@ -22,7 +22,7 @@ class SodiumLog {
 
 class RiwayatController extends GetxController {
   final RxString filterRange = "Minggu Ini".obs;
-  final List<String> filterRanges = ["Hari Ini", "Minggu Ini", "Bulan Ini"];
+  final List<String> filterRanges = ["Minggu Ini", "Bulan Ini", "Tahun Ini"];
 
   final RxList<SodiumLog> logs = <SodiumLog>[].obs;
   final RxDouble dailyLimit = 2000.0.obs;
@@ -90,25 +90,7 @@ class RiwayatController extends GetxController {
   }
 
   List<SodiumLog> get filteredLogs {
-    final now = DateTime.now();
-    return logs.where((log) {
-      if (filterRange.value == "Hari Ini") {
-        return log.timestamp.day == now.day &&
-            log.timestamp.month == now.month &&
-            log.timestamp.year == now.year;
-      } else if (filterRange.value == "Minggu Ini") {
-        final todayMidnight = DateTime(now.year, now.month, now.day);
-        final startOfWeek = todayMidnight.subtract(
-          Duration(days: now.weekday - 1),
-        );
-        return log.timestamp.isAfter(startOfWeek) ||
-            log.timestamp.isAtSameMomentAs(startOfWeek);
-      } else if (filterRange.value == "Bulan Ini") {
-        return log.timestamp.month == now.month &&
-            log.timestamp.year == now.year;
-      }
-      return true;
-    }).toList();
+    return logs.toList();
   }
 
   double getAverageDailyIntake() {
@@ -128,24 +110,33 @@ class RiwayatController extends GetxController {
     return days > 0 ? (totalFoodIntake / days) : 0;
   }
 
-  List<double> getWeeklyChartData() {
-    List<double> chartData = List.filled(7, 0.0);
+  // Generate radial data for 3 concentric rings (harian, bulanan, tahunan)
+  Map<String, double> getRadialData() {
     final now = DateTime.now();
-    final todayMidnight = DateTime(now.year, now.month, now.day);
-    final startOfWeek = todayMidnight.subtract(Duration(days: now.weekday - 1));
-
-    double limit = dailyLimit.value > 0 ? dailyLimit.value : 2000.0;
-
+    
+    double harian = 0;
+    double bulanan = 0;
+    double tahunan = 0;
+    
     for (var log in logs) {
-      if (log.type == 'makanan' &&
-          (log.timestamp.isAfter(startOfWeek) ||
-              log.timestamp.isAtSameMomentAs(startOfWeek))) {
-        int weekdayIndex = log.timestamp.weekday - 1;
-        chartData[weekdayIndex] += (log.amount / limit);
+      if (log.type == 'makanan') {
+        if (log.timestamp.year == now.year) {
+          tahunan += log.amount;
+          if (log.timestamp.month == now.month) {
+            bulanan += log.amount;
+            if (log.timestamp.day == now.day) {
+              harian += log.amount;
+            }
+          }
+        }
       }
     }
-
-    return chartData.map((e) => e.clamp(0.0, 1.0)).toList();
+    
+    return {
+      'harian': harian,
+      'bulanan': bulanan,
+      'tahunan': tahunan,
+    };
   }
 
   void deleteHistoryLog(String id) async {

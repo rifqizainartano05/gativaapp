@@ -61,29 +61,9 @@ class ProfileController extends GetxController {
         }
       });
 
-      // Dengarkan sub collection label gizi makanan untuk total natrium hari ini
-      final now = DateTime.now();
-      final startOfDay = DateTime(now.year, now.month, now.day);
-      Get.find<AuthService>()
-          .getUserReference(user.uid)
-          .collection('label gizi makanan')
-          .where(
-            'created_at',
-            isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
-          )
-          .snapshots()
-          .listen((snapshot) {
-            double total = 0;
-            for (var doc in snapshot.docs) {
-              final data = doc.data();
-              final amount =
-                  (data['natrium'] as num?)?.toDouble() ??
-                  (data['sodium'] as num?)?.toDouble() ??
-                  0.0;
-              total += amount;
-            }
-            totalNatrium.value = total.toInt();
-          });
+      // Data natrium sudah diambil dari userReference (koleksi pasien)
+      // Blok kode sebelumnya yang menjumlahkan dari 'label gizi makanan' dihapus
+      // sesuai permintaan agar membaca langsung dari data 'natrium' di sub collection pasien.
     }
   }
 

@@ -63,331 +63,7 @@ class ScannerView extends GetView<ScannerController> {
         backgroundColor: Colors.white,
         // AppBar dihapus agar tidak menahan pewarnaan SystemUiOverlayStyle
         body: Obx(() {
-          // JIKA ADA HASIL (Layar Struk Full Putih)
-          if (controller.hasResult.value) {
-            return AnnotatedRegion<SystemUiOverlayStyle>(
-              value: const SystemUiOverlayStyle(
-                systemNavigationBarColor: Colors.white,
-                systemNavigationBarIconBrightness: Brightness.dark,
-                statusBarColor: Colors.transparent,
-                statusBarIconBrightness: Brightness.dark,
-                statusBarBrightness: Brightness.light,
-              ),
-              child: Container(
-                color: Colors.white,
-                height: double.infinity,
-                width: double.infinity,
-                child: SafeArea(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 24,
-                    ),
-                    child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.center, // Pusatkan teks di awal
-                      children: [
-                        const Text(
-                          "Label Gizi Pindaian",
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-
-                        // Kotak timer hitung mundur
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.orange.shade50,
-                            border: Border.all(color: Colors.orange.shade200),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            "Halaman ini akan ditutup otomatis dalam ${controller.countdown.value} detik",
-                            style: TextStyle(
-                              color: Colors.orange.shade800,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // KOTAK STRUK DIGITAL (Digabung dengan Total Natrium)
-                        Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFAFAFA),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.glassBorder),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.03),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      controller.scannedFoodName.value,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleLarge
-                                          ?.copyWith(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                    ),
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primary.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Text(
-                                      controller.scannedServingSize.value,
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: AppColors.primary,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 16),
-                              const DashedLine(),
-                              const SizedBox(height: 16),
-
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const Text(
-                                    'Natrium per Sajian',
-                                    style: TextStyle(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  Text(
-                                    '${controller.scannedSodiumPerServing.value.toInt()} mg',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.textPrimary,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const Text(
-                                    'Sajian per Bungkus',
-                                    style: TextStyle(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  Text(
-                                    '${controller.scannedServingsPerPack.value.toInt()} sajian',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.textPrimary,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 24),
-                              const DashedLine(), // Garis pemisah untuk Total Natrium
-                              const SizedBox(height: 20),
-
-                              // TOTAL NATRIUM DIGABUNG DI DALAM KOTAK
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const Text(
-                                    'TOTAL NATRIUM:',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w900,
-                                      color: AppColors.textPrimary,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  Text(
-                                    '${controller.totalCalculatedSodium.toInt()} mg',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 24,
-                                      color:
-                                          controller.totalCalculatedSodium >=
-                                              1000
-                                          ? AppColors.danger
-                                          : controller.totalCalculatedSodium >=
-                                                600
-                                          ? AppColors.warning
-                                          : AppColors.safe,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Calculator Converter (Di luar Struk atau tetap di bawahnya)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.04),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: AppColors.primary.withOpacity(0.2),
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const Text(
-                                    'Porsi Konsumsi Anda:',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                  Text(
-                                    '${controller.servingsMultiplier.value.toStringAsFixed(1)} Bungkus',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.primary,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  const Text(
-                                    '0.5x',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: AppColors.textMuted,
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: Slider(
-                                      value:
-                                          controller.servingsMultiplier.value,
-                                      min: 0.5,
-                                      max: 3.0,
-                                      divisions: 5,
-                                      label:
-                                          '${controller.servingsMultiplier.value}x',
-                                      activeColor: AppColors.primary,
-                                      onChanged: (val) {
-                                        controller.servingsMultiplier.value =
-                                            val;
-                                      },
-                                    ),
-                                  ),
-                                  const Text(
-                                    '3x',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: AppColors.textMuted,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-
-                        // Actions
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              controller.logScannedFood();
-                            },
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              backgroundColor:
-                                  controller.totalCalculatedSodium >= 1000
-                                  ? AppColors.danger
-                                  : AppColors.primary,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                            ),
-                            child: const Text(
-                              'LIHAT DETAIL',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          child: TextButton(
-                            onPressed: () => controller.resetScan(),
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                            ),
-                            child: const Text(
-                              'Tutup Manual',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }
-
+          // Layar Kamera Aktif / Siap Scan
           // JIKA TIDAK ADA HASIL (Layar Kamera Aktif / Siap Scan)
           return AnnotatedRegion<SystemUiOverlayStyle>(
             value: const SystemUiOverlayStyle(
@@ -439,9 +115,26 @@ class ScannerView extends GetView<ScannerController> {
                   }),
                 ),
 
-                // 2. Full Screen Loading Overlay Dihapus dari sini dan dipindah ke paling bawah Stack
-
-                // Tombol Toggle Kamera Dihapus
+                // 2. Scanner Overlay (Dimmed background with cutout)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        // Make the box nice and proportional (e.g. for nutrition facts, a rectangle)
+                        final boxWidth = constraints.maxWidth * 0.75;
+                        final boxHeight = boxWidth * 1.3;
+                        final scanWindow = Rect.fromCenter(
+                          center: Offset(constraints.maxWidth / 2, constraints.maxHeight / 2 - 80),
+                          width: boxWidth,
+                          height: boxHeight,
+                        );
+                        return CustomPaint(
+                          painter: ScannerOverlayPainter(scanWindow: scanWindow),
+                        );
+                      },
+                    ),
+                  ),
+                ),
 
                 // 3. Tombol Ambil Gambar
                 Align(
@@ -545,5 +238,69 @@ class ScannerView extends GetView<ScannerController> {
         }),
       ),
     );
+  }
+}
+
+class ScannerOverlayPainter extends CustomPainter {
+  final Rect scanWindow;
+  final double borderRadius;
+
+  ScannerOverlayPainter({required this.scanWindow, this.borderRadius = 16.0});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Dimmed background to make it not too bright
+    final backgroundPaint = Paint()..color = Colors.black.withOpacity(0.65);
+    final backgroundPath = Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    // Transparent cutout window in the middle
+    final cutoutPath = Path()
+      ..addRRect(RRect.fromRectAndRadius(scanWindow, Radius.circular(borderRadius)));
+    
+    // Combine paths using difference to create a hole
+    final path = Path.combine(PathOperation.difference, backgroundPath, cutoutPath);
+    canvas.drawPath(path, backgroundPaint);
+
+    // Beautiful corner borders for the scanner box
+    final borderPaint = Paint()
+      ..color = AppColors.primary
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 5.0
+      ..strokeCap = StrokeCap.round;
+    
+    final double cornerLength = 40.0;
+    
+    // Top-left
+    canvas.drawPath(Path()
+      ..moveTo(scanWindow.left, scanWindow.top + cornerLength)
+      ..lineTo(scanWindow.left, scanWindow.top + borderRadius)
+      ..arcToPoint(Offset(scanWindow.left + borderRadius, scanWindow.top), radius: Radius.circular(borderRadius))
+      ..lineTo(scanWindow.left + cornerLength, scanWindow.top), borderPaint);
+      
+    // Top-right
+    canvas.drawPath(Path()
+      ..moveTo(scanWindow.right - cornerLength, scanWindow.top)
+      ..lineTo(scanWindow.right - borderRadius, scanWindow.top)
+      ..arcToPoint(Offset(scanWindow.right, scanWindow.top + borderRadius), radius: Radius.circular(borderRadius))
+      ..lineTo(scanWindow.right, scanWindow.top + cornerLength), borderPaint);
+      
+    // Bottom-left
+    canvas.drawPath(Path()
+      ..moveTo(scanWindow.left, scanWindow.bottom - cornerLength)
+      ..lineTo(scanWindow.left, scanWindow.bottom - borderRadius)
+      ..arcToPoint(Offset(scanWindow.left + borderRadius, scanWindow.bottom), radius: Radius.circular(borderRadius), clockwise: false)
+      ..lineTo(scanWindow.left + cornerLength, scanWindow.bottom), borderPaint);
+
+    // Bottom-right
+    canvas.drawPath(Path()
+      ..moveTo(scanWindow.right - cornerLength, scanWindow.bottom)
+      ..lineTo(scanWindow.right - borderRadius, scanWindow.bottom)
+      ..arcToPoint(Offset(scanWindow.right, scanWindow.bottom - borderRadius), radius: Radius.circular(borderRadius), clockwise: false)
+      ..lineTo(scanWindow.right, scanWindow.bottom - cornerLength), borderPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant ScannerOverlayPainter oldDelegate) {
+    return oldDelegate.scanWindow != scanWindow || oldDelegate.borderRadius != borderRadius;
   }
 }

@@ -15,8 +15,7 @@ class EditProfileController extends GetxController {
   final tensiController = TextEditingController();
   final beratBadanController = TextEditingController();
   final tinggiBadanController = TextEditingController();
-
-
+  
   final selectedCondition = 'Sehat'.obs;
 
   @override
@@ -39,14 +38,13 @@ class EditProfileController extends GetxController {
 
         if (doc.exists) {
           final data = doc.data() as Map<String, dynamic>;
-          nameController.text = data['nama'] ?? data['name'] ?? '';
-          ageController.text = (data['usia'] ?? data['age'])?.toString() ?? '';
+          nameController.text = data['name'] ?? data['nama'] ?? '';
+          ageController.text = (data['age'] ?? data['usia'])?.toString() ?? '';
           tensiController.text = data['tekanan_darah'] ?? data['bloodPressure'] ?? data['tensi'] ?? '';
           beratBadanController.text = (data['berat_badan'] ?? data['weight'])?.toString() ?? '';
           tinggiBadanController.text = (data['tinggi_badan'] ?? data['height'])?.toString() ?? '';
           photoBase64.value = data['strImageBase64'] ?? data['photoBase64'] ?? '';
-          String condition = data['kondisi_kesehatan'] ?? 'Sehat';
-          selectedCondition.value = condition;
+          selectedCondition.value = data['kondisi_kesehatan'] ?? 'Sehat';
         }
       }
     } catch (e) {
@@ -81,12 +79,8 @@ class EditProfileController extends GetxController {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         final dataToUpdate = <String, dynamic>{
-          'nama': nameController.text.trim(),
-          'usia': int.tryParse(ageController.text.trim()) ?? 0,
-          'tekanan_darah': tensiController.text.trim(),
-          'berat_badan': double.tryParse(beratBadanController.text.trim()) ?? 0.0,
-          'tinggi_badan': double.tryParse(tinggiBadanController.text.trim()) ?? 0.0,
-          'kondisi_kesehatan': selectedCondition.value,
+          'name': nameController.text.trim(),
+          'age': int.tryParse(ageController.text.trim()) ?? 0,
         };
         
         if (photoBase64.value.isNotEmpty) {

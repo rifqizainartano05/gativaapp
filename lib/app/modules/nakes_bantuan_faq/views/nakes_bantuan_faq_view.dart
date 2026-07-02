@@ -109,9 +109,24 @@ class NakesBantuanFaqView extends GetView<NakesBantuanFaqController> {
                       ),
                     ],
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Stack(
                     children: [
+                      // Watermark Background inside the content container
+                      Positioned(
+                        right: -20,
+                        bottom: -20,
+                        child: Transform.rotate(
+                          angle: -0.2,
+                          child: Icon(
+                            Icons.health_and_safety_rounded,
+                            size: 150,
+                            color: Colors.grey.withOpacity(0.04),
+                          ),
+                        ),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                       _buildFaqItem(
                         'Bagaimana cara membalas chat pasien?',
                         'Anda dapat masuk ke tab Konsultasi dan memilih nama pasien yang ingin dibalas. Pesan baru akan berada di bagian paling atas daftar.',
@@ -123,6 +138,10 @@ class NakesBantuanFaqView extends GetView<NakesBantuanFaqController> {
                       _buildFaqItem(
                         'Bagaimana jika aplikasi mengalami error?',
                         'Pastikan koneksi internet stabil. Jika masalah berlanjut, hubungi tim IT Support GATIVA di menu Bantuan Lanjutan atau restart aplikasi Anda.',
+                      ),
+                      _buildFaqItem(
+                        'Apa yang harus dilakukan jika akun dihapus atau diblokir?',
+                        'Jika akun Anda dihapus oleh admin (misal karena pelanggaran) atau dihapus sendiri, Anda tidak bisa lagi mengakses fitur. Untuk banding atau bantuan lebih lanjut, silakan hubungi tim kami di gatrapreventiva@gmail.com.',
                       ),
                       const SizedBox(height: 24),
                       Center(
@@ -137,29 +156,40 @@ class NakesBantuanFaqView extends GetView<NakesBantuanFaqController> {
                       ),
                       const SizedBox(height: 12),
                       Center(
-                        child: ElevatedButton.icon(
-                          onPressed: () {},
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFF2E7D32),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(24),
-                            ),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2E7D32).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFF2E7D32).withOpacity(0.3)),
                           ),
-                          icon: const Icon(Icons.email_outlined, size: 20),
-                          label: const Text('Hubungi Support'),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.email_rounded, color: Color(0xFF2E7D32), size: 20),
+                              SizedBox(width: 8),
+                              SelectableText(
+                                'gatrapreventiva@gmail.com',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF2E7D32),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ),
+                ],
               ),
-            ),
-          ],
-        ),
-      ),
-    );
+            ), // Container
+          ), // SingleChildScrollView
+        ), // Expanded
+      ], // Column children
+    ), // Column
+  ), // Scaffold
+); // AnnotatedRegion
   }
 
   Widget _buildFaqItem(String question, String answer) {

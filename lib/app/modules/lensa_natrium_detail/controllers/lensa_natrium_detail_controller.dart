@@ -11,6 +11,15 @@ class LensaNatriumDetailController extends GetxController {
   void onInit() {
     super.onInit();
     // Mendapatkan data makanan yang dilempar dari halaman sebelumnya
-    foodItem = Get.arguments as Map<String, dynamic>;
+    final args = Get.arguments;
+    if (args != null && args is Map<String, dynamic>) {
+      foodItem = args;
+    } else {
+      foodItem = {
+        'name': 'Data tidak ditemukan',
+        'natrium': 0,
+        'type': 'Tidak diketahui',
+      };
+    }
   }
 }
