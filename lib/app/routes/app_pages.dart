@@ -2,6 +2,8 @@ import 'package:get/get.dart';
 
 import '../modules/scan_dokter_akses/bindings/scan_dokter_akses_binding.dart';
 import '../modules/scan_dokter_akses/views/scan_dokter_akses_view.dart';
+import '../modules/ganti_kata_sandi/bindings/ganti_kata_sandi_binding.dart';
+import '../modules/ganti_kata_sandi/views/ganti_kata_sandi_view.dart';
 
 import '../modules/anggota/bindings/anggota_binding.dart';
 import '../modules/anggota/views/anggota_view.dart';
@@ -326,6 +328,11 @@ class AppPages {
       name: _Paths.SCAN_DOKTER_AKSES,
       page: () => const ScanDokterAksesView(),
       binding: ScanDokterAksesBinding(),
+    ),
+    GetPage(
+      name: _Paths.GANTI_KATA_SANDI,
+      page: () => const GantiKataSandiView(),
+      binding: GantiKataSandiBinding(),
     ),
   ];
 }

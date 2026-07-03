@@ -185,6 +185,17 @@ class ProfileView extends GetView<ProfileController> {
                                   color: AppColors.glassBorder,
                                 ),
                                 _buildSimpleMenuTile(
+                                  icon: Icons.lock_outline_rounded,
+                                  title: "Ganti Kata Sandi",
+                                  subtitle: "Perbarui kata sandi Anda",
+                                  onTap: () => Get.toNamed(Routes.GANTI_KATA_SANDI),
+                                ),
+                                const Divider(
+                                  height: 1,
+                                  indent: 56,
+                                  color: AppColors.glassBorder,
+                                ),
+                                _buildSimpleMenuTile(
                                   icon: Icons.notifications_active_rounded,
                                   title: "Notifikasi Pengingat",
                                   subtitle: "Pengingat selalu aktif",

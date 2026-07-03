@@ -48,6 +48,7 @@ abstract class Routes {
   static const ROOM_CHAT = _Paths.ROOM_CHAT;
   static const ROOM_NAKES_CHAT = _Paths.ROOM_NAKES_CHAT;
   static const SCAN_DOKTER_AKSES = _Paths.SCAN_DOKTER_AKSES;
+  static const GANTI_KATA_SANDI = _Paths.GANTI_KATA_SANDI;
 }
 
 abstract class _Paths {
@@ -97,4 +98,5 @@ abstract class _Paths {
   static const ROOM_CHAT = '/room-chat';
   static const ROOM_NAKES_CHAT = '/room-nakes-chat';
   static const SCAN_DOKTER_AKSES = '/scan-dokter-akses';
+  static const GANTI_KATA_SANDI = '/ganti-kata-sandi';
 }
