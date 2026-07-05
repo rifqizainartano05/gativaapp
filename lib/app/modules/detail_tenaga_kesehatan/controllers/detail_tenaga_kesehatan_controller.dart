@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class DetailDokterController extends GetxController {
+class DetailTenagaKesehatanController extends GetxController {
   final isLoading = true.obs;
   final doctorData = <String, dynamic>{}.obs;
   final isOnline = false.obs;
@@ -87,3 +87,4 @@ class DetailDokterController extends GetxController {
     }
   }
 }
+

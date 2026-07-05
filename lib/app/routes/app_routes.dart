@@ -29,7 +29,7 @@ abstract class Routes {
   static const NAKES_INFORMASI_KESEHATAN = _Paths.NAKES_INFORMASI_KESEHATAN;
   static const INFORMASI_KESEHATAN_DETAIL = _Paths.INFORMASI_KESEHATAN_DETAIL;
   static const NOTIFIKASI = _Paths.NOTIFIKASI;
-  static const DETAIL_DOKTER = _Paths.DETAIL_DOKTER;
+  static const DETAIL_TENAGA_KESEHATAN = _Paths.DETAIL_TENAGA_KESEHATAN;
   static const NAKES_PROFILE = _Paths.NAKES_PROFILE;
   static const NAKES_GANTI_KATA_SANDI = _Paths.NAKES_GANTI_KATA_SANDI;
   static const KATALOG = _Paths.KATALOG;
@@ -47,7 +47,7 @@ abstract class Routes {
   static const SCANNER_RESULT = _Paths.SCANNER_RESULT;
   static const ROOM_CHAT = _Paths.ROOM_CHAT;
   static const ROOM_NAKES_CHAT = _Paths.ROOM_NAKES_CHAT;
-  static const SCAN_DOKTER_AKSES = _Paths.SCAN_DOKTER_AKSES;
+  static const SCAN_TENAGA_KESEHATAN_AKSES = _Paths.SCAN_TENAGA_KESEHATAN_AKSES;
   static const GANTI_KATA_SANDI = _Paths.GANTI_KATA_SANDI;
 }
 
@@ -79,7 +79,7 @@ abstract class _Paths {
   static const NAKES_INFORMASI_KESEHATAN = '/nakes-informasi-kesehatan';
   static const INFORMASI_KESEHATAN_DETAIL = '/informasi-kesehatan-detail';
   static const NOTIFIKASI = '/notifikasi';
-  static const DETAIL_DOKTER = '/detail-dokter';
+  static const DETAIL_TENAGA_KESEHATAN = '/detail-dokter';
   static const NAKES_PROFILE = '/nakes-profile';
   static const NAKES_GANTI_KATA_SANDI = '/nakes-ganti-kata-sandi';
   static const KATALOG = '/katalog';
@@ -97,6 +97,8 @@ abstract class _Paths {
   static const SCANNER_RESULT = '/scanner-result';
   static const ROOM_CHAT = '/room-chat';
   static const ROOM_NAKES_CHAT = '/room-nakes-chat';
-  static const SCAN_DOKTER_AKSES = '/scan-dokter-akses';
+  static const SCAN_TENAGA_KESEHATAN_AKSES = '/scan-tenaga-kesehatan-akses';
   static const GANTI_KATA_SANDI = '/ganti-kata-sandi';
 }
+
+

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../routes/app_pages.dart';
 
 class GantiKataSandiController extends GetxController {
   final oldPasswordCtrl = TextEditingController();
@@ -74,10 +75,11 @@ class GantiKataSandiController extends GetxController {
 
         Get.snackbar(
           'Berhasil',
-          'Kata sandi berhasil diubah',
+          'Kata sandi berhasil diubah, silakan masuk kembali',
           backgroundColor: Colors.white,
         );
-        Get.back();
+        await FirebaseAuth.instance.signOut();
+        Get.offAllNamed(Routes.LOGIN);
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'wrong-password') {

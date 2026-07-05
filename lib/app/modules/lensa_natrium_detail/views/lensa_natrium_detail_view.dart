@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/lensa_natrium_detail_controller.dart';
+import '../../lensa_natrium/controllers/lensa_natrium_controller.dart' as lensa_natrium;
 
 class AppColors {
   static const primary = Color(0xFF2E7D32);
@@ -296,6 +297,8 @@ class LensaNatriumDetailView extends GetView<LensaNatriumDetailController> {
                   ),
                 ),
               ),
+              const SizedBox(height: 24),
+
               const SizedBox(height: 40),
             ],
           ),

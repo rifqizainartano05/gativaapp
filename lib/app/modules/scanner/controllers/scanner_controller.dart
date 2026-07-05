@@ -21,6 +21,7 @@ class ScannerController extends GetxController {
   // OCR state
   final RxBool isScanning = false.obs;
   final RxBool hasResult = false.obs;
+  final RxBool isFromMission = false.obs;
 
   void toggleCamera() {
     isCameraActive.value = !isCameraActive.value;
@@ -50,8 +51,14 @@ class ScannerController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    if (Get.arguments != null && Get.arguments is String) {
-      _packageName.value = Get.arguments as String;
+    if (Get.arguments != null) {
+      if (Get.arguments is String) {
+        _packageName.value = Get.arguments as String;
+      } else if (Get.arguments is Map) {
+        final args = Get.arguments as Map;
+        _packageName.value = args['name'] ?? '';
+        isFromMission.value = args['isFromMission'] == true;
+      }
     }
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
@@ -171,7 +178,12 @@ class ScannerController extends GetxController {
         'servingSize': scannedServingSize.value,
         'sodiumPerServing': scannedSodiumPerServing.value,
         'servingsPerPack': scannedServingsPerPack.value,
+        'isFromMission': isFromMission.value,
       })?.then((_) {
+        if (isFromMission.value) {
+          Get.back();
+          return;
+        }
         // Resume preview when returning from result page
         resetScan();
       });

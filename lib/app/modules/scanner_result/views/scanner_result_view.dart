@@ -51,9 +51,17 @@ class ScannerResultView extends GetView<ScannerResultController> {
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark.copyWith(systemNavigationBarColor: Colors.white, systemNavigationBarIconBrightness: Brightness.dark),
-      child: Scaffold(
-        backgroundColor: Colors.white,
-      body: Stack(
+      child: Obx(() {
+        bool canGoBack = true;
+
+        return PopScope(
+          canPop: canGoBack,
+          onPopInvoked: (didPop) {
+            if (didPop) return;
+          },
+          child: Scaffold(
+            backgroundColor: Colors.white,
+          body: Stack(
         children: [
           // Background Watermark (Receipt)
           Positioned(
@@ -337,7 +345,19 @@ class ScannerResultView extends GetView<ScannerResultController> {
             left: 16,
             child: SafeArea(
               child: InkWell(
-                onTap: () => Get.back(),
+                onTap: () {
+                  if (!canGoBack) {
+                    Get.snackbar(
+                      'Perhatian',
+                      'Harap catat konsumsi produk untuk menyelesaikan misi.',
+                      backgroundColor: Colors.orange,
+                      colorText: Colors.white,
+                      snackPosition: SnackPosition.BOTTOM,
+                    );
+                  } else {
+                    Get.back();
+                  }
+                },
                 borderRadius: BorderRadius.circular(12),
                 child: Container(
                   padding: const EdgeInsets.all(10),
@@ -364,7 +384,10 @@ class ScannerResultView extends GetView<ScannerResultController> {
           ),
         ],
       ),
-    ));
+    ),
+  );
+  }),
+  );
   }
 
   Widget _buildInfoRow(String label, String value) {

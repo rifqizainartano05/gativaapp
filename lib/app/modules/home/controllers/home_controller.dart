@@ -23,9 +23,9 @@ class HomeController extends GetxController {
 
   String get statusMessage {
     double ratio = usageRatio;
-    if (ratio < 0.6) return 'Asupan sangat terkendali. Lanjutkan!';
-    if (ratio < 0.9) return 'Mulai dekati batas. Perhatikan makan malam Anda.';
-    return 'Batas terlampaui! Hindari makanan kemasan hari ini.';
+    if (ratio < 0.6) return 'Aman, lanjutkan!';
+    if (ratio < 0.9) return 'Mulai mendekati batas!';
+    return 'Batas terlampaui!';
   }
 
   // ==== PROYEKSI (SIMULASI MAKAN BERIKUTNYA) ====
@@ -143,9 +143,6 @@ class HomeController extends GetxController {
         if (doc.exists) {
           final data = doc.data() as Map<String, dynamic>;
           userName.value = data['name'] ?? user.displayName ?? "Pengguna";
-          totalConsumedToday.value =
-              (data['natrium'] ?? data['sodium'] ?? data['totalNatrium'] ?? 0)
-                  .toDouble();
 
           int age = data['age'] ?? 28;
           String condition =
@@ -167,14 +164,29 @@ class HomeController extends GetxController {
             }
 
             await Get.find<AuthService>().getUserReference(user.uid).update(updates);
+
           } else {
             limit.value = storedLimit;
           }
         }
       });
 
-      // Menggunakan data 'natrium' dari dokumen pasien secara langsung.
-      // Tidak lagi menghitung ulang dari sub-collection 'label gizi makanan'.
+      Get.find<AuthService>()
+          .getUserReference(user.uid)
+          .collection('label gizi makanan')
+          .snapshots()
+          .listen((snapshot) {
+        double dailyTotal = 0.0;
+        final now = DateTime.now();
+        for (var doc in snapshot.docs) {
+          final data = doc.data();
+          DateTime? docDate = (data['created_at'] as Timestamp?)?.toDate() ?? (data['timestamp'] as Timestamp?)?.toDate();
+          if (docDate != null && docDate.year == now.year && docDate.month == now.month && docDate.day == now.day) {
+            dailyTotal += ((data['natrium'] ?? data['sodium'] ?? data['amount'] ?? 0) as num).toDouble();
+          }
+        }
+        totalConsumedToday.value = dailyTotal;
+      });
     }
   }
 }

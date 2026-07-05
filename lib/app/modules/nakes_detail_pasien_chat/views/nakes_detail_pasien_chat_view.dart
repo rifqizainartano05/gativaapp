@@ -172,7 +172,7 @@ class NakesDetailPasienChatView
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
                                       Text(
-                                        '$natrium',
+                                        '${(natrium as num).toInt()}',
                                         style: const TextStyle(
                                           fontSize: 32,
                                           fontWeight: FontWeight.w900,
@@ -203,7 +203,7 @@ class NakesDetailPasienChatView
                                             ),
                                           ),
                                           Text(
-                                            '$dailyLimit mg',
+                                            '${(dailyLimit as num).toInt()} mg',
                                             style: const TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.bold,

@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import '../controllers/detail_dokter_controller.dart';
+import '../controllers/detail_tenaga_kesehatan_controller.dart';
 
-class DetailDokterView extends GetView<DetailDokterController> {
-  const DetailDokterView({super.key});
+class DetailTenagaKesehatanView extends GetView<DetailTenagaKesehatanController> {
+  const DetailTenagaKesehatanView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -168,9 +168,9 @@ class DetailDokterView extends GetView<DetailDokterController> {
                                   ),
                                 ),
                                 const SizedBox(height: 20),
-                                // Nama Dokter
+                                // Nama Tenaga Kesehatan
                                 Text(
-                                  data['name'] ?? data['nama'] ?? data['username'] ?? 'Nama Dokter',
+                                  data['name'] ?? data['nama'] ?? data['username'] ?? 'Nama Tenaga Kesehatan',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w900,
                                     fontSize: 22,
@@ -352,3 +352,4 @@ class DetailDokterView extends GetView<DetailDokterController> {
     );
   }
 }
+

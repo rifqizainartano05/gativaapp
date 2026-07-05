@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../controllers/scan_barcode_controller.dart';
@@ -8,10 +9,17 @@ class ScanBarcodeView extends GetView<ScanBarcodeController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarIconBrightness: Brightness.light,
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: Stack(
+          children: [
           // 1. Mobile Scanner Camera
           MobileScanner(
             controller: controller.scannerController,
@@ -117,12 +125,13 @@ class ScanBarcodeView extends GetView<ScanBarcodeController> {
               ),
             ),
           ),
-        ),
+            ),
+          ),
+        ],
       ),
-    ],
-  ),
-);
-}
+    ),
+    );
+  }
 
   Widget _buildCircleButton({
     required IconData icon,
@@ -178,55 +187,40 @@ class _ScannerOverlayState extends State<_ScannerOverlay>
 
         return Stack(
           children: [
-            // Gelap di luar kotak menggunakan CustomPaint
-            Positioned.fill(
-              child: CustomPaint(
-                painter: _ScannerOverlayPainter(
-                  scanAreaSize: scanAreaSize,
-                  borderRadius: 24,
-                  overlayColor: Colors.black.withOpacity(0.5), // Lighter overlay
-                ),
-              ),
-            ),
+            // Gelap di luar kotak (Dihapus sesuai permintaan)
 
-            // Border Kaca di sekitar kotak
-            Center(
-              child: Container(
-                width: scanAreaSize,
-                height: scanAreaSize,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.3), // Sedikit lebih terang bordernya
-                    width: 2,
-                  ),
-                ),
-                // Icon dihapus sesuai permintaan
-              ),
-            ),
-
-            // Garis Laser yang Berjalan Naik-Turun
+            // Container untuk Watermark dan Laser
             Center(
               child: SizedBox(
                 width: scanAreaSize,
                 height: scanAreaSize,
-                child: AnimatedBuilder(
-                  animation: _animationController,
-                  builder: (context, child) {
-                    return Positioned(
-                      top: _animationController.value * (scanAreaSize - 4), // 4 is line height
-                      left: 0,
-                      right: 0,
-                      child: child!,
-                    );
-                  },
-                  child: Container(
-                    height: 4,
-                    width: scanAreaSize,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.5), // Laser tanpa blur
+                child: Stack(
+                  children: [
+                    Center(
+                      child: Icon(
+                        Icons.qr_code_rounded,
+                        size: 150,
+                        color: Colors.white.withOpacity(0.15),
+                      ),
                     ),
-                  ),
+                    AnimatedBuilder(
+                      animation: _animationController,
+                      builder: (context, child) {
+                        return Positioned(
+                          top: _animationController.value * (scanAreaSize - 4),
+                          left: 0,
+                          right: 0,
+                          child: child!,
+                        );
+                      },
+                      child: Container(
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.5), // Laser tipis
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

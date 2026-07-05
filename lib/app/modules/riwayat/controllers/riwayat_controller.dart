@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../../services/auth_service.dart';
+import '../../gamifikasi/controllers/gamifikasi_controller.dart';
 
 class SodiumLog {
   final String id;
@@ -26,6 +27,9 @@ class RiwayatController extends GetxController {
 
   final RxList<SodiumLog> logs = <SodiumLog>[].obs;
   final RxDouble dailyLimit = 2000.0.obs;
+  final RxDouble averageSodium = 0.0.obs;
+  final RxInt currentStreak = 0.obs;
+  final RxBool isMissionCompleted = false.obs;
 
   @override
   void onInit() {
@@ -85,6 +89,11 @@ class RiwayatController extends GetxController {
             // Sort descending locally to ensure we don't miss docs without created_at field
             rawLogs.sort((a, b) => b.timestamp.compareTo(a.timestamp));
             logs.value = rawLogs;
+            
+            if (Get.isRegistered<GamifikasiController>()) {
+              bool done = Get.find<GamifikasiController>().completeMissionByLevel(12);
+              if (done) isMissionCompleted.value = true;
+            }
           });
     }
   }

@@ -39,4 +39,49 @@ class NotificationService {
       notificationDetails: platformChannelSpecifics,
     );
   }
+
+  static Future<void> showNotification({required int id, required String title, required String body}) async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+          'gativa_general_channel',
+          'Notifikasi Umum',
+          channelDescription: 'Notifikasi sistem dan pengingat',
+          importance: Importance.high,
+          priority: Priority.high,
+        );
+    const NotificationDetails platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+    );
+
+    await _notificationsPlugin.show(
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: platformChannelSpecifics,
+    );
+  }
+
+  static Future<void> scheduleDailyReminder() async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+          'gativa_daily_channel',
+          'Pengingat Harian',
+          channelDescription: 'Pengingat misi dan target harian',
+          importance: Importance.high,
+          priority: Priority.high,
+        );
+    const NotificationDetails platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+    );
+
+    // Mengingatkan setiap hari (dari waktu saat ini / login)
+    await _notificationsPlugin.periodicallyShow(
+      id: 999, // Menggunakan ID yang sama dengan gamifikasi
+      title: 'Pengingat Sehat Gativa! 🎮',
+      body: 'Jangan lupa selesaikan misi Detox Natrium dan cek target harianmu hari ini ya!',
+      repeatInterval: RepeatInterval.daily,
+      notificationDetails: platformChannelSpecifics,
+      androidScheduleMode: AndroidScheduleMode.inexact,
+    );
+  }
 }

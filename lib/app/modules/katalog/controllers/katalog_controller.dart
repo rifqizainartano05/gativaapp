@@ -56,7 +56,7 @@ class KatalogController extends GetxController {
       Container(
         decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.zero,
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.1),
@@ -78,11 +78,12 @@ class KatalogController extends GetxController {
                   color: const Color(0xFF2E7D32).withOpacity(0.05),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
@@ -179,6 +180,7 @@ class KatalogController extends GetxController {
                       ],
                     ),
                   ],
+                ),
                 ),
               ),
             ],

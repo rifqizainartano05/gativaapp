@@ -491,7 +491,7 @@ class _ChatBubble extends StatelessWidget {
                 ? CrossAxisAlignment.end
                 : CrossAxisAlignment.start,
             children: [
-              // Nama pengirim untuk dokter
+              // Nama pengirim untuk tenaga kesehatan
               if (!isUser && senderName != null && senderRole != 'sistem')
                 Padding(
                   padding: const EdgeInsets.only(left: 12, bottom: 4),
@@ -574,3 +574,4 @@ class _ChatBubble extends StatelessWidget {
     );
   }
 }
+

@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 
-import '../modules/scan_dokter_akses/bindings/scan_dokter_akses_binding.dart';
-import '../modules/scan_dokter_akses/views/scan_dokter_akses_view.dart';
+import '../modules/scan_tenaga_kesehatan_akses/bindings/scan_tenaga_kesehatan_akses_binding.dart';
+import '../modules/scan_tenaga_kesehatan_akses/views/scan_tenaga_kesehatan_akses_view.dart';
 import '../modules/ganti_kata_sandi/bindings/ganti_kata_sandi_binding.dart';
 import '../modules/ganti_kata_sandi/views/ganti_kata_sandi_view.dart';
 
@@ -13,8 +13,8 @@ import '../modules/catatan_nakes/views/catatan_nakes_view.dart';
 import '../modules/catatan_nakes/views/catatan_nakes_view.dart';
 import '../modules/chat/bindings/chat_binding.dart';
 import '../modules/chat/views/chat_view.dart';
-import '../modules/detail_dokter/bindings/detail_dokter_binding.dart';
-import '../modules/detail_dokter/views/detail_dokter_view.dart';
+import '../modules/detail_tenaga_kesehatan/bindings/detail_tenaga_kesehatan_binding.dart';
+import '../modules/detail_tenaga_kesehatan/views/detail_tenaga_kesehatan_view.dart';
 import '../modules/edit_profile/bindings/edit_profile_binding.dart';
 import '../modules/edit_profile/views/edit_profile_view.dart';
 import '../modules/edukasi/bindings/edukasi_binding.dart';
@@ -225,9 +225,9 @@ class AppPages {
       binding: NotifikasiBinding(),
     ),
     GetPage(
-      name: _Paths.DETAIL_DOKTER,
-      page: () => const DetailDokterView(),
-      binding: DetailDokterBinding(),
+      name: _Paths.DETAIL_TENAGA_KESEHATAN,
+      page: () => const DetailTenagaKesehatanView(),
+      binding: DetailTenagaKesehatanBinding(),
     ),
     GetPage(
       name: _Paths.NAKES_DETAIL_PASIEN_GATIVA,
@@ -325,9 +325,9 @@ class AppPages {
       binding: RoomNakesChatBinding(),
     ),
     GetPage(
-      name: _Paths.SCAN_DOKTER_AKSES,
-      page: () => const ScanDokterAksesView(),
-      binding: ScanDokterAksesBinding(),
+      name: _Paths.SCAN_TENAGA_KESEHATAN_AKSES,
+      page: () => const ScanTenagaKesehatanAksesView(),
+      binding: ScanTenagaKesehatanAksesBinding(),
     ),
     GetPage(
       name: _Paths.GANTI_KATA_SANDI,

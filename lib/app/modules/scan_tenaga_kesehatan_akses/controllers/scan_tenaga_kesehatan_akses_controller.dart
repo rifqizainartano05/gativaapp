@@ -6,7 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../services/auth_service.dart';
 
-class ScanDokterAksesController extends GetxController {
+class ScanTenagaKesehatanAksesController extends GetxController {
   final MobileScannerController scannerController = MobileScannerController(
     detectionSpeed: DetectionSpeed.noDuplicates,
     formats: [BarcodeFormat.qrCode],
@@ -102,7 +102,7 @@ class ScanDokterAksesController extends GetxController {
       // Save doctor info to patient's document
       await Get.find<AuthService>().getUserReference(user.uid).set({
         'nakesUid': nakesUid,
-        'nakesName': nakesDoc.data()?['name'] ?? 'Dokter',
+        'nakesName': nakesDoc.data()?['name'] ?? nakesDoc.data()?['nama'] ?? 'Tenaga Kesehatan',
       }, SetOptions(merge: true));
 
       Get.back(); // Tutup loading
@@ -133,7 +133,7 @@ class ScanDokterAksesController extends GetxController {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Anda sekarang telah terhubung dengan ${nakesDoc.data()?['name'] ?? 'Dokter'}.',
+                  'Anda sekarang telah terhubung dengan ${nakesDoc.data()?['name'] ?? nakesDoc.data()?['nama'] ?? 'Tenaga Kesehatan'}.',
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.black54),
                 ),
@@ -182,3 +182,4 @@ class ScanDokterAksesController extends GetxController {
     Get.offAllNamed('/main-navigation');
   }
 }
+

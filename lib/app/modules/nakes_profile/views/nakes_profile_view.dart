@@ -45,16 +45,22 @@ class NakesProfileView extends GetView<NakesProfileController> {
 
                   Column(
                     children: [
-                      Obx(() => CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Colors.white24,
-                        backgroundImage: controller.imageBytes.value != null
-                            ? MemoryImage(controller.imageBytes.value!)
-                            : null,
-                        child: controller.imageBytes.value == null
-                            ? const Icon(Icons.person, color: Colors.white, size: 64)
-                            : null,
-                      )),
+                      Obx(
+                        () => CircleAvatar(
+                          radius: 50,
+                          backgroundColor: Colors.white24,
+                          backgroundImage: controller.imageBytes.value != null
+                              ? MemoryImage(controller.imageBytes.value!)
+                              : null,
+                          child: controller.imageBytes.value == null
+                              ? const Icon(
+                                  Icons.person,
+                                  color: Colors.white,
+                                  size: 64,
+                                )
+                              : null,
+                        ),
+                      ),
                       const SizedBox(height: 16),
                       Obx(
                         () => Text(
@@ -92,7 +98,9 @@ class NakesProfileView extends GetView<NakesProfileController> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFF2E7D32).withOpacity(0.3)),
+                    border: Border.all(
+                      color: const Color(0xFF2E7D32).withOpacity(0.3),
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.02),
@@ -121,7 +129,7 @@ class NakesProfileView extends GetView<NakesProfileController> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "Barcode Akses Dokter",
+                              "Barcode Akses",
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -139,7 +147,11 @@ class NakesProfileView extends GetView<NakesProfileController> {
                           ],
                         ),
                       ),
-                      const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.grey),
+                      const Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 16,
+                        color: Colors.grey,
+                      ),
                     ],
                   ),
                 ),

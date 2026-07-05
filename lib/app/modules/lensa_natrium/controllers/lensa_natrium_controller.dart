@@ -3,11 +3,15 @@ import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../services/auth_service.dart';
+import '../../gamifikasi/controllers/gamifikasi_controller.dart';
+import '../../../routes/app_pages.dart';
+import '../../main_navigation/controllers/main_navigation_controller.dart';
 
 class LensaNatriumController extends GetxController {
   final TextEditingController searchController = TextEditingController();
   final isAnalyzing = false.obs;
   final isLoading = false.obs;
+  final isMissionCompleted = false.obs;
 
   final searchResults = <Map<String, dynamic>>[].obs;
   final allJajanan = <Map<String, dynamic>>[].obs;
@@ -126,14 +130,55 @@ class LensaNatriumController extends GetxController {
     );
   }
 
-  void logFood(Map<String, dynamic> item) {
-    Get.snackbar(
-      'Berhasil Disimpan',
-      '${item['name']} telah ditambahkan ke catatan harian.',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.white,
-      colorText: Colors.black87,
-    );
+  void logFood(Map<String, dynamic> item) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final docRef = FirebaseFirestore.instance
+          .collection('mobile')
+          .doc('roles')
+          .collection('pasien')
+          .doc(user.uid);
+          
+      final batch = FirebaseFirestore.instance.batch();
+      final labelRef = docRef.collection('label gizi makanan').doc();
+      
+      batch.set(labelRef, {
+        'name': item['name'],
+        'type': item['type'] ?? 'makanan',
+        'natrium': item['natrium'],
+        'created_at': Timestamp.now(),
+      });
+      
+      batch.set(docRef, {
+        'natrium': FieldValue.increment(item['natrium']),
+      }, SetOptions(merge: true));
+      
+      await batch.commit();
+
+      Get.snackbar(
+        'Berhasil Disimpan',
+        '${item['name']} telah ditambahkan ke catatan harian.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.white,
+        colorText: Colors.black87,
+      );
+    }    
+    if (Get.isRegistered<GamifikasiController>()) {
+      final gamifikasi = Get.find<GamifikasiController>();
+      int currentLevel = gamifikasi.currentActiveLevel.value;
+      if ([1, 3, 6, 7, 9, 10, 11].contains(currentLevel)) {
+        bool done = gamifikasi.completeMissionByLevel(currentLevel);
+        if (done) isMissionCompleted.value = true;
+      }
+    }
+
+    bool isFromMission = Get.arguments != null && Get.arguments is Map && Get.arguments['isFromMission'] == true;
+    if (isFromMission || isMissionCompleted.value) {
+      if (Get.isRegistered<MainNavigationController>()) {
+        Get.find<MainNavigationController>().changePage(1); // Index 1 is Gamifikasi
+      }
+      Get.until((route) => route.settings.name == Routes.MAIN_NAVIGATION);
+    }
   }
 
   void deleteJajanan(String id, bool isGlobal) async {

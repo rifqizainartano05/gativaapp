@@ -336,7 +336,7 @@ class RoomChatView extends GetView<RoomChatController> {
                     final docName = doc['name'] ?? 'Dokter';
                     return GestureDetector(
                       onTap: () {
-                        Get.toNamed(Routes.DETAIL_DOKTER, arguments: doc);
+                        Get.toNamed(Routes.DETAIL_TENAGA_KESEHATAN, arguments: doc);
                       },
                       child: Row(
                         children: [
@@ -666,7 +666,7 @@ class _ChatBubble extends StatelessWidget {
           child: Column(
             crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
             children: [
-              // Nama pengirim untuk dokter
+              // Nama pengirim untuk tenaga kesehatan
               if (!isUser && senderName != null && senderRole != 'sistem')
                 Padding(
                   padding: const EdgeInsets.only(left: 12, bottom: 4),
@@ -738,4 +738,5 @@ class _ChatBubble extends StatelessWidget {
     );
   }
 }
+
 

@@ -63,6 +63,20 @@ class ScanBarcodeController extends GetxController {
         );
 
         try {
+          final User? currentUser = FirebaseAuth.instance.currentUser;
+          if (currentUser != null) {
+            final existingOwner = await Get.find<AuthService>()
+                .getUserReference(currentUser.uid)
+                .collection('anggota')
+                .where('role', isEqualTo: 'Pemilik Grup')
+                .get();
+
+            if (existingOwner.docs.isNotEmpty) {
+              Get.back(); // Tutup loading
+              _showErrorDialog("Anda sudah bergabung di grup lain. 1 Pengguna hanya bisa bergabung ke 1 Grup.");
+              return;
+            }
+          }
           final doc = await Get.find<AuthService>()
               .getUserReference(ownerUid)
               .collection('anggota')
@@ -94,7 +108,6 @@ class ScanBarcodeController extends GetxController {
           // Fetch scanner's (current user) actual sodium data
           double scannerSodium = 0;
           double scannerLimit = 2000;
-          final User? currentUser = FirebaseAuth.instance.currentUser;
           if (currentUser != null) {
             final scannerDoc = await Get.find<AuthService>().getUserReference(currentUser.uid).get();
             if (scannerDoc.exists) {

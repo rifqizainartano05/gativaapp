@@ -291,10 +291,7 @@ class HomeView extends StatelessWidget {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        controller.statusMessage
-                                                .split('.')
-                                                .first +
-                                            '.',
+                                        controller.statusMessage,
                                         textAlign: TextAlign.center,
                                         style: TextStyle(
                                           fontSize: 12,

@@ -84,7 +84,7 @@ class ChatController extends GetxController {
       nakesList.value = temp;
       isLoading.value = false;
     }, onError: (e) {
-      Get.snackbar('Error', 'Gagal memuat daftar dokter: $e');
+      Get.snackbar('Error', 'Gagal memuat daftar tenaga kesehatan: $e');
       isLoading.value = false;
     });
   }
@@ -116,3 +116,4 @@ class ChatController extends GetxController {
     super.onClose();
   }
 }
+

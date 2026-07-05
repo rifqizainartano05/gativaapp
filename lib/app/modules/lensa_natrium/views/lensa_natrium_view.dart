@@ -30,8 +30,26 @@ class LensaNatriumView extends GetView<LensaNatriumController> {
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.light,
       ),
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF4F6F8),
+      child: Obx(() {
+        bool isFromMission = Get.arguments is Map && Get.arguments['isFromMission'] == true;
+        bool canGoBack = !isFromMission || controller.isMissionCompleted.value;
+
+        return PopScope(
+          canPop: canGoBack,
+          onPopInvoked: (didPop) {
+            if (didPop) return;
+            if (!canGoBack) {
+              Get.snackbar(
+                'Perhatian',
+                'Harap cari atau deteksi 1 makanan untuk menyelesaikan misi.',
+                backgroundColor: Colors.orange,
+                colorText: Colors.white,
+                snackPosition: SnackPosition.BOTTOM,
+              );
+            }
+          },
+          child: Scaffold(
+            backgroundColor: const Color(0xFFF4F6F8),
         body: SafeArea(
           top: false,
           bottom: true,
@@ -77,7 +95,19 @@ class LensaNatriumView extends GetView<LensaNatriumController> {
                         Row(
                           children: [
                             InkWell(
-                              onTap: () => Get.back(),
+                              onTap: () {
+                                if (!canGoBack) {
+                                  Get.snackbar(
+                                    'Perhatian',
+                                    'Harap cari atau deteksi 1 makanan untuk menyelesaikan misi.',
+                                    backgroundColor: Colors.orange,
+                                    colorText: Colors.white,
+                                    snackPosition: SnackPosition.BOTTOM,
+                                  );
+                                } else {
+                                  Get.back();
+                                }
+                              },
                               child: Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
@@ -293,6 +323,8 @@ class LensaNatriumView extends GetView<LensaNatriumController> {
         ),
       ),
     );
+  }),
+  );
   }
 
   void _showScannerDialog(BuildContext context) {

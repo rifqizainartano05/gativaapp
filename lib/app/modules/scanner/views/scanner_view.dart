@@ -59,9 +59,26 @@ class ScannerView extends GetView<ScannerController> {
         statusBarIconBrightness: Brightness.dark,
         statusBarBrightness: Brightness.light,
       ),
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        // AppBar dihapus agar tidak menahan pewarnaan SystemUiOverlayStyle
+      child: Obx(() {
+        bool canGoBack = !controller.isFromMission.value;
+
+        return PopScope(
+          canPop: canGoBack,
+          onPopInvoked: (didPop) {
+            if (didPop) return;
+            if (!canGoBack) {
+              Get.snackbar(
+                'Perhatian',
+                'Harap ambil gambar produk untuk menyelesaikan misi.',
+                backgroundColor: Colors.orange,
+                colorText: Colors.white,
+                snackPosition: SnackPosition.BOTTOM,
+              );
+            }
+          },
+          child: Scaffold(
+            backgroundColor: Colors.white,
+            // AppBar dihapus agar tidak menahan pewarnaan SystemUiOverlayStyle
         body: Obx(() {
           // Layar Kamera Aktif / Siap Scan
           // JIKA TIDAK ADA HASIL (Layar Kamera Aktif / Siap Scan)
@@ -238,6 +255,8 @@ class ScannerView extends GetView<ScannerController> {
         }),
       ),
     );
+  }),
+  );
   }
 }
 

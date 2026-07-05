@@ -22,7 +22,7 @@ class NakesDetailPasienGativaController extends GetxController {
     if (data != null) {
       pasienData.value = data;
       _populateFields(data);
-      _fetchFreshData(data['id']);
+      _listenToPasienData(data['id']);
     } else {
       _populateFields({});
     }
@@ -47,40 +47,71 @@ class NakesDetailPasienGativaController extends GetxController {
     }
   }
 
-  Future<void> _fetchFreshData(String? id) async {
+  bool _isFirstLoad = true;
+
+  void _listenToPasienData(String? id) {
     if (id == null) return;
-    try {
-      final doc = await FirebaseFirestore.instance
-          .collection('mobile')
-          .doc('roles')
-          .collection('pasien')
-          .doc(id)
-          .get();
-          
+    FirebaseFirestore.instance
+        .collection('mobile')
+        .doc('roles')
+        .collection('pasien')
+        .doc(id)
+        .snapshots()
+        .listen((doc) {
       if (doc.exists) {
         final data = doc.data() as Map<String, dynamic>;
         data['id'] = doc.id;
-        pasienData.value = data;
+        pasienData.assignAll({
+          ...pasienData,
+          ...data,
+        });
         
-        nameController.text = data['name'] ?? data['nama'] ?? '';
-        tekananDarahController.text = data['tekanan_darah'] ?? '';
-        tinggiBadanController.text = (data['tinggi_badan'] ?? '').toString();
-        beratBadanController.text = (data['berat_badan'] ?? '').toString();
-        kondisiKesehatanController.text = data['kondisi_kesehatan'] ?? data['kondisi'] ?? '';
-        usiaController.text = (data['age'] ?? data['usia'] ?? '').toString();
-        
-        dynamic rawCatatan = data['catatan_nakes'];
-        if (rawCatatan is List) {
-          catatanList.value = List<String>.from(rawCatatan);
-        } else if (rawCatatan is String && rawCatatan.isNotEmpty) {
-          catatanList.value = [rawCatatan];
-        } else {
-          catatanList.clear();
+        if (_isFirstLoad) {
+          nameController.text = data['name'] ?? data['nama'] ?? '';
+          tekananDarahController.text = data['tekanan_darah'] ?? '';
+          tinggiBadanController.text = (data['tinggi_badan'] ?? '').toString();
+          beratBadanController.text = (data['berat_badan'] ?? '').toString();
+          kondisiKesehatanController.text = data['kondisi_kesehatan'] ?? data['kondisi'] ?? '';
+          usiaController.text = (data['age'] ?? data['usia'] ?? '').toString();
+          
+          dynamic rawCatatan = data['catatan_nakes'];
+          if (rawCatatan is List) {
+            catatanList.value = List<String>.from(rawCatatan);
+          } else if (rawCatatan is String && rawCatatan.isNotEmpty) {
+            catatanList.value = [rawCatatan];
+          } else {
+            catatanList.clear();
+          }
+          _isFirstLoad = false;
         }
       }
-    } catch (e) {
-      // Ignore error, fallback to arguments data
-    }
+    }, onError: (e) {
+      // Ignore error
+    });
+
+    // Calculate daily total from subcollection 'label gizi makanan'
+    FirebaseFirestore.instance
+        .collection('mobile')
+        .doc('roles')
+        .collection('pasien')
+        .doc(id)
+        .collection('label gizi makanan')
+        .snapshots()
+        .listen((snapshot) {
+      double dailyTotal = 0.0;
+      final now = DateTime.now();
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        DateTime? docDate = (data['created_at'] as Timestamp?)?.toDate() ?? (data['timestamp'] as Timestamp?)?.toDate();
+        if (docDate != null && docDate.year == now.year && docDate.month == now.month && docDate.day == now.day) {
+          dailyTotal += ((data['natrium'] ?? data['sodium'] ?? data['amount'] ?? 0) as num).toDouble();
+        }
+      }
+      pasienData['natrium'] = dailyTotal.toInt();
+      pasienData.refresh();
+    }, onError: (e) {
+      // Ignore error
+    });
   }
 
   @override

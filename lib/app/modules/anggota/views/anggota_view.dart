@@ -707,29 +707,13 @@ class AnggotaView extends StatelessWidget {
                           statusIcon: statusIcon,
                           sending: sending,
                           onRemind: () => controller.sendReminder(member),
+                          onDelete: member.name.endsWith('(Saya)') ? null : () => controller.deleteMember(member),
                         );
                       }
 
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Peringatan text has been removed based on user request
-                          if (pemilik.isNotEmpty) ...[
-                            const Padding(
-                              padding: EdgeInsets.only(bottom: 12.0, left: 4.0),
-                              child: Text("Pemilik Grup", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary)),
-                            ),
-                            ...pemilik.map((m) => buildCard(m)),
-                            const SizedBox(height: 16),
-                          ],
-                          if (anggota.isNotEmpty) ...[
-                            const Padding(
-                              padding: EdgeInsets.only(bottom: 12.0, left: 4.0),
-                              child: Text("Anggota", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary)),
-                            ),
-                            ...anggota.map((m) => buildCard(m)),
-                          ],
-                        ]
+                        children: members.map((m) => buildCard(m)).toList(),
                       );
                     }),
                   ],
@@ -818,6 +802,7 @@ class AnimatedAnggotaCard extends StatefulWidget {
   final IconData statusIcon;
   final bool sending;
   final VoidCallback onRemind;
+  final VoidCallback? onDelete;
 
   const AnimatedAnggotaCard({
     super.key,
@@ -827,6 +812,7 @@ class AnimatedAnggotaCard extends StatefulWidget {
     required this.statusIcon,
     required this.sending,
     required this.onRemind,
+    this.onDelete,
   });
 
   @override
@@ -851,6 +837,15 @@ class _AnimatedAnggotaCardState extends State<AnimatedAnggotaCard>
       vsync: this,
       duration: Duration(milliseconds: durationMs),
     )..repeat();
+
+    // Otomatis bergetar jika ini adalah card milik sendiri dan statusnya waspada/bahaya
+    bool isMe = widget.member.name.contains('(Saya)');
+    if (isMe && widget.ratio >= 0.6) {
+      HapticFeedback.heavyImpact();
+      Future.delayed(const Duration(milliseconds: 500), () {
+        HapticFeedback.heavyImpact();
+      });
+    }
   }
 
   @override
@@ -864,6 +859,7 @@ class _AnimatedAnggotaCardState extends State<AnimatedAnggotaCard>
     bool isDanger = widget.ratio >= 0.9;
     bool isWarning = widget.ratio >= 0.6 && widget.ratio < 0.9;
     bool isSafe = widget.ratio < 0.6;
+    bool isMe = widget.member.name.contains('(Saya)');
 
     Widget remindButton = Material(
       color: Colors.transparent,
@@ -962,50 +958,70 @@ class _AnimatedAnggotaCardState extends State<AnimatedAnggotaCard>
             ), // Warna gelap ala monitor rumah sakit
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: widget.statusColor.withOpacity(isSafe ? 0.3 : 0.8),
+              color: widget.statusColor.withOpacity(0.3),
               width: 1.5,
             ),
             boxShadow: [
-              if (!isSafe)
-                BoxShadow(
-                  color: widget.statusColor.withOpacity(glowOpacity),
-                  blurRadius: 15,
-                  spreadRadius: 2,
-                ),
+              // Cahaya neon memancar dari belakang kalau waspada/bahaya
+              BoxShadow(
+                color: widget.statusColor.withOpacity(glowOpacity),
+                blurRadius: isDanger ? 30 : 20,
+                spreadRadius: isDanger ? 5 : 2,
+              ),
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(
-              18,
-            ), // Disesuaikan sedikit lebih kecil dari border luar
+            borderRadius: BorderRadius.circular(18),
             child: Stack(
               children: [
-                // 1. Main Content Card (Lapis Paling Bawah)
+                // 1. Konten Utama Card
                 Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(20),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(12),
+                            width: 50,
+                            height: 50,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.1),
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: widget.statusColor.withOpacity(0.5),
-                                width: 1.5,
+                                color: widget.statusColor,
+                                width: 2,
                               ),
                             ),
-                            child: Icon(
-                              Icons.person,
-                              color: Colors.white,
-                              size: 24,
+                            child: CircleAvatar(
+                              backgroundColor: Colors.transparent,
+                              child: widget.member.avatarUrl.length == 1
+                                  ? Text(
+                                      widget.member.avatarUrl,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 20,
+                                      ),
+                                    )
+                                  : ClipOval(
+                                      child: Image.network(
+                                        widget.member.avatarUrl,
+                                        width: 50,
+                                        height: 50,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (
+                                          context,
+                                          error,
+                                          stackTrace,
+                                        ) => const Icon(
+                                          Icons.person,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
                             ),
                           ),
-                          const SizedBox(width: 14),
-
-                          // Name & role
+                          const SizedBox(width: 16),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1013,39 +1029,29 @@ class _AnimatedAnggotaCardState extends State<AnimatedAnggotaCard>
                                 Text(
                                   widget.member.name,
                                   style: const TextStyle(
+                                    fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 16,
                                     color: Colors.white,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Peran: ${widget.member.role}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey,
                                   ),
                                 ),
                               ],
                             ),
                           ),
-
-                          // Consumed / Limit stats
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
                                 '${widget.member.consumedSodium.toInt()} mg',
                                 style: TextStyle(
+                                  fontSize: 20,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 18,
                                   color: widget.statusColor,
                                 ),
                               ),
                               Text(
                                 '/ ${widget.member.dailyLimit.toInt()} mg',
                                 style: const TextStyle(
-                                  fontSize: 11,
+                                  fontSize: 12,
                                   color: Colors.grey,
                                 ),
                               ),
@@ -1053,21 +1059,19 @@ class _AnimatedAnggotaCardState extends State<AnimatedAnggotaCard>
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-
-                      // Linear progress indicator
+                      const SizedBox(height: 20),
                       Row(
                         children: [
                           Expanded(
                             child: ClipRRect(
-                              borderRadius: BorderRadius.circular(6),
+                              borderRadius: BorderRadius.circular(10),
                               child: LinearProgressIndicator(
                                 value: widget.ratio,
-                                minHeight: 8,
-                                backgroundColor: Colors.white.withOpacity(0.1),
+                                backgroundColor: Colors.grey[800],
                                 valueColor: AlwaysStoppedAnimation<Color>(
                                   widget.statusColor,
                                 ),
+                                minHeight: 8,
                               ),
                             ),
                           ),
@@ -1075,20 +1079,16 @@ class _AnimatedAnggotaCardState extends State<AnimatedAnggotaCard>
                           Text(
                             '${(widget.ratio * 100).toInt()}%',
                             style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
                               color: widget.statusColor,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
-
-                      // Notification alert sender trigger
+                      const SizedBox(height: 16),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // Usage Warning Indicator
                           Row(
                             children: [
                               Icon(
@@ -1096,27 +1096,18 @@ class _AnimatedAnggotaCardState extends State<AnimatedAnggotaCard>
                                 color: widget.statusColor,
                                 size: 16,
                               ),
-                              const SizedBox(width: 6),
+                              const SizedBox(width: 8),
                               Text(
                                 'Status: ${widget.member.statusText}',
                                 style: TextStyle(
-                                  fontSize: 11,
                                   color: widget.statusColor,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
                                 ),
                               ),
                             ],
                           ),
-
-                          // Action button to remind
-                          if (!isSafe)
-                            // Jika bahaya, sembunyikan secara visual di layer ini (hanya untuk mempertahankan space/layout)
-                            Opacity(
-                              opacity: isDanger ? 0.0 : 1.0,
-                              child: remindButton,
-                            )
-                          else
-                            const SizedBox.shrink(),
+                          if (isWarning && !isMe) remindButton,
                         ],
                       ),
                     ],
@@ -1155,7 +1146,7 @@ class _AnimatedAnggotaCardState extends State<AnimatedAnggotaCard>
                               color: Colors.white.withOpacity(0.9), // Icon Solid Putih di tengah kabut merah
                             ),
                             const SizedBox(height: 12),
-                            remindButton,
+                            if (!isMe) remindButton,
                           ],
                         ),
                       ),
@@ -1180,7 +1171,7 @@ class _AnimatedAnggotaCardState extends State<AnimatedAnggotaCard>
                 ),
 
                 // 5. Tombol INGATKAN! Muncul di atas segalanya saat Bahaya
-                if (isDanger)
+                if (isDanger && !isMe)
                   Positioned(bottom: 16, right: 16, child: remindButton),
               ],
             ),

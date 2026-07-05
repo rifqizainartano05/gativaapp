@@ -93,7 +93,7 @@ class LoginController extends GetxController {
             final pasienDoc = await authService.getUserReference(user.uid).get();
             final data = pasienDoc.data() as Map<String, dynamic>?;
             if (data != null && data['nakesUid'] == null) {
-              Get.offAllNamed(Routes.SCAN_DOKTER_AKSES);
+              Get.offAllNamed(Routes.SCAN_TENAGA_KESEHATAN_AKSES);
             } else {
               Get.offAllNamed(Routes.MAIN_NAVIGATION);
             }
@@ -310,3 +310,4 @@ class LoginController extends GetxController {
     Get.toNamed(Routes.REGISTER);
   }
 }
+

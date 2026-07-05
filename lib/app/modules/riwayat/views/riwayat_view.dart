@@ -45,8 +45,27 @@ class RiwayatView extends StatelessWidget {
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.light,
       ),
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF4F6F8),
+      child: Obx(() {
+        bool isFromMission = Get.arguments is Map && Get.arguments['isFromMission'] == true;
+        bool missionCompleted = controller.isMissionCompleted.value; // Unconditionally read to avoid GetX error
+        bool canGoBack = !isFromMission || missionCompleted;
+
+        return PopScope(
+          canPop: canGoBack,
+          onPopInvoked: (didPop) {
+            if (didPop) return;
+            if (!canGoBack) {
+              Get.snackbar(
+                'Perhatian',
+                'Harap tunggu data termuat untuk menyelesaikan misi.',
+                backgroundColor: Colors.orange,
+                colorText: Colors.white,
+                snackPosition: SnackPosition.BOTTOM,
+              );
+            }
+          },
+          child: Scaffold(
+            backgroundColor: const Color(0xFFF4F6F8),
         body: Column(
           children: [
             // Custom Header
@@ -86,7 +105,19 @@ class RiwayatView extends StatelessWidget {
                   Row(
                     children: [
                       InkWell(
-                        onTap: () => Get.back(),
+                        onTap: () {
+                          if (!canGoBack) {
+                            Get.snackbar(
+                              'Perhatian',
+                              'Harap tunggu data termuat untuk menyelesaikan misi.',
+                              backgroundColor: Colors.orange,
+                              colorText: Colors.white,
+                              snackPosition: SnackPosition.BOTTOM,
+                            );
+                          } else {
+                            Get.back();
+                          }
+                        },
                         child: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
@@ -469,6 +500,8 @@ class RiwayatView extends StatelessWidget {
         ),
       ),
     );
+  }),
+  );
   }
 
   // Removed manual _buildChartBar

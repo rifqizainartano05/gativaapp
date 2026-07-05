@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../services/auth_service.dart';
+import '../../../services/notification_service.dart';
 
 class NotifikasiModel {
   final String id;
@@ -47,6 +48,24 @@ class NotifikasiController extends GetxController {
           .orderBy('timestamp', descending: true)
           .snapshots()
           .listen((snapshot) {
+            
+        for (var change in snapshot.docChanges) {
+          if (change.type == DocumentChangeType.added) {
+            final data = change.doc.data();
+            if (data != null) {
+              final timestamp = (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
+              // Only notify if it was created in the last 15 seconds to avoid spam on initial load
+              if (DateTime.now().difference(timestamp).inSeconds < 15 && (data['isRead'] != true)) {
+                NotificationService.showNotification(
+                  id: change.doc.id.hashCode,
+                  title: data['title'] ?? 'Notifikasi',
+                  body: data['message'] ?? '',
+                );
+              }
+            }
+          }
+        }
+        
         _userNotifs = snapshot.docs.map((doc) {
           final data = doc.data();
           return NotifikasiModel(

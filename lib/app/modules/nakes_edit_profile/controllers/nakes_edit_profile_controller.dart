@@ -60,7 +60,7 @@ class NakesEditProfileController extends GetxController {
         tensiController.text = data['tensi'] ?? '';
         beratBadanController.text = (data['beratBadan'] ?? '').toString();
         tinggiBadanController.text = (data['tinggiBadan'] ?? '').toString();
-        photoBase64.value = data['photoBase64'] ?? data['strImageBase64'] ?? '';
+        photoBase64.value = data['photo64'] ?? '';
         universitasController.text = data['universitas'] ?? '';
         mulaiPraktikController.text = data['mulai_praktik'] ?? '';
         jadwalOnlineController.text = data['jadwal_online'] ?? '';
@@ -124,7 +124,7 @@ class NakesEditProfileController extends GetxController {
         await Get.find<AuthService>().getUserReference(user.uid).update({
           'name': nameController.text.trim(),
           'age': age,
-          'photoBase64': photoBase64.value,
+          'photo64': photoBase64.value,
           'universitas': universitasController.text.trim(),
           'mulai_praktik': mulaiPraktikController.text.trim(),
           'jadwal_online': jadwalOnlineController.text.trim(),

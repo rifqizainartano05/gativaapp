@@ -126,35 +126,36 @@ class FaqController extends GetxController {
                               elevation: 0,
                             ),
                             onPressed: () async {
-                              try {
-                                User? user = FirebaseAuth.instance.currentUser;
-                                if (user != null) {
-                                  // Delete user data in firestore
-                                  await Get.find<AuthService>()
-                                      .getUserReference(user.uid)
-                                      .delete();
-                                  // Delete the auth user
-                                  await user.delete();
+                                try {
+                                  User? user = FirebaseAuth.instance.currentUser;
+                                  if (user != null) {
+                                    // Delete user data in firestore
+                                    await Get.find<AuthService>()
+                                        .getUserReference(user.uid)
+                                        .delete();
+                                    // Delete the auth user
+                                    await user.delete();
+                                    await FirebaseAuth.instance.signOut();
+                                    Get.offAllNamed(Routes.LOGIN);
+                                    Get.snackbar(
+                                      "Berhasil",
+                                      "Akun Anda telah dihapus secara permanen.",
+                                      backgroundColor: Colors.green.withOpacity(
+                                        0.1,
+                                      ),
+                                      colorText: Colors.green,
+                                    );
+                                  }
+                                } catch (e) {
+                                  await FirebaseAuth.instance.signOut();
                                   Get.offAllNamed(Routes.LOGIN);
                                   Get.snackbar(
-                                    "Berhasil",
-                                    "Akun Anda telah dihapus secara permanen.",
-                                    backgroundColor: Colors.green.withOpacity(
-                                      0.1,
-                                    ),
-                                    colorText: Colors.green,
+                                    "Info",
+                                    "Sesi login telah diakhiri. Silakan login kembali untuk melanjutkan penghapusan akun.",
+                                    backgroundColor: Colors.blue.withOpacity(0.1),
+                                    colorText: Colors.blue,
                                   );
                                 }
-                              } catch (e) {
-                                await FirebaseAuth.instance.signOut();
-                                Get.offAllNamed(Routes.LOGIN);
-                                Get.snackbar(
-                                  "Berhasil",
-                                  "Data akun Anda telah dihapus. Sesi login telah diakhiri.",
-                                  backgroundColor: Colors.green.withOpacity(0.1),
-                                  colorText: Colors.green,
-                                );
-                              }
                             },
                             child: const Text(
                               "Hapus",

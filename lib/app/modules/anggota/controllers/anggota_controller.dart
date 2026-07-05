@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -79,62 +80,92 @@ class AnggotaController extends GetxController {
     super.onClose();
   }
 
-  void fetchAnggotaData() async {
+  StreamSubscription? _makananSub;
+  StreamSubscription? _anggotaSub;
+  StreamSubscription? _userSub;
+
+  double _myTodaySodium = 0.0;
+  double _myDailyLimit = 1500.0;
+  String _myName = "Pemilik";
+  List<AnggotaMember> _otherMembers = [];
+
+  void _updateMembersUI(String uid) {
+    List<AnggotaMember> members = [];
+    members.add(
+      AnggotaMember(
+        id: uid,
+        name: _myName + " (Saya)",
+        role: "Pemilik Grup",
+        consumedSodium: _myTodaySodium,
+        dailyLimit: _myDailyLimit,
+        avatarUrl: _myName.isNotEmpty ? _myName[0].toUpperCase() : "P",
+      )
+    );
+    members.addAll(_otherMembers);
+    AnggotaMembers.value = members;
+  }
+
+  void fetchAnggotaData() {
     User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      // Get current user's name for Nearby Display
-      var userDoc = await Get.find<AuthService>()
-          .getUserReference(user.uid)
-          .get();
-      if (userDoc.exists) {
-        currentUserName =
-            (userDoc.data() as Map<String, dynamic>?)?['name'] ?? "Anggota";
+    if (user == null) return;
+
+    final now = DateTime.now();
+    final startOfDay = DateTime(now.year, now.month, now.day);
+    final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59, 999);
+
+    // 1. Listen to user profile for dailyLimit and name
+    _userSub = Get.find<AuthService>()
+        .getUserReference(user.uid)
+        .snapshots()
+        .listen((doc) {
+      if (doc.exists) {
+        final data = doc.data() as Map<String, dynamic>;
+        _myName = data['name'] ?? user.displayName ?? "Pemilik";
+        _myDailyLimit = (data['dailyLimit'] ?? 1500).toDouble();
+        currentUserName = _myName;
+        _updateMembersUI(user.uid);
       }
+    });
 
-      Get.find<AuthService>()
-          .getUserReference(user.uid)
-          .collection('anggota')
-          .where('dataType', isEqualTo: 'Anggota')
-          .snapshots()
-          .listen((snapshot) async {
-            
-            // Get current user data to insert as Pemilik (Owner)
-            var userDoc = await Get.find<AuthService>().getUserReference(user.uid).get();
-            List<AnggotaMember> members = [];
-            
-            if (userDoc.exists) {
-              final userData = userDoc.data() as Map<String, dynamic>?;
-              if (userData != null) {
-                double consumed = (userData['natrium'] ?? userData['sodium'] ?? userData['totalNatrium'] ?? 0).toDouble();
-                double limit = (userData['dailyLimit'] ?? 2000).toDouble();
-                String name = userData['name'] ?? user.displayName ?? "Pemilik";
-                members.add(
-                  AnggotaMember(
-                    id: user.uid,
-                    name: name + " (Saya)",
-                    role: "Pemilik Grup",
-                    consumedSodium: consumed,
-                    dailyLimit: limit,
-                    avatarUrl: name.isNotEmpty ? name[0].toUpperCase() : "P",
-                  )
-                );
-              }
-            }
+    // 2. Listen to today's food logs for real-time sodium sum
+    _makananSub = Get.find<AuthService>()
+        .getUserReference(user.uid)
+        .collection('label gizi makanan')
+        .snapshots()
+        .listen((snapshot) {
+      double total = 0;
+      final now = DateTime.now();
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        DateTime? docDate = (data['created_at'] as Timestamp?)?.toDate() ?? (data['timestamp'] as Timestamp?)?.toDate();
+        if (docDate != null && docDate.year == now.year && docDate.month == now.month && docDate.day == now.day) {
+          total += (data['natrium'] ?? data['sodium'] ?? 0).toDouble();
+        }
+      }
+      _myTodaySodium = total;
+      _updateMembersUI(user.uid);
+    });
 
-            members.addAll(snapshot.docs.map((doc) {
-              final data = doc.data();
-              return AnggotaMember(
-                id: doc.id,
-                name: data['name'] ?? "Unknown",
-                role: data['role'] ?? "Member",
-                consumedSodium: (data['sodiumConsumed'] ?? 0).toDouble(),
-                dailyLimit: (data['limit'] ?? 2000).toDouble(),
-                avatarUrl: (data['name'] ?? "U")[0].toString().toUpperCase(),
-              );
-            }));
-            
-            AnggotaMembers.value = members;
-          });
+    // 3. Listen to other members in the group
+    _anggotaSub = Get.find<AuthService>()
+        .getUserReference(user.uid)
+        .collection('anggota')
+        .where('dataType', isEqualTo: 'Anggota')
+        .snapshots()
+        .listen((snapshot) {
+      _otherMembers = snapshot.docs.map((doc) {
+        final data = doc.data();
+        return AnggotaMember(
+          id: doc.id,
+          name: data['name'] ?? "Unknown",
+          role: data['role'] ?? "Member",
+          consumedSodium: (data['sodiumConsumed'] ?? 0).toDouble(),
+          dailyLimit: (data['limit'] ?? 2000).toDouble(),
+          avatarUrl: (data['name'] ?? "U")[0].toString().toUpperCase(),
+        );
+      }).toList();
+      _updateMembersUI(user.uid);
+    });
 
       // Dengarkan group_requests (pending requests)
       Get.find<AuthService>()
@@ -153,7 +184,6 @@ class AnggotaController extends GetxController {
               );
             }).toList();
           });
-    }
   }
 
   Future<bool> _requestPermissions() async {
@@ -515,5 +545,32 @@ class AnggotaController extends GetxController {
       colorText: const Color(0xFFFFFFFF),
       margin: const EdgeInsets.all(20),
     );
+  }
+
+  Future<void> deleteMember(AnggotaMember member) async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    try {
+      // Hapus dari sub-collection 'anggota' milik currentUser
+      await Get.find<AuthService>()
+          .getUserReference(user.uid)
+          .collection('anggota')
+          .doc(member.id)
+          .delete();
+
+      // Hapus currentUser dari sub-collection 'anggota' milik member
+      await Get.find<AuthService>()
+          .getUserReference(member.id)
+          .collection('anggota')
+          .doc(user.uid)
+          .delete();
+
+      Get.snackbar('Berhasil', '${member.name} telah dihapus dari grup.',
+          backgroundColor: Colors.green.shade100,
+          colorText: Colors.green.shade800);
+    } catch (e) {
+      Get.snackbar('Error', 'Gagal menghapus ${member.name}.');
+    }
   }
 }

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import '../controllers/scan_dokter_akses_controller.dart';
+import '../controllers/scan_tenaga_kesehatan_akses_controller.dart';
 
-class ScanDokterAksesView extends GetView<ScanDokterAksesController> {
-  const ScanDokterAksesView({super.key});
+class ScanTenagaKesehatanAksesView extends GetView<ScanTenagaKesehatanAksesController> {
+  const ScanTenagaKesehatanAksesView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +34,7 @@ class ScanDokterAksesView extends GetView<ScanDokterAksesController> {
                   onTap: controller.goToMain,
                 ),
                 const Text(
-                  "Akses Dokter",
+                  "Akses Tenaga Kesehatan",
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -227,3 +227,4 @@ class _ScannerOverlay extends StatelessWidget {
     );
   }
 }
+

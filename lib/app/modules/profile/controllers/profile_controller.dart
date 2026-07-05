@@ -42,11 +42,6 @@ class ProfileController extends GetxController {
         if (doc.exists) {
           final data = doc.data() as Map<String, dynamic>;
           name.value = data['name'] ?? data['nama'] ?? user.displayName ?? "Pengguna";
-          totalNatrium.value =
-              (data['natrium'] as num?)?.toInt() ??
-              (data['sodium'] as num?)?.toInt() ??
-              (data['totalNatrium'] as num?)?.toInt() ??
-              0;
           age.value = data['age'] ?? data['usia'] ?? 28;
           photoBase64.value = data['photoBase64'] ?? '';
           beratBadan.value = data['berat_badan']?.toString() ?? 'Belum ada';
@@ -71,9 +66,22 @@ class ProfileController extends GetxController {
         }
       });
 
-      // Data natrium sudah diambil dari userReference (koleksi pasien)
-      // Blok kode sebelumnya yang menjumlahkan dari 'label gizi makanan' dihapus
-      // sesuai permintaan agar membaca langsung dari data 'natrium' di sub collection pasien.
+      Get.find<AuthService>()
+          .getUserReference(user.uid)
+          .collection('label gizi makanan')
+          .snapshots()
+          .listen((snapshot) {
+        double dailyTotal = 0.0;
+        final now = DateTime.now();
+        for (var doc in snapshot.docs) {
+          final data = doc.data();
+          DateTime? docDate = (data['created_at'] as Timestamp?)?.toDate() ?? (data['timestamp'] as Timestamp?)?.toDate();
+          if (docDate != null && docDate.year == now.year && docDate.month == now.month && docDate.day == now.day) {
+            dailyTotal += ((data['natrium'] ?? data['sodium'] ?? data['amount'] ?? 0) as num).toDouble();
+          }
+        }
+        totalNatrium.value = dailyTotal.toInt();
+      });
     }
   }
 
@@ -84,6 +92,7 @@ class ProfileController extends GetxController {
         final data = doc.data();
         if (data != null) {
           nakesPhotoBase64.value = data['photoBase64'] ?? '';
+          nakesName.value = data['name'] ?? data['nama'] ?? nakesName.value;
         }
       }
     } catch (e) {
@@ -265,7 +274,7 @@ class ProfileController extends GetxController {
               ),
               const SizedBox(height: 8),
               const Text(
-                "Pilih rentang tanggal untuk laporan dokter Anda.",
+                "Pilih rentang tanggal untuk laporan tenaga kesehatan Anda.",
                 style: TextStyle(color: Colors.grey, fontSize: 13),
               ),
               const SizedBox(height: 24),
@@ -675,3 +684,4 @@ class ProfileController extends GetxController {
     );
   }
 }
+
