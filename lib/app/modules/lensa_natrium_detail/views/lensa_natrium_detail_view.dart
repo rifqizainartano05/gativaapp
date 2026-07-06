@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/lensa_natrium_detail_controller.dart';
-import '../../lensa_natrium/controllers/lensa_natrium_controller.dart' as lensa_natrium;
+import '../../lensa_natrium/controllers/lensa_natrium_controller.dart'
+    as lensa_natrium;
 
 class AppColors {
   static const primary = Color(0xFF2E7D32);
@@ -54,11 +55,15 @@ class LensaNatriumDetailView extends GetView<LensaNatriumDetailController> {
           onPressed: () {
             // Karena dari scanner, kita ingin kembali ke Lensa Natrium
             // dan bukan ke tampilan scanner
-            Get.offNamedUntil('/lensa-natrium', (route) => route.settings.name == '/main-navigation' || route.isFirst);
+            Get.offNamedUntil(
+              '/lensa-natrium',
+              (route) =>
+                  route.settings.name == '/main-navigation' || route.isFirst,
+            );
           },
         ),
         title: const Text(
-          'Detail Jajanan',
+          'Detail Lensa Natrium',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
         centerTitle: true,
@@ -94,47 +99,47 @@ class LensaNatriumDetailView extends GetView<LensaNatriumDetailController> {
                     ),
                     Column(
                       children: [
-                    Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 10,
-                            offset: const Offset(0, 5),
+                        Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Icon(
-                          Icons.fastfood_rounded,
-                          size: 50,
-                          color: statusColor,
+                          child: Center(
+                            child: Icon(
+                              Icons.fastfood_rounded,
+                              size: 50,
+                              color: statusColor,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      food['name'] ?? 'Unknown',
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      food['description'] ?? '',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white.withOpacity(0.8),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
+                        const SizedBox(height: 20),
+                        Text(
+                          food['name'] ?? 'Unknown',
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          food['description'] ?? '',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white.withOpacity(0.8),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
                       ],
                     ),
                   ],

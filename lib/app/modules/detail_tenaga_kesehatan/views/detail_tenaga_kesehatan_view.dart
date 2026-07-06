@@ -260,6 +260,69 @@ class DetailTenagaKesehatanView extends GetView<DetailTenagaKesehatanController>
                                   ),
                                 ],
 
+                                // Rating Box
+                                const SizedBox(height: 12),
+                                Obx(() {
+                                  final hasRated = controller.hasRated.value;
+                                  return Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(color: Colors.grey.shade200),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          hasRated ? "Rating Anda" : "Beri Rating Tenaga Kesehatan",
+                                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          hasRated ? "Terima kasih telah memberikan penilaian." : "Seberapa puas Anda dengan layanan ini?",
+                                          style: const TextStyle(fontSize: 12, color: Colors.black54),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: List.generate(5, (index) {
+                                            final currentRating = controller.rating.value;
+                                            return IconButton(
+                                              icon: Icon(
+                                                index < currentRating ? Icons.star_rounded : Icons.star_border_rounded,
+                                                color: Colors.amber,
+                                                size: 36,
+                                              ),
+                                              onPressed: hasRated ? null : () {
+                                                controller.rating.value = index + 1;
+                                              },
+                                            );
+                                          }),
+                                        ),
+                                        if (!hasRated) ...[
+                                          const SizedBox(height: 16),
+                                          ElevatedButton(
+                                            onPressed: () {
+                                              if (controller.rating.value > 0) {
+                                                controller.updateDoctorRating(data['id']?.toString(), controller.rating.value);
+                                              }
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: const Color(0xFF2E7D32),
+                                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                              minimumSize: const Size(double.infinity, 44),
+                                            ),
+                                            child: const Text("Kirim Rating", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  );
+                                }),
+                                const SizedBox(height: 16),
+
                                 ...data.entries.where((e) {
                                   final excludedKeys = ['photoBase64', 'strImageBase64', 'id', 'name', 'nama', 'username', 'role', 'universitas', 'lulusan', 'pengalaman', 'mulai_praktik', 'jadwal_online', 'detail_tenaga_kesehatan', 'strNumber', 'age', 'email', 'createdAt', 'created_at', 'kode_akses', 'status'];
                                   return !excludedKeys.contains(e.key) && e.value != null && e.value.toString().isNotEmpty;

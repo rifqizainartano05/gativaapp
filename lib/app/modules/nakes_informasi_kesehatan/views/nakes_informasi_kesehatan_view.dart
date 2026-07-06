@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../controllers/nakes_informasi_kesehatan_controller.dart';
 
 import 'package:flutter/services.dart';
+import '../../../widgets/custom_popup.dart';
 
 class NakesInformasiKesehatanView extends GetView<NakesInformasiKesehatanController> {
   const NakesInformasiKesehatanView({super.key});
@@ -160,17 +161,12 @@ class NakesInformasiKesehatanView extends GetView<NakesInformasiKesehatanControl
                                     IconButton(
                                       icon: const Icon(Icons.delete, color: Colors.red, size: 20),
                                       onPressed: () {
-                                        Get.defaultDialog(
+                                        CustomPopup.showConfirm(
                                           title: 'Hapus Data',
-                                          middleText: 'Yakin ingin menghapus informasi ini?',
-                                          textConfirm: 'Hapus',
-                                          confirmTextColor: Colors.white,
-                                          buttonColor: Colors.red,
+                                          message: 'Yakin ingin menghapus informasi ini?',
                                           onConfirm: () {
                                             controller.deleteInformasi(info.id);
-                                            Get.back();
                                           },
-                                          textCancel: 'Batal',
                                         );
                                       },
                                     ),
@@ -451,10 +447,9 @@ class NakesInformasiKesehatanView extends GetView<NakesInformasiKesehatanControl
                             }
                             Get.back();
                           } else {
-                            Get.snackbar(
+                            CustomPopup.showWarning(
                               'Peringatan',
                               'Tanggal dan alamat harus diisi',
-                              backgroundColor: Colors.white,
                             );
                           }
                         },

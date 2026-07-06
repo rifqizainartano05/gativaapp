@@ -93,30 +93,59 @@ class ScanBarcodeController extends GetxController {
           final inviteData = doc.data() as Map<String, dynamic>? ?? {};
           final String ownerName = inviteData['ownerName'] ?? "Pengguna";
 
-          // Fetch owner's actual sodium data
+          // Fetch owner's actual sodium data from 'pasien'
           double ownerSodium = 0;
           double ownerLimit = 2000;
-          final ownerDoc = await Get.find<AuthService>().getUserReference(ownerUid).get();
-          if (ownerDoc.exists) {
-            final data = ownerDoc.data() as Map<String, dynamic>?;
-            if (data != null) {
-              ownerSodium = (data['natrium'] ?? data['sodium'] ?? data['totalNatrium'] ?? 0).toDouble();
-              ownerLimit = (data['dailyLimit'] ?? 2000).toDouble();
+          
+          final ownerFoodDoc = await FirebaseFirestore.instance
+              .collection('mobile')
+              .doc('roles')
+              .collection('pasien')
+              .doc(ownerUid)
+              .collection('label gizi makanan')
+              .get();
+              
+          if (ownerFoodDoc.docs.isNotEmpty) {
+            double total = 0;
+            final now = DateTime.now();
+            for (var fDoc in ownerFoodDoc.docs) {
+              final fData = fDoc.data();
+              DateTime? docDate = (fData['created_at'] as Timestamp?)?.toDate() ?? (fData['timestamp'] as Timestamp?)?.toDate();
+              if (docDate != null && docDate.year == now.year && docDate.month == now.month && docDate.day == now.day) {
+                total += ((fData['natrium'] ?? fData['sodium'] ?? fData['amount'] ?? 0) as num).toDouble();
+              }
             }
+            ownerSodium = total;
           }
+          final ownerDoc = await Get.find<AuthService>().getUserReference(ownerUid).get();
+          if (ownerDoc.exists) ownerLimit = ((ownerDoc.data() as Map<String, dynamic>?)?['dailyLimit'] ?? 2000).toDouble();
 
-          // Fetch scanner's (current user) actual sodium data
+          // Fetch scanner's actual sodium data from 'pasien'
           double scannerSodium = 0;
           double scannerLimit = 2000;
           if (currentUser != null) {
-            final scannerDoc = await Get.find<AuthService>().getUserReference(currentUser.uid).get();
-            if (scannerDoc.exists) {
-              final data = scannerDoc.data() as Map<String, dynamic>?;
-              if (data != null) {
-                scannerSodium = (data['natrium'] ?? data['sodium'] ?? data['totalNatrium'] ?? 0).toDouble();
-                scannerLimit = (data['dailyLimit'] ?? 2000).toDouble();
+            final scannerFoodDoc = await FirebaseFirestore.instance
+                .collection('mobile')
+                .doc('roles')
+                .collection('pasien')
+                .doc(currentUser.uid)
+                .collection('label gizi makanan')
+                .get();
+                
+            if (scannerFoodDoc.docs.isNotEmpty) {
+              double total = 0;
+              final now = DateTime.now();
+              for (var fDoc in scannerFoodDoc.docs) {
+                final fData = fDoc.data();
+                DateTime? docDate = (fData['created_at'] as Timestamp?)?.toDate() ?? (fData['timestamp'] as Timestamp?)?.toDate();
+                if (docDate != null && docDate.year == now.year && docDate.month == now.month && docDate.day == now.day) {
+                  total += ((fData['natrium'] ?? fData['sodium'] ?? fData['amount'] ?? 0) as num).toDouble();
+                }
               }
+              scannerSodium = total;
             }
+            final scannerDoc = await Get.find<AuthService>().getUserReference(currentUser.uid).get();
+            if (scannerDoc.exists) scannerLimit = ((scannerDoc.data() as Map<String, dynamic>?)?['dailyLimit'] ?? 2000).toDouble();
           }
 
           _showConfirmationDialog(ownerName, ownerUid, token, ownerSodium, ownerLimit, scannerSodium, scannerLimit);
@@ -143,196 +172,203 @@ class ScanBarcodeController extends GetxController {
   ) {
     Get.dialog(
       Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        clipBehavior: Clip.antiAlias,
-        elevation: 10,
-        child: Stack(
-          children: [
-            // Watermark Icon
-            Positioned(
-              right: -40,
-              bottom: -40,
-              child: Icon(
-                Icons.verified_user_rounded,
-                size: 180,
-                color: Colors.green.withOpacity(0.04),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(32),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.green.withOpacity(0.15),
+                blurRadius: 40,
+                offset: const Offset(0, 12),
+              )
+            ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            children: [
+              // Premium Background Blobs
+              Positioned(
+                top: -60,
+                right: -40,
+                child: Container(
+                  width: 200,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [Colors.green.withOpacity(0.15), Colors.transparent],
+                    ),
+                  ),
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.green.shade100, Colors.green.shade50],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
+              // Rotated Watermark Icon
+              Positioned(
+                left: -30,
+                bottom: -40,
+                child: Transform.rotate(
+                  angle: -0.2,
+                  child: Icon(
+                    Icons.group_add_rounded,
+                    size: 200,
+                    color: Colors.green.withOpacity(0.04),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.teal.shade300, Colors.teal.shade500],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.teal.withOpacity(0.2),
+                            blurRadius: 16,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
                       ),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.green.withOpacity(0.1),
-                          blurRadius: 10,
-                          spreadRadius: 2,
-                        ),
-                      ],
+                      child: const Icon(
+                        Icons.group_add_rounded,
+                        color: Colors.white,
+                        size: 44,
+                      ),
                     ),
-                    child: Icon(
-                      Icons.group_add_rounded,
-                      color: Colors.green.shade700,
-                      size: 44,
+                    const SizedBox(height: 24),
+                    const Text(
+                      "Undangan Ditemukan",
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: Colors.black87),
+                      textAlign: TextAlign.center,
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    "Undangan Grup Ditemukan",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, letterSpacing: -0.5),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    "Anda diundang oleh $ownerName untuk bergabung ke grup pantauan natriumnya.",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 13,
-                      height: 1.5,
+                    const SizedBox(height: 12),
+                    Text(
+                      "Anda diundang oleh $ownerName untuk bergabung ke grup pantauan natriumnya.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.grey.shade600, fontSize: 14, height: 1.5),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  // Data Box Premium
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                      border: Border.all(color: Colors.grey.shade100),
+                    const SizedBox(height: 24),
+                    // Data Box Premium
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.03),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                        border: Border.all(color: Colors.grey.shade100),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(10)),
+                                child: Icon(Icons.person_outline_rounded, size: 18, color: Colors.blue.shade700),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(child: Text(ownerName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600))),
+                              Text("${ownerLimit.toInt()} mg", style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.blue)),
+                            ],
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            child: Divider(height: 1, color: Color(0xFFF0F0F0)),
+                          ),
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(10)),
+                                child: Icon(Icons.person_rounded, size: 18, color: Colors.green.shade700),
+                              ),
+                              const SizedBox(width: 12),
+                              const Expanded(child: Text("Batas Anda", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600))),
+                              Text("${scannerLimit.toInt()} mg", style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.green)),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(6)),
-                              child: Icon(Icons.person_outline_rounded, size: 16, color: Colors.blue.shade700),
+                    const SizedBox(height: 24),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade50.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.orange.shade100),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.info_outline_rounded, color: Colors.orange.shade700, size: 20),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              "Pemilik grup juga harus menerima permintaan Anda.",
+                              style: TextStyle(fontSize: 12, color: Colors.orange.shade900, height: 1.4),
                             ),
-                            const SizedBox(width: 10),
-                            Expanded(child: Text(ownerName, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600))),
-                            Text("${ownerLimit.toInt()} mg", style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.blue)),
-                          ],
-                        ),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 10),
-                          child: Divider(height: 1, color: Color(0xFFEEEEEE)),
-                        ),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(6)),
-                              child: Icon(Icons.person_rounded, size: 16, color: Colors.green.shade700),
-                            ),
-                            const SizedBox(width: 10),
-                            const Expanded(child: Text("Batas Anda", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600))),
-                            Text("${scannerLimit.toInt()} mg", style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.green)),
-                          ],
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.shade50,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.orange.shade200, width: 0.5),
-                    ),
-                    child: Row(
+                    const SizedBox(height: 32),
+                    Row(
                       children: [
-                        Icon(
-                          Icons.privacy_tip_rounded,
-                          color: Colors.orange.shade700,
-                          size: 20,
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () {
+                              Get.back();
+                              _resumeScanning();
+                            },
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            ),
+                            child: Text("Batal", style: TextStyle(color: Colors.grey.shade700, fontWeight: FontWeight.bold, fontSize: 16)),
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: Text(
-                            "Setelah Anda menyetujui, pemilik grup juga harus menerima permintaan Anda.",
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.orange.shade900,
-                              height: 1.4,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Get.back();
+                              _joinGroup(ownerUid, token);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF00796B),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              elevation: 2,
+                              shadowColor: Colors.teal.withOpacity(0.3),
                             ),
+                            child: const Text("Setujui", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 28),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {
-                            Get.back();
-                            _resumeScanning();
-                          },
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            side: BorderSide(color: Colors.grey.shade300),
-                          ),
-                          child: const Text(
-                            "Batal",
-                            style: TextStyle(
-                              color: Colors.black87,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Get.back();
-                            _joinGroup(ownerUid, token);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF2E7D32),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: const Text(
-                            "Setujui",
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       barrierDismissible: false,
@@ -374,17 +410,121 @@ class ScanBarcodeController extends GetxController {
           .doc(token)
           .delete();
 
-      Get.defaultDialog(
-        title: "Permintaan Terkirim",
-        middleText:
-            "Permintaan bergabung telah dikirim. Menunggu persetujuan pemilik grup.",
-        textConfirm: "OK",
-        confirmTextColor: Colors.white,
-        buttonColor: const Color(0xFF2E7D32),
-        onConfirm: () {
-          Get.back(); // Tutup dialog
-          Get.back(); // Tutup halaman scanner
-        },
+      Get.dialog(
+        Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(32),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.blue.withOpacity(0.15),
+                  blurRadius: 40,
+                  offset: const Offset(0, 12),
+                )
+              ],
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Stack(
+              children: [
+                // Premium Background Blobs
+                Positioned(
+                  top: -60,
+                  right: -40,
+                  child: Container(
+                    width: 200,
+                    height: 200,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [Colors.blue.withOpacity(0.12), Colors.transparent],
+                      ),
+                    ),
+                  ),
+                ),
+                // Rotated Watermark Icon
+                Positioned(
+                  left: -30,
+                  bottom: -40,
+                  child: Transform.rotate(
+                    angle: -0.2,
+                    child: Icon(
+                      Icons.send_rounded,
+                      size: 200,
+                      color: Colors.blue.withOpacity(0.04),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [Colors.blueGrey.shade300, Colors.blueGrey.shade500],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.blueGrey.withOpacity(0.2),
+                              blurRadius: 16,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.mark_email_read_rounded,
+                          color: Colors.white,
+                          size: 44,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      const Text(
+                        "Permintaan Terkirim",
+                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: Colors.black87),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        "Permintaan bergabung telah dikirim. Menunggu persetujuan pemilik grup.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.grey.shade600, fontSize: 14, height: 1.5),
+                      ),
+                      const SizedBox(height: 32),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Get.back(); // Tutup dialog
+                            Get.back(); // Tutup halaman scanner
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF455A64),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            elevation: 2,
+                            shadowColor: Colors.blueGrey.withOpacity(0.3),
+                          ),
+                          child: const Text("OK", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        barrierDismissible: false,
       );
     } catch (e) {
       Get.snackbar("Terjadi Kesalahan", "Gagal mengirim permintaan bergabung.");
@@ -393,16 +533,121 @@ class ScanBarcodeController extends GetxController {
   }
 
   void _showErrorDialog(String message) {
-    Get.defaultDialog(
-      title: "Peringatan",
-      middleText: message,
-      textConfirm: "Coba Lagi",
-      confirmTextColor: Colors.white,
-      buttonColor: Colors.red,
-      onConfirm: () {
-        Get.back();
-        _resumeScanning();
-      },
+    Get.dialog(
+      Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(32),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.red.withOpacity(0.15),
+                blurRadius: 40,
+                offset: const Offset(0, 12),
+              )
+            ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            children: [
+              // Premium Background Blobs
+              Positioned(
+                top: -60,
+                right: -40,
+                child: Container(
+                  width: 200,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [Colors.red.withOpacity(0.12), Colors.transparent],
+                    ),
+                  ),
+                ),
+              ),
+              // Rotated Watermark Icon
+              Positioned(
+                left: -30,
+                bottom: -40,
+                child: Transform.rotate(
+                  angle: -0.2,
+                  child: Icon(
+                    Icons.error_outline_rounded,
+                    size: 200,
+                    color: Colors.red.withOpacity(0.04),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.red.shade300, Colors.red.shade400],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.red.withOpacity(0.2),
+                            blurRadius: 16,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.warning_rounded,
+                        color: Colors.white,
+                        size: 44,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      "Peringatan",
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: Colors.black87),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      message,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.grey.shade600, fontSize: 14, height: 1.5),
+                    ),
+                    const SizedBox(height: 32),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Get.back();
+                          _resumeScanning();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFC62828),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          elevation: 2,
+                          shadowColor: Colors.red.withOpacity(0.2),
+                        ),
+                        child: const Text("Mengerti", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: false,
     );
   }
 

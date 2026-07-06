@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../routes/app_pages.dart';
 
 class OnboardingController extends GetxController {
@@ -31,6 +32,16 @@ class OnboardingController extends GetxController {
     currentPage.value = index;
   }
 
+  Future<void> _finishOnboarding() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('has_seen_onboarding', true);
+    } catch (e) {
+      debugPrint('Error saving onboarding state: $e');
+    }
+    Get.offAllNamed(Routes.LOGIN);
+  }
+
   void nextPage() {
     if (currentPage.value < onboardingPages.length - 1) {
       pageController.nextPage(
@@ -38,11 +49,11 @@ class OnboardingController extends GetxController {
         curve: Curves.easeIn,
       );
     } else {
-      Get.offAllNamed(Routes.LOGIN);
+      _finishOnboarding();
     }
   }
 
   void skip() {
-    Get.offAllNamed(Routes.LOGIN);
+    _finishOnboarding();
   }
 }

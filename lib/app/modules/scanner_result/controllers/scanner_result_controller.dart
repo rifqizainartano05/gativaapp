@@ -56,36 +56,12 @@ class ScannerResultController extends GetxController {
       
       await batch.commit();
       
-      Get.snackbar(
-        "Sukses",
-        "Data konsumsi natrium berhasil dicatat.",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: const Color(0xFF2E7D32).withOpacity(0.9),
-        colorText: Colors.white,
-      );
-      
-      if (Get.isRegistered<GamifikasiController>()) {
-        final gamifikasi = Get.find<GamifikasiController>();
-        int currentLevel = gamifikasi.currentActiveLevel.value;
-        // Daftar level yang diselesaikan dengan mencatat makanan / pemindaian
-        if ([1, 2, 3, 5, 6, 7, 9, 10, 11, 13].contains(currentLevel)) {
-          bool done = gamifikasi.completeMissionByLevel(currentLevel);
-          if (done) isMissionCompleted.value = true;
-        }
-      }
-      
-      if (isFromMission.value || isMissionCompleted.value) {
-        if (Get.isRegistered<MainNavigationController>()) {
-          Get.find<MainNavigationController>().changePage(1); // Index 1 is Gamifikasi
-        }
-        Get.until((route) => route.settings.name == Routes.MAIN_NAVIGATION);
-      } else {
-        Get.offNamed(Routes.LENSA_NATRIUM_DETAIL, arguments: {
-          'name': foodName.value,
-          'natrium': totalCalculatedSodium,
-          'type': 'Kemasan',
-        });
-      }
+      Get.offNamed(Routes.LENSA_NATRIUM_DETAIL, arguments: {
+        'name': foodName.value,
+        'natrium': totalCalculatedSodium,
+        'type': 'Kemasan',
+        'showSuccessPopup': true,
+      });
     } else {
       Get.snackbar(
         "Error",

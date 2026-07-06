@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
+import '../../../widgets/custom_popup.dart';
 
 class NakesPasienGativaController extends GetxController {
   final isLoading = true.obs;
@@ -35,7 +36,7 @@ class NakesPasienGativaController extends GetxController {
       }).toList();
       isLoading.value = false;
     }, onError: (e) {
-      Get.snackbar('Error', 'Gagal memuat data pasien: $e');
+      CustomPopup.showError('Error', 'Gagal memuat data pasien: $e');
       isLoading.value = false;
     });
   }

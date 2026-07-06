@@ -210,6 +210,7 @@ class GamifikasiView extends GetView<GamifikasiController> {
 
   Widget _buildMapPath(BuildContext context) {
     return Obx(() {
+      if (controller.missions.isEmpty) return const SizedBox(height: 100);
       final missions = controller.missions;
       return Container(
         width: double.infinity,
@@ -226,12 +227,91 @@ class GamifikasiView extends GetView<GamifikasiController> {
                 if (mission.isUnlocked) {
                   _showMissionDetails(context, mission);
                 } else {
-                  Get.snackbar(
-                    'Terkunci',
-                    'Selesaikan level sebelumnya untuk membuka level ini.',
-                    snackPosition: SnackPosition.BOTTOM,
-                    backgroundColor: Colors.black87,
-                    colorText: Colors.white,
+                  Get.dialog(
+                    Dialog(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                      backgroundColor: Colors.white,
+                      elevation: 10,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: Stack(
+                          children: [
+                            // Watermark
+                            Positioned(
+                              right: -40,
+                              bottom: -20,
+                              child: Icon(
+                                Icons.lock_rounded,
+                                size: 200,
+                                color: Colors.grey.withOpacity(0.1),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: Colors.amber.withOpacity(0.15),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.lock_rounded,
+                                      color: Colors.amber,
+                                      size: 48,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  const Text(
+                                    "Level Terkunci 🔒",
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  const Text(
+                                    "Selesaikan misi di level sebelumnya untuk membuka akses ke level ini.",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.black54,
+                                      height: 1.5,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 24),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton(
+                                      onPressed: () => Get.back(),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.grey.shade800,
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(vertical: 14),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        elevation: 0,
+                                      ),
+                                      child: const Text(
+                                        "Mengerti",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   );
                 }
               },
@@ -250,15 +330,6 @@ class GamifikasiView extends GetView<GamifikasiController> {
                         color: isActive ? Colors.orange : Colors.transparent,
                         width: isActive ? 4 : 0,
                       ),
-                      boxShadow: isActive
-                          ? [
-                              BoxShadow(
-                                color: Colors.amber.withOpacity(0.5),
-                                blurRadius: 15,
-                                spreadRadius: 5,
-                              ),
-                            ]
-                          : null,
                     ),
                     child: Center(
                       child: mission.isCompleted
@@ -315,175 +386,246 @@ class GamifikasiView extends GetView<GamifikasiController> {
       Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         backgroundColor: Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.amber.withOpacity(0.2),
-                            shape: BoxShape.circle,
+        elevation: 10,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Stack(
+            children: [
+              // Icon Watermark di pojok kanan bawah
+              Positioned(
+                right: -40,
+                bottom: -20,
+                child: Icon(
+                  Icons.emoji_events_rounded,
+                  size: 200,
+                  color: const Color(0xFF2E7D32).withOpacity(0.05),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [Color(0xFFFBC02D), Color(0xFFF57F17)],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.star_rounded,
+                                    color: Colors.white,
+                                    size: 32,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        mission.title,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 18,
+                                          color: Color(0xFF2E7D32),
+                                        ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFF2E7D32).withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Text(
+                                          '+${mission.rewardPoints} Poin',
+                                          style: const TextStyle(
+                                            color: Color(0xFF2E7D32),
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          child: const Icon(
-                            Icons.star_rounded,
-                            color: Colors.amber,
-                            size: 32,
+                          IconButton(
+                            icon: const Icon(Icons.close_rounded, color: Colors.grey),
+                            onPressed: () => Get.back(),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      
+                      // Deskripsi Misi
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.8),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.grey.shade200),
+                        ),
+                        child: Obx(
+                          () => Text(
+                            mission.description.replaceAll(
+                              '{limit}',
+                              controller.dailyLimit.value.toString(),
+                            ),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.black87,
+                              height: 1.6,
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        Column(
+                      ),
+                      const SizedBox(height: 24),
+                      
+                      // Pertanyaan (Bila ada)
+                      if (mission.question != null && !mission.isCompleted) ...[
+                        Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            SizedBox(
-                              width: 130,
+                            const Icon(Icons.help_outline_rounded, color: Color(0xFF2E7D32), size: 22),
+                            const SizedBox(width: 8),
+                            Expanded(
                               child: Text(
-                                mission.title,
+                                mission.question!,
                                 style: const TextStyle(
+                                  fontSize: 14,
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+                                  color: Color(0xFF2E7D32),
                                 ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            Text(
-                              '+${mission.rewardPoints} Poin',
-                              style: const TextStyle(
-                                color: Color(0xFF2E7D32),
-                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.grey),
-                      onPressed: () => Get.back(),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Obx(
-                  () => Text(
-                    mission.description.replaceAll(
-                      '{limit}',
-                      controller.dailyLimit.value.toString(),
-                    ),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.black87,
-                      height: 1.5,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                if (mission.question != null && !mission.isCompleted) ...[
-                  Text(
-                    mission.question!,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: answerController,
-                    decoration: InputDecoration(
-                      hintText: "Tulis jawaban Anda...",
-                      filled: true,
-                      fillColor: Colors.grey.shade100,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                ],
-                Row(
-                  children: [
-                    if (!mission.isCompleted) ...[
-                      Expanded(
-                        child: OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: answerController,
+                          decoration: InputDecoration(
+                            hintText: "Tulis jawaban Anda di sini...",
+                            hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.grey.shade300),
                             ),
-                            side: const BorderSide(color: Colors.grey),
-                          ),
-                          onPressed: () => Get.back(),
-                          child: const Text(
-                            "Batal",
-                            style: TextStyle(
-                              color: Colors.black54,
-                              fontWeight: FontWeight.bold,
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.grey.shade300),
+                            ),
+                            focusedBorder: const OutlineInputBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(12)),
+                              borderSide: BorderSide(color: Color(0xFF2E7D32), width: 2),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
                             ),
                           ),
                         ),
+                        const SizedBox(height: 24),
+                      ],
+                      
+                      // Tombol Aksi
+                      Row(
+                        children: [
+                          if (!mission.isCompleted) ...[
+                            Expanded(
+                              child: OutlinedButton(
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  side: BorderSide(color: Colors.grey.shade300),
+                                ),
+                                onPressed: () => Get.back(),
+                                child: const Text(
+                                  "Batal",
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                          ],
+                          Expanded(
+                            flex: mission.isCompleted ? 1 : 2,
+                            child: ElevatedButton(
+                              onPressed: mission.isCompleted
+                                  ? null
+                                  : () {
+                                      if (mission.question != null && answerController.text.trim().isEmpty) {
+                                        Get.snackbar(
+                                          'Perhatian',
+                                          'Harap isi jawaban dari pertanyaan misi ini terlebih dahulu!',
+                                          snackPosition: SnackPosition.BOTTOM,
+                                          backgroundColor: Colors.orange,
+                                          colorText: Colors.white,
+                                        );
+                                        return;
+                                      }
+
+                                      Get.back(); // Tutup dialog soal
+
+                                      // Validasi menggunakan API Groq
+                                      controller.verifyMissionAnswer(mission, answerController.text);
+                                    },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF2E7D32),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: mission.isCompleted ? 0 : 4,
+                                shadowColor: const Color(0xFF2E7D32).withOpacity(0.4),
+                              ),
+                              child: Text(
+                                mission.isCompleted ? 'Misi Selesai 🎉' : 'Mulai Tugas',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 12),
                     ],
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: mission.isCompleted
-                            ? null
-                            : () {
-                                if (mission.question != null && answerController.text.trim().isEmpty) {
-                                  Get.snackbar(
-                                    'Perhatian',
-                                    'Harap isi jawaban dari pertanyaan misi ini terlebih dahulu!',
-                                    snackPosition: SnackPosition.BOTTOM,
-                                    backgroundColor: Colors.orange,
-                                    colorText: Colors.white,
-                                  );
-                                  return;
-                                }
-
-                                Get.back();
-
-                                controller.completeMission(mission.id);
-                              },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2E7D32),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 14,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text(
-                          mission.isCompleted ? 'Selesai' : 'Mulai Tugas',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

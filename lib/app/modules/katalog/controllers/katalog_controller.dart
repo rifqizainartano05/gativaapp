@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../services/auth_service.dart';
+import '../../../widgets/custom_popup.dart';
 
 class KatalogController extends GetxController {
   final RxList<Map<String, dynamic>> items = <Map<String, dynamic>>[].obs;
@@ -227,10 +228,9 @@ class KatalogController extends GetxController {
         });
       });
 
-      Get.snackbar(
-        'Berhasil', 
+      CustomPopup.showSuccess(
+        'Berhasil',
         'Data konsumsi natrium Anda berhasil dikurangi $hematNatrium mg!',
-        backgroundColor: Colors.white,
       );
     } catch (e) {
       Get.snackbar('Gagal', 'Terjadi kesalahan: $e');

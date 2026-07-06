@@ -4,11 +4,12 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:nearby_connections/nearby_connections.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 import 'dart:math';
 import '../../../services/auth_service.dart';
+import '../../../services/notification_service.dart';
+import '../../../widgets/custom_popup.dart';
 
 class AnggotaMember {
   final String id;
@@ -55,12 +56,7 @@ class AnggotaController extends GetxController {
   final RxList<AnggotaMember> AnggotaMembers = <AnggotaMember>[].obs;
   final RxList<GroupRequest> pendingRequests = <GroupRequest>[].obs;
   final RxMap<String, bool> isSendingReminder = <String, bool>{}.obs;
-  final RxList<Map<String, String>> discoveredDevices =
-      <Map<String, String>>[].obs;
-  final RxBool isScanningDevices = false.obs;
   final RxBool isCreatingInvite = false.obs;
-
-  final Strategy strategy = Strategy.P2P_STAR;
   static const MethodChannel _shareChannel = MethodChannel('gativa/share');
   static const String inviteBaseUrl = 'https://gativa.app/invite';
   static const String appDownloadUrl =
@@ -76,13 +72,20 @@ class AnggotaController extends GetxController {
 
   @override
   void onClose() {
-    Nearby().stopDiscovery();
+    _makananSub?.cancel();
+    _anggotaSub?.cancel();
+    _userSub?.cancel();
+    for (var sub in _memberFoodSubs.values) {
+      sub.cancel();
+    }
+    _memberFoodSubs.clear();
     super.onClose();
   }
 
   StreamSubscription? _makananSub;
   StreamSubscription? _anggotaSub;
   StreamSubscription? _userSub;
+  final Map<String, StreamSubscription> _memberFoodSubs = {};
 
   double _myTodaySodium = 0.0;
   double _myDailyLimit = 1500.0;
@@ -127,9 +130,12 @@ class AnggotaController extends GetxController {
       }
     });
 
-    // 2. Listen to today's food logs for real-time sodium sum
-    _makananSub = Get.find<AuthService>()
-        .getUserReference(user.uid)
+    // 2. Listen to today's food logs for real-time sodium sum from 'pasien'
+    _makananSub = FirebaseFirestore.instance
+        .collection('mobile')
+        .doc('roles')
+        .collection('pasien')
+        .doc(user.uid)
         .collection('label gizi makanan')
         .snapshots()
         .listen((snapshot) {
@@ -139,7 +145,7 @@ class AnggotaController extends GetxController {
         final data = doc.data();
         DateTime? docDate = (data['created_at'] as Timestamp?)?.toDate() ?? (data['timestamp'] as Timestamp?)?.toDate();
         if (docDate != null && docDate.year == now.year && docDate.month == now.month && docDate.day == now.day) {
-          total += (data['natrium'] ?? data['sodium'] ?? 0).toDouble();
+          total += ((data['natrium'] ?? data['sodium'] ?? data['amount'] ?? 0) as num).toDouble();
         }
       }
       _myTodaySodium = total;
@@ -155,11 +161,47 @@ class AnggotaController extends GetxController {
         .listen((snapshot) {
       _otherMembers = snapshot.docs.map((doc) {
         final data = doc.data();
+        
+        // Mulai listen ke data gizi aktual member di subcollection pasien
+        if (!_memberFoodSubs.containsKey(doc.id)) {
+          _memberFoodSubs[doc.id] = FirebaseFirestore.instance
+              .collection('mobile')
+              .doc('roles')
+              .collection('pasien')
+              .doc(doc.id)
+              .collection('label gizi makanan')
+              .snapshots()
+              .listen((foodSnap) {
+            double memberTotal = 0;
+            final n = DateTime.now();
+            for (var fDoc in foodSnap.docs) {
+              final fData = fDoc.data();
+              DateTime? dDate = (fData['created_at'] as Timestamp?)?.toDate() ?? (fData['timestamp'] as Timestamp?)?.toDate();
+              if (dDate != null && dDate.year == n.year && dDate.month == n.month && dDate.day == n.day) {
+                memberTotal += ((fData['natrium'] ?? fData['sodium'] ?? fData['amount'] ?? 0) as num).toDouble();
+              }
+            }
+            // Update nilai consumedSodium di list _otherMembers
+            int index = _otherMembers.indexWhere((m) => m.id == doc.id);
+            if (index != -1) {
+              _otherMembers[index] = AnggotaMember(
+                id: _otherMembers[index].id,
+                name: _otherMembers[index].name,
+                role: _otherMembers[index].role,
+                consumedSodium: memberTotal,
+                dailyLimit: _otherMembers[index].dailyLimit,
+                avatarUrl: _otherMembers[index].avatarUrl,
+              );
+              _updateMembersUI(user.uid);
+            }
+          });
+        }
+
         return AnggotaMember(
           id: doc.id,
           name: data['name'] ?? "Unknown",
           role: data['role'] ?? "Member",
-          consumedSodium: (data['sodiumConsumed'] ?? 0).toDouble(),
+          consumedSodium: (data['sodiumConsumed'] ?? 0).toDouble(), // Nilai sementara sebelum listener makanan terpanggil
           dailyLimit: (data['limit'] ?? 2000).toDouble(),
           avatarUrl: (data['name'] ?? "U")[0].toString().toUpperCase(),
         );
@@ -183,55 +225,7 @@ class AnggotaController extends GetxController {
                 role: data['role'] ?? 'Anggota Keluarga',
               );
             }).toList();
-          });
-  }
-
-  Future<bool> _requestPermissions() async {
-    Map<Permission, PermissionStatus> statuses = await [
-      Permission.location,
-      Permission.bluetooth,
-      Permission.bluetoothAdvertise,
-      Permission.bluetoothConnect,
-      Permission.bluetoothScan,
-      Permission.nearbyWifiDevices,
-    ].request();
-
-    return statuses.values.every((status) => status.isGranted);
-  }
-
-  void startDiscovery() async {
-    bool hasPermissions = await _requestPermissions();
-    if (!hasPermissions) {
-      Get.snackbar("Izin Ditolak", "Mohon izinkan lokasi dan bluetooth.");
-      return;
-    }
-
-    try {
-      discoveredDevices.clear();
-      isScanningDevices.value = true;
-
-      // Mulai discovery, radar akan terus berputar hingga dihentikan atau menampilkan list jika ada yang ditemukan
-      await Nearby().startDiscovery(
-        currentUserName,
-        strategy,
-        onEndpointFound: (id, name, serviceId) {
-          if (!discoveredDevices.any((d) => d['id'] == id)) {
-            discoveredDevices.add({"id": id, "name": name});
-          }
-        },
-        onEndpointLost: (id) {
-          discoveredDevices.removeWhere((d) => d['id'] == id);
-        },
-      );
-    } catch (e) {
-      isScanningDevices.value = false;
-      print("Discovery error: $e");
-    }
-  }
-
-  void stopDiscovery() {
-    isScanningDevices.value = false;
-    Nearby().stopDiscovery();
+    });
   }
 
   String _generateInviteToken() {
@@ -243,7 +237,7 @@ class AnggotaController extends GetxController {
   Future<String?> generateQRInvite() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      Get.snackbar(
+      CustomPopup.showWarning(
         "Belum Masuk",
         "Silakan masuk terlebih dahulu untuk membuat undangan.",
       );
@@ -286,158 +280,11 @@ class AnggotaController extends GetxController {
       final inviteData = "GATIVA_INVITE:${user.uid}:$token";
       return inviteData;
     } catch (e) {
-      Get.snackbar("Undangan Gagal", "Gagal membuat barcode undangan.");
+      CustomPopup.showError("Undangan Gagal", "Gagal membuat barcode undangan.");
       return null;
     } finally {
       isCreatingInvite.value = false;
     }
-  }
-
-  void requestConnection(String endpointId, String endpointName) {
-    Nearby().requestConnection(
-      currentUserName,
-      endpointId,
-      onConnectionInitiated: (id, info) {
-        // Harus disetujui manual (Hak Akses Privat)
-        Get.dialog(
-          Dialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-            ),
-            clipBehavior: Clip.antiAlias,
-            elevation: 10,
-            child: Stack(
-              children: [
-                // Watermark Icon
-                Positioned(
-                  right: -40,
-                  bottom: -40,
-                  child: Icon(
-                    Icons.security_rounded,
-                    size: 180,
-                    color: Colors.orange.withOpacity(0.05),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(18),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [Colors.orange.shade100, Colors.orange.shade50],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.orange.withOpacity(0.1),
-                              blurRadius: 10,
-                              spreadRadius: 2,
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          Icons.security_rounded,
-                          color: Colors.orange.shade700,
-                          size: 44,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      const Text(
-                        "Hak Akses Privat",
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, letterSpacing: -0.5),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        "$endpointName mencoba bergabung ke grup Anda. Dengan menyetujui, $endpointName dapat melihat data pantauan natrium harian Anda. Apakah Anda menyetujui?",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 13,
-                          height: 1.5,
-                        ),
-                      ),
-                      const SizedBox(height: 28),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () {
-                                Nearby().rejectConnection(id);
-                                Get.back();
-                              },
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                side: BorderSide(color: Colors.grey.shade300),
-                              ),
-                              child: const Text(
-                                "Tolak",
-                                style: TextStyle(
-                                  color: Colors.black87,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: () {
-                                Get.back();
-                                Nearby().acceptConnection(
-                                  id,
-                                  onPayLoadRecieved: (endid, payload) {},
-                                  onPayloadTransferUpdate:
-                                      (endid, payloadTransferUpdate) {},
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFE65100), // Orange Dark
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                elevation: 0,
-                              ),
-                              child: const Text(
-                                "Setujui",
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          barrierDismissible: false,
-        );
-      },
-      onConnectionResult: (id, status) {
-        if (status == Status.CONNECTED) {
-          Get.snackbar(
-            "Terhubung",
-            "Berhasil mengundang $endpointName ke grup Anda.",
-            backgroundColor: Colors.green.shade100,
-            colorText: Colors.green.shade800,
-          );
-        } else if (status == Status.REJECTED) {
-          Get.snackbar("Ditolak", "Koneksi ditolak.");
-        }
-      },
-      onDisconnected: (id) {},
-    );
   }
 
   Future<void> acceptRequest(GroupRequest request) async {
@@ -508,9 +355,9 @@ class AnggotaController extends GetxController {
             'joinedAt': FieldValue.serverTimestamp(),
           });
 
-      Get.snackbar('Berhasil', '${request.name} telah bergabung ke grup Anda.');
+      CustomPopup.showSuccess('Berhasil', '${request.name} telah bergabung ke grup Anda.');
     } catch (e) {
-      Get.snackbar('Error', 'Gagal menyetujui permintaan.');
+      CustomPopup.showError('Error', 'Gagal menyetujui permintaan.');
     }
   }
 
@@ -525,26 +372,46 @@ class AnggotaController extends GetxController {
           .doc(request.id)
           .update({'status': 'rejected'});
     } catch (e) {
-      Get.snackbar('Error', 'Gagal menolak permintaan.');
+      CustomPopup.showError('Error', 'Gagal menolak permintaan.');
     }
   }
 
   void sendReminder(AnggotaMember member) async {
     isSendingReminder[member.id] = true;
 
-    // Simulate network request
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      // Save notification to the member's notifikasi subcollection
+      await Get.find<AuthService>()
+          .getUserReference(member.id)
+          .collection('notifikasi')
+          .add({
+        'title': 'Pengingat dari ${_myName}',
+        'message': 'Halo ${member.name}, jangan lupa perhatikan batas konsumsi garam kamu hari ini!',
+        'timestamp': FieldValue.serverTimestamp(),
+        'isRead': false,
+        'type': 'pengingat',
+      });
 
-    isSendingReminder[member.id] = false;
+      isSendingReminder[member.id] = false;
 
-    Get.snackbar(
-      "Pengingat Terkirim",
-      "Notifikasi telah dikirimkan ke ${member.name} untuk menjaga pola makannya.",
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: const Color(0xFF2E7D32),
-      colorText: const Color(0xFFFFFFFF),
-      margin: const EdgeInsets.all(20),
-    );
+      // Bergetar dan notifikasi lokal "seperti gamifikasi" sebagai feedback sukses mengirim
+      NotificationService.showNotification(
+        id: member.id.hashCode,
+        title: "Pengingat Terkirim! 🔔",
+        body: "Notifikasi berhasil dikirim ke ${member.name}.",
+      );
+
+      CustomPopup.showSuccess(
+        "Pengingat Terkirim",
+        "Notifikasi telah dikirimkan ke ${member.name} untuk menjaga pola makannya.",
+      );
+    } catch (e) {
+      isSendingReminder[member.id] = false;
+      CustomPopup.showError(
+        "Gagal",
+        "Gagal mengirim pengingat ke ${member.name}.",
+      );
+    }
   }
 
   Future<void> deleteMember(AnggotaMember member) async {
@@ -566,11 +433,9 @@ class AnggotaController extends GetxController {
           .doc(user.uid)
           .delete();
 
-      Get.snackbar('Berhasil', '${member.name} telah dihapus dari grup.',
-          backgroundColor: Colors.green.shade100,
-          colorText: Colors.green.shade800);
+      CustomPopup.showSuccess('Berhasil', '${member.name} telah dihapus dari grup.');
     } catch (e) {
-      Get.snackbar('Error', 'Gagal menghapus ${member.name}.');
+      CustomPopup.showError('Error', 'Gagal menghapus ${member.name}.');
     }
   }
 }

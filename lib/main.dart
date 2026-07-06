@@ -18,9 +18,17 @@ void main() async {
       );
     }
     await NotificationService.init();
-    await Get.putAsync(() => AuthService().init());
   } catch (e) {
     debugPrint('Firebase gagal inisialisasi: $e');
+  }
+
+  // Daftarkan AuthService ke memori secara sinkron agar tidak ada error 'not found'
+  final authService = Get.put(AuthService());
+  // Inisialisasi AuthService secara terpisah (misal fetch role)
+  try {
+    await authService.init();
+  } catch (e) {
+    debugPrint('AuthService init error: $e');
   }
 
   SystemChrome.setSystemUIOverlayStyle(

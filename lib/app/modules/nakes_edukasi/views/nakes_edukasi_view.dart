@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../controllers/nakes_edukasi_controller.dart';
 
 import 'package:flutter/services.dart';
+import '../../../widgets/custom_popup.dart';
 
 class NakesEdukasiView extends GetView<NakesEdukasiController> {
   const NakesEdukasiView({super.key});
@@ -213,18 +214,12 @@ class NakesEdukasiView extends GetView<NakesEdukasiController> {
                           IconButton(
                             icon: Icon(Icons.delete, color: Colors.red.shade400, size: 20),
                             onPressed: () {
-                              Get.defaultDialog(
+                              CustomPopup.showConfirm(
                                 title: 'Hapus Data',
-                                middleText:
-                                    'Yakin ingin menghapus ${article.title}?',
-                                textConfirm: 'Hapus',
-                                confirmTextColor: Colors.white,
-                                buttonColor: Colors.red,
+                                message: 'Yakin ingin menghapus ${article.title}?',
                                 onConfirm: () {
                                   controller.deleteArticle(article.id);
-                                  Get.back();
                                 },
-                                textCancel: 'Batal',
                               );
                             },
                           ),
@@ -411,10 +406,9 @@ class NakesEdukasiView extends GetView<NakesEdukasiController> {
                             }
                             Get.back();
                           } else {
-                            Get.snackbar(
+                            CustomPopup.showWarning(
                               'Peringatan',
                               'Judul dan Kategori harus diisi',
-                              backgroundColor: Colors.white,
                             );
                           }
                         },

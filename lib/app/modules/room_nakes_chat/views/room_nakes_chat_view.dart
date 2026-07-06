@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../routes/app_pages.dart';
 import '../controllers/room_nakes_chat_controller.dart';
+import '../../../widgets/custom_popup.dart';
 
 class RoomNakesChatView extends GetView<RoomNakesChatController> {
   const RoomNakesChatView({super.key});
@@ -132,25 +133,17 @@ class RoomNakesChatView extends GetView<RoomNakesChatController> {
                     ),
                     Obx(() {
                       if (controller.selectedDoctor.value != null) {
-                        return PopupMenuButton<String>(
-                          icon: const Icon(Icons.more_vert, color: Colors.white),
-                          onSelected: (value) {
-                            if (value == 'clear') {
-                              controller.clearChatHistory();
-                            }
+                        return IconButton(
+                          icon: const Icon(Icons.delete_outline_rounded, color: Colors.white),
+                          onPressed: () {
+                            CustomPopup.showConfirm(
+                              title: 'Hapus Semua Chat?',
+                              message: 'Apakah Anda yakin ingin menghapus seluruh riwayat chat ini? Tindakan ini tidak dapat dibatalkan.',
+                              onConfirm: () {
+                                controller.clearChatHistory();
+                              },
+                            );
                           },
-                          itemBuilder: (context) => [
-                            PopupMenuItem(
-                              value: 'clear',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.delete_sweep_rounded, color: Colors.red.shade400, size: 20),
-                                  const SizedBox(width: 8),
-                                  const Text('Hapus Chat', style: TextStyle(color: Colors.red)),
-                                ],
-                              ),
-                            ),
-                          ],
                         );
                       }
                       return const SizedBox.shrink();
@@ -332,117 +325,12 @@ class _ChatBubble extends StatelessWidget {
   void _showDeleteDialog(BuildContext context, RoomNakesChatController controller) {
     if (id == null || id == 'system') return;
 
-    Get.dialog(
-      Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        backgroundColor: Colors.transparent,
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Stack(
-            children: [
-              Positioned(
-                right: -20,
-                bottom: -20,
-                child: Opacity(
-                  opacity: 0.04,
-                  child: Icon(
-                    Icons.delete_sweep_rounded,
-                    size: 120,
-                    color: Colors.red.shade900,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade50,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.delete_outline_rounded,
-                        color: Colors.red.shade600,
-                        size: 32,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      "Hapus Pesan?",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFF1E293B),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      "Apakah Anda yakin ingin menghapus pesan ini?",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 13, color: Colors.black54),
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              side: BorderSide(color: Colors.grey.shade300),
-                            ),
-                            onPressed: () => Get.back(),
-                            child: const Text(
-                              "Batal",
-                              style: TextStyle(
-                                color: Colors.black87,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red.shade600,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              elevation: 0,
-                            ),
-                            onPressed: () {
-                              Get.back();
-                              if (id != null) {
-                                controller.deleteSingleMessage(id!);
-                              }
-                            },
-                            child: const Text(
-                              "Hapus",
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+    CustomPopup.showConfirm(
+      title: 'Hapus Pesan?',
+      message: 'Apakah Anda yakin ingin menghapus pesan ini?',
+      onConfirm: () {
+        controller.deleteSingleMessage(id!);
+      },
     );
   }
 

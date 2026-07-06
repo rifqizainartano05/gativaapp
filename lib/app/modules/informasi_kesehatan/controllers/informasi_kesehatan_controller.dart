@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
+import '../../../widgets/custom_popup.dart';
 
 class InformasiKesehatanController extends GetxController {
   final isLoading = true.obs;
@@ -24,7 +25,7 @@ class InformasiKesehatanController extends GetxController {
       }).toList();
       isLoading.value = false;
     }, onError: (e) {
-      Get.snackbar('Error', 'Gagal memuat data informasi: $e');
+      CustomPopup.showError('Error', 'Gagal memuat data informasi: $e');
       isLoading.value = false;
     });
   }

@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../widgets/custom_popup.dart';
 import '../../../services/auth_service.dart';
 
 class NakesEditProfileController extends GetxController {
@@ -84,11 +85,9 @@ class NakesEditProfileController extends GetxController {
         photoBase64.value = base64String;
       }
     } catch (e) {
-      Get.snackbar(
+      CustomPopup.showError(
         'Kesalahan',
         'Gagal mengambil gambar',
-        backgroundColor: Colors.red.withOpacity(0.1),
-        colorText: Colors.red,
       );
     }
   }
@@ -96,22 +95,18 @@ class NakesEditProfileController extends GetxController {
   Future<void> updateProfile() async {
     if (nameController.text.trim().isEmpty ||
         ageController.text.trim().isEmpty) {
-      Get.snackbar(
+      CustomPopup.showWarning(
         'Input Kosong',
         'Harap isi semua kolom.',
-        backgroundColor: Colors.red.withOpacity(0.1),
-        colorText: Colors.red,
       );
       return;
     }
 
     int? age = int.tryParse(ageController.text);
     if (age == null || age < 5) {
-      Get.snackbar(
+      CustomPopup.showWarning(
         'Kesalahan',
         'Usia tidak valid (Minimal 5 tahun).',
-        backgroundColor: Colors.red.withOpacity(0.1),
-        colorText: Colors.red,
       );
       return;
     }
@@ -130,20 +125,18 @@ class NakesEditProfileController extends GetxController {
           'jadwal_online': jadwalOnlineController.text.trim(),
         });
 
-        Get.back();
-        Get.snackbar(
+        CustomPopup.showSuccess(
           'Berhasil',
           'Profil Anda telah diperbarui.',
-          backgroundColor: Colors.green.withOpacity(0.1),
-          colorText: Colors.green,
         );
+        Future.delayed(const Duration(milliseconds: 1500), () {
+          Get.back();
+        });
       }
     } catch (e) {
-      Get.snackbar(
+      CustomPopup.showError(
         'Gagal',
         'Terjadi kesalahan saat memperbarui profil.',
-        backgroundColor: Colors.red.withOpacity(0.1),
-        colorText: Colors.red,
       );
     } finally {
       isLoading.value = false;

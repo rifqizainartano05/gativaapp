@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../widgets/custom_popup.dart';
 
 class NakesDetailPasienGativaController extends GetxController {
   final pasienData = {}.obs;
@@ -129,7 +130,7 @@ class NakesDetailPasienGativaController extends GetxController {
   Future<void> saveChanges() async {
     final id = pasienData['id'];
     if (id == null) {
-      Get.snackbar('Error', 'ID Pasien tidak ditemukan');
+      CustomPopup.showError('Error', 'ID Pasien tidak ditemukan');
       return;
     }
 
@@ -169,8 +170,7 @@ class NakesDetailPasienGativaController extends GetxController {
       });
 
       if (updatedData.isEmpty) {
-        Get.snackbar('Info', 'Tidak ada perubahan data yang perlu disimpan',
-            backgroundColor: Colors.blue.withOpacity(0.1), colorText: Colors.blue);
+        CustomPopup.showWarning('Info', 'Tidak ada perubahan data yang perlu disimpan');
         isLoading.value = false;
         return;
       }
@@ -187,16 +187,12 @@ class NakesDetailPasienGativaController extends GetxController {
         ...updatedData,
       };
       
-      Get.snackbar('Sukses', 'Data pasien berhasil diperbarui', 
-          backgroundColor: Colors.green.withOpacity(0.1), colorText: Colors.green);
-      
-      // Navigate back automatically after a short delay so the user sees the snackbar
-      Future.delayed(const Duration(seconds: 1), () {
+      CustomPopup.showSuccess('Sukses', 'Data pasien berhasil diperbarui');
+      Future.delayed(const Duration(milliseconds: 1500), () {
         Get.back(result: true);
       });
     } catch (e) {
-      Get.snackbar('Error', 'Gagal memperbarui data: $e',
-          backgroundColor: Colors.red.withOpacity(0.1), colorText: Colors.red);
+      CustomPopup.showError('Error', 'Gagal memperbarui data: $e');
     } finally {
       isLoading.value = false;
     }

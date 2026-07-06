@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart'; // Ditambahkan untuk efek radar
 import 'package:qr_flutter/qr_flutter.dart';
 import '../controllers/anggota_controller.dart';
 
@@ -120,246 +119,7 @@ class AnggotaView extends StatelessWidget {
     );
   }
 
-  void _showInviteDialog(BuildContext context) {
-    final controller = Get.find<AnggotaController>();
 
-    // Otomatis mulai scan ketika pop-up terbuka
-    controller.startDiscovery();
-
-    showDialog(
-      context: context,
-      barrierDismissible: false, // Tidak bisa ditutup dengan mengetuk luar
-      builder: (context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          backgroundColor: Colors.white,
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Obx(() {
-              // STATE 1: SEDANG MENCARI (RADAR EFEK)
-              if (controller.isScanningDevices.value && controller.discoveredDevices.isEmpty) {
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const SizedBox(height: 20),
-                    const SpinKitRipple(color: AppColors.primary, size: 100),
-                    const SizedBox(height: 32),
-                    const Text(
-                      "Mencari Perangkat...",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      "Pastikan bluetooth dan wifi perangkat Anggota menyala dan berada dalam jarak dekat.",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                        height: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      child: TextButton(
-                        onPressed: () {
-                          controller.stopDiscovery();
-                          Get.back();
-                        },
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                        ),
-                        child: const Text(
-                          "BATALKAN",
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              }
-
-              // STATE 2: PERANGKAT DITEMUKAN
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        "Perangkat Ditemukan",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close, color: Colors.grey),
-                        onPressed: () {
-                          controller.stopDiscovery();
-                          Get.back();
-                        },
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  // List Perangkat
-                  ...controller.discoveredDevices
-                      .map(
-                        (device) => Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF8F9FA),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: AppColors.glassBorder),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue.withOpacity(0.1),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.smartphone_rounded,
-                                  color: Colors.blue,
-                                  size: 20,
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Text(
-                                  device['name'] ?? "Unknown",
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.textPrimary,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ),
-                              ElevatedButton.icon(
-                                onPressed: () {
-                                  controller.requestConnection(
-                                    device['id'] ?? '',
-                                    device['name'] ?? 'Unknown',
-                                  );
-                                  Get.back();
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primary,
-                                  elevation: 0,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 0,
-                                  ),
-                                  minimumSize: const Size(0, 36),
-                                ),
-                                icon: const Icon(
-                                  Icons.person_add_alt_1_rounded,
-                                  size: 14,
-                                  color: Colors.white,
-                                ),
-                                label: const Text(
-                                  "Undang",
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      )
-                      .toList(),
-
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      icon: controller.isCreatingInvite.value
-                          ? const SizedBox(
-                              width: 14,
-                              height: 14,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 1.8,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Icon(Icons.qr_code_2_rounded, size: 18),
-                      label: Text(
-                        controller.isCreatingInvite.value
-                            ? "Membuat Barcode..."
-                            : "Tampilkan Barcode Undangan",
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      onPressed: controller.isCreatingInvite.value
-                          ? null
-                          : () async {
-                              String? qrData = await controller
-                                  .generateQRInvite();
-                              if (qrData != null && context.mounted) {
-                                _showQRDialog(context, qrData);
-                              }
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: TextButton.icon(
-                      icon: const Icon(Icons.refresh_rounded, size: 18),
-                      label: const Text(
-                        "Pindai Ulang Perangkat",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      onPressed: () => controller.startDiscovery(),
-                      style: TextButton.styleFrom(
-                        foregroundColor: AppColors.primary,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            }),
-          ),
-        );
-      },
-    );
-  }
 
   void _showQRDialog(BuildContext context, String qrData) {
     showDialog(
@@ -368,8 +128,10 @@ class AnggotaView extends StatelessWidget {
         return Dialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
+            side: BorderSide(color: Colors.grey.shade200, width: 1),
           ),
           backgroundColor: Colors.white,
+          elevation: 0,
           child: Padding(
             padding: const EdgeInsets.all(24.0),
             child: Column(
@@ -604,73 +366,106 @@ class AnggotaView extends StatelessWidget {
                           ...controller.pendingRequests.map((req) {
                             return Container(
                               margin: const EdgeInsets.only(bottom: 12),
-                              padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: Colors.orange.shade50,
-                                borderRadius: BorderRadius.circular(16),
+                                gradient: LinearGradient(
+                                  colors: [Colors.blueGrey.shade50, Colors.white],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.blueGrey.withOpacity(0.06),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 8),
+                                  )
+                                ],
                                 border: Border.all(
-                                  color: Colors.orange.shade200,
+                                  color: Colors.blueGrey.shade100,
                                 ),
                               ),
-                              child: Row(
-                                children: [
-                                  CircleAvatar(
-                                    backgroundColor: Colors.orange.shade200,
-                                    child: const Icon(
-                                      Icons.person,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          req.name,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 14,
-                                          ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(20),
+                                child: Stack(
+                                  children: [
+                                    // Watermark Icon Premium
+                                    Positioned(
+                                      right: -15,
+                                      top: -15,
+                                      child: Transform.rotate(
+                                        angle: 0.1,
+                                        child: Icon(
+                                          Icons.group_add_rounded,
+                                          size: 110,
+                                          color: Colors.blueGrey.withOpacity(0.04),
                                         ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          "Meminta bergabung",
-                                          style: TextStyle(
-                                            color: Colors.grey.shade700,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Row(
-                                    children: [
-                                      IconButton(
-                                        onPressed: () =>
-                                            controller.rejectRequest(req),
-                                        icon: const Icon(
-                                          Icons.close,
-                                          color: Colors.red,
-                                        ),
-                                        tooltip: "Tolak",
                                       ),
-                                      IconButton(
-                                        onPressed: () =>
-                                            controller.acceptRequest(req),
-                                        icon: const Icon(
-                                          Icons.check,
-                                          color: Colors.green,
-                                        ),
-                                        tooltip: "Terima",
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(16),
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(10),
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                colors: [Colors.blueGrey.shade300, Colors.blueGrey.shade400],
+                                              ),
+                                              shape: BoxShape.circle,
+                                              boxShadow: [
+                                                BoxShadow(color: Colors.blueGrey.withOpacity(0.2), blurRadius: 8, offset: const Offset(0, 4))
+                                              ],
+                                            ),
+                                            child: const Icon(Icons.person_add_alt_1_rounded, color: Colors.white, size: 20),
+                                          ),
+                                          const SizedBox(width: 14),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  req.name,
+                                                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Colors.black87),
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  "Ingin bergabung ke grup",
+                                                  style: TextStyle(color: Colors.blueGrey.shade600, fontSize: 12, fontWeight: FontWeight.w500),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Row(
+                                            children: [
+                                              InkWell(
+                                                onTap: () => controller.rejectRequest(req),
+                                                borderRadius: BorderRadius.circular(12),
+                                                child: Container(
+                                                  padding: const EdgeInsets.all(8),
+                                                  decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(12)),
+                                                  child: Icon(Icons.close_rounded, color: Colors.red.shade600, size: 22),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              InkWell(
+                                                onTap: () => controller.acceptRequest(req),
+                                                borderRadius: BorderRadius.circular(12),
+                                                child: Container(
+                                                  padding: const EdgeInsets.all(8),
+                                                  decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(12)),
+                                                  child: Icon(Icons.check_rounded, color: Colors.green.shade700, size: 22),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
                                       ),
-                                    ],
-                                  ),
-                                ],
+                                    ),
+                                  ],
+                                ),
                               ),
                             );
-                          }),
+                          }).toList(),
                           const SizedBox(height: 20),
                         ],
                       );
@@ -678,6 +473,11 @@ class AnggotaView extends StatelessWidget {
 
                     // Members Cards
                     Obx(() {
+                      if (controller.AnggotaMembers.isEmpty) {
+                        return const Center(
+                          child: Text("Belum ada anggota", style: TextStyle(color: Colors.grey)),
+                        );
+                      }
                       final members = controller.AnggotaMembers;
                       final pemilik = members.where((m) => m.role.toLowerCase().contains('pemilik')).toList();
                       final anggota = members.where((m) => !m.role.toLowerCase().contains('pemilik')).toList();
@@ -1169,10 +969,6 @@ class _AnimatedAnggotaCardState extends State<AnimatedAnggotaCard>
                     ),
                   ),
                 ),
-
-                // 5. Tombol INGATKAN! Muncul di atas segalanya saat Bahaya
-                if (isDanger && !isMe)
-                  Positioned(bottom: 16, right: 16, child: remindButton),
               ],
             ),
           ),

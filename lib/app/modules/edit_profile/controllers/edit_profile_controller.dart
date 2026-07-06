@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../widgets/custom_popup.dart';
 
 class EditProfileController extends GetxController {
   final isFetching = false.obs;
@@ -48,7 +49,7 @@ class EditProfileController extends GetxController {
         }
       }
     } catch (e) {
-      Get.snackbar('Error', 'Gagal memuat profil', snackPosition: SnackPosition.BOTTOM);
+      CustomPopup.showError('Error', 'Gagal memuat profil');
     } finally {
       isFetching.value = false;
     }
@@ -69,7 +70,7 @@ class EditProfileController extends GetxController {
         photoBase64.value = base64Encode(bytes);
       }
     } catch (e) {
-      Get.snackbar('Error', 'Gagal mengambil gambar', snackPosition: SnackPosition.BOTTOM);
+      CustomPopup.showError('Error', 'Gagal mengambil gambar');
     }
   }
 
@@ -94,17 +95,16 @@ class EditProfileController extends GetxController {
             .doc(user.uid)
             .set(dataToUpdate, SetOptions(merge: true));
 
-        Get.back();
-        Get.snackbar(
+        CustomPopup.showSuccess(
           'Sukses',
           'Profil berhasil diperbarui',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green.shade600,
-          colorText: Colors.white,
         );
+        Future.delayed(const Duration(milliseconds: 1500), () {
+          Get.back();
+        });
       }
     } catch (e) {
-      Get.snackbar('Error', 'Gagal memperbarui profil', snackPosition: SnackPosition.BOTTOM);
+      CustomPopup.showError('Error', 'Gagal memperbarui profil');
     } finally {
       isLoading.value = false;
     }

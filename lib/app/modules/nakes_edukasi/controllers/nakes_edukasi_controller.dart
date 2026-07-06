@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../widgets/custom_popup.dart';
 
 class EdukasiArticle {
   final String id;
@@ -80,17 +80,14 @@ class NakesEdukasiController extends GetxController {
             'gambar': '',
             'createdAt': FieldValue.serverTimestamp(),
           });
-      Get.snackbar(
+      CustomPopup.showSuccess(
         'Sukses',
         'Edukasi berhasil ditambahkan',
-        backgroundColor: Colors.white,
       );
     } catch (e) {
-      Get.snackbar(
+      CustomPopup.showError(
         'Error',
         'Gagal menambahkan edukasi',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
       );
     }
   }
@@ -113,17 +110,14 @@ class NakesEdukasiController extends GetxController {
           .collection('edukasi')
           .doc(id)
           .update({'judul': title, 'kategori': category, 'deskripsi': content});
-      Get.snackbar(
+      CustomPopup.showSuccess(
         'Sukses',
         'Edukasi berhasil diperbarui',
-        backgroundColor: Colors.white,
       );
     } catch (e) {
-      Get.snackbar(
+      CustomPopup.showError(
         'Error',
         'Gagal memperbarui edukasi',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
       );
     }
   }
@@ -141,17 +135,14 @@ class NakesEdukasiController extends GetxController {
           .collection('edukasi')
           .doc(id)
           .delete();
-      Get.snackbar(
+      CustomPopup.showSuccess(
         'Sukses',
         'Edukasi berhasil dihapus',
-        backgroundColor: Colors.white,
       );
     } catch (e) {
-      Get.snackbar(
+      CustomPopup.showError(
         'Error',
         'Gagal menghapus edukasi',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
       );
     }
   }

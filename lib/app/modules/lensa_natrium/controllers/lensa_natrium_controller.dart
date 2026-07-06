@@ -6,6 +6,7 @@ import '../../../services/auth_service.dart';
 import '../../gamifikasi/controllers/gamifikasi_controller.dart';
 import '../../../routes/app_pages.dart';
 import '../../main_navigation/controllers/main_navigation_controller.dart';
+import '../../../widgets/custom_popup.dart';
 
 class LensaNatriumController extends GetxController {
   final TextEditingController searchController = TextEditingController();
@@ -121,12 +122,9 @@ class LensaNatriumController extends GetxController {
     await Future.delayed(const Duration(seconds: 2));
     isAnalyzing.value = false;
 
-    Get.snackbar(
+    CustomPopup.showWarning(
       'Analisis Selesai',
       'Tidak menemukan natrium pada gambar yang dipindai.',
-      snackPosition: SnackPosition.TOP,
-      backgroundColor: Colors.white,
-      colorText: Colors.black87,
     );
   }
 
@@ -155,12 +153,9 @@ class LensaNatriumController extends GetxController {
       
       await batch.commit();
 
-      Get.snackbar(
+      CustomPopup.showSuccess(
         'Berhasil Disimpan',
         '${item['name']} telah ditambahkan ke catatan harian.',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.white,
-        colorText: Colors.black87,
       );
     }    
     if (Get.isRegistered<GamifikasiController>()) {
@@ -191,11 +186,7 @@ class LensaNatriumController extends GetxController {
               .collection('label gizi makanan')
               .doc(id)
               .delete();
-          Get.snackbar(
-            "Terhapus",
-            "Data pindaian dihapus",
-            backgroundColor: Get.theme.scaffoldBackgroundColor,
-          );
+          CustomPopup.showSuccess("Terhapus", "Data pindaian dihapus");
         } else {
           await FirebaseFirestore.instance
               .collection('website')
@@ -203,18 +194,10 @@ class LensaNatriumController extends GetxController {
               .collection('jajanan')
               .doc(id)
               .delete();
-          Get.snackbar(
-            "Terhapus",
-            "Data katalog dihapus",
-            backgroundColor: Get.theme.scaffoldBackgroundColor,
-          );
+          CustomPopup.showSuccess("Terhapus", "Data katalog dihapus");
         }
       } catch (e) {
-        Get.snackbar(
-          "Gagal",
-          "Gagal menghapus data: $e",
-          backgroundColor: Colors.red.withOpacity(0.1),
-        );
+        CustomPopup.showError("Gagal", "Gagal menghapus data: $e");
       }
     }
   }

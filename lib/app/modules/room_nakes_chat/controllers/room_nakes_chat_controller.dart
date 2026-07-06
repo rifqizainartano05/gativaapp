@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../services/auth_service.dart';
+import '../../../widgets/custom_popup.dart';
 
 class ChatMessage {
   final String? id;
@@ -93,7 +94,7 @@ class RoomNakesChatController extends GetxController {
           .collection('messages')
           .add(messageData);
     } catch (e) {
-      Get.snackbar('Error', 'Gagal mengirim pesan: $e');
+      CustomPopup.showError('Error', 'Gagal mengirim pesan: $e');
     }
   }
 
@@ -177,21 +178,27 @@ class RoomNakesChatController extends GetxController {
           .collection('messages')
           .doc(msgId)
           .delete();
+          
+      // Hapus dari sisi Pasien
+      await FirebaseFirestore.instance
+          .collection('mobile')
+          .doc('roles')
+          .collection('pasien')
+          .doc(doctorId)
+          .collection('chats')
+          .doc(userId)
+          .collection('messages')
+          .doc(msgId)
+          .delete();
       
-      // Catatan: idealnya kita juga hapus dari sisi Pasien
-      // namun kita butuh referensi ID dokumen di sisi Pasien jika ingin menghapusnya.
-      
-      Get.snackbar(
+      CustomPopup.showSuccess(
         'Sukses',
         'Pesan berhasil dihapus',
-        backgroundColor: Colors.white,
       );
     } catch (e) {
-      Get.snackbar(
+      CustomPopup.showError(
         'Error',
         'Gagal menghapus pesan: $e',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
       );
     }
   }
@@ -210,10 +217,20 @@ class RoomNakesChatController extends GetxController {
           .collection('chats')
           .doc(doctorId)
           .collection('messages');
+          
+      final pasienMessagesRef = FirebaseFirestore.instance
+          .collection('mobile')
+          .doc('roles')
+          .collection('pasien')
+          .doc(doctorId)
+          .collection('chats')
+          .doc(userId)
+          .collection('messages');
 
       final snapshot = await messagesRef.get();
       for (var doc in snapshot.docs) {
         batch.delete(doc.reference);
+        batch.delete(pasienMessagesRef.doc(doc.id));
       }
       await batch.commit();
 
@@ -230,13 +247,12 @@ class RoomNakesChatController extends GetxController {
         ),
       );
 
-      Get.snackbar(
+      CustomPopup.showSuccess(
         'Berhasil',
         'Chat berhasil dihapus',
-        backgroundColor: Get.theme.primaryColor.withOpacity(0.1),
       );
     } catch (e) {
-      Get.snackbar('Error', 'Gagal menghapus chat: $e');
+      CustomPopup.showError('Error', 'Gagal menghapus chat: $e');
     }
   }
 

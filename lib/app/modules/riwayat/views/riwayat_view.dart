@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../controllers/riwayat_controller.dart';
+import '../../../widgets/custom_popup.dart';
 
 // Inlined AppColors to prevent missing import errors
 class AppColors {
@@ -55,12 +56,9 @@ class RiwayatView extends StatelessWidget {
           onPopInvoked: (didPop) {
             if (didPop) return;
             if (!canGoBack) {
-              Get.snackbar(
+              CustomPopup.showWarning(
                 'Perhatian',
                 'Harap tunggu data termuat untuk menyelesaikan misi.',
-                backgroundColor: Colors.orange,
-                colorText: Colors.white,
-                snackPosition: SnackPosition.BOTTOM,
               );
             }
           },
@@ -107,12 +105,9 @@ class RiwayatView extends StatelessWidget {
                       InkWell(
                         onTap: () {
                           if (!canGoBack) {
-                            Get.snackbar(
+                            CustomPopup.showWarning(
                               'Perhatian',
                               'Harap tunggu data termuat untuk menyelesaikan misi.',
-                              backgroundColor: Colors.orange,
-                              colorText: Colors.white,
-                              snackPosition: SnackPosition.BOTTOM,
                             );
                           } else {
                             Get.back();
@@ -356,9 +351,9 @@ class RiwayatView extends StatelessWidget {
 
                           Color densityColor = AppColors.safe;
                           if (log.type == 'makanan') {
-                            densityColor = log.amount >= 800
+                            densityColor = log.amount >= 1000
                                 ? AppColors.danger
-                                : log.amount >= 400
+                                : log.amount >= 600
                                 ? AppColors.warning
                                 : AppColors.safe;
                           } else {

@@ -153,11 +153,13 @@ class AppPages {
       name: _Paths.ONBOARDING,
       page: () => const OnboardingView(),
       binding: OnboardingBinding(),
+      transition: Transition.noTransition,
     ),
     GetPage(
       name: _Paths.LOGIN,
       page: () => const LoginView(),
       binding: LoginBinding(),
+      transition: Transition.noTransition,
     ),
     GetPage(
       name: _Paths.REGISTER,

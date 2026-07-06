@@ -4,6 +4,8 @@ import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../services/auth_service.dart';
+import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class NakesDashboardController extends GetxController {
   final currentIndex = 0.obs;
@@ -38,6 +40,41 @@ class NakesDashboardController extends GetxController {
     });
     
     fetchDashboardData();
+    Future.delayed(const Duration(seconds: 2), checkNotificationPermission);
+  }
+
+  Future<void> checkNotificationPermission() async {
+    final status = await Permission.notification.status;
+    if (!status.isGranted) {
+      Get.dialog(
+        AlertDialog(
+          title: const Text("Izin Notifikasi", style: TextStyle(fontWeight: FontWeight.bold)),
+          content: const Text("Untuk menerima peringatan pasien dan notifikasi penting, mohon izinkan notifikasi untuk aplikasi Gativa."),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(),
+              child: Text("Nanti", style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.bold)),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Get.back();
+                final result = await Permission.notification.request();
+                if (result.isPermanentlyDenied) {
+                  openAppSettings();
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2E7D32),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text("Izinkan", style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   Future<void> fetchDashboardData() async {

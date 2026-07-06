@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../controllers/nakes_catalog_controller.dart';
+import '../../../widgets/custom_popup.dart';
 
 // Inlined AppColors
 class AppColors {
@@ -390,18 +391,12 @@ class NakesCatalogView extends StatelessWidget {
                                         size: 20,
                                       ),
                                       onPressed: () {
-                                        Get.defaultDialog(
+                                        CustomPopup.showConfirm(
                                           title: 'Hapus Data',
-                                          middleText:
-                                              'Yakin ingin menghapus ${alt.alternativeFood}?',
-                                          textConfirm: 'Hapus',
-                                          confirmTextColor: Colors.white,
-                                          buttonColor: Colors.red,
+                                          message: 'Yakin ingin menghapus ${alt.alternativeFood}?',
                                           onConfirm: () {
                                             controller.deleteFood(alt.id);
-                                            Get.back();
                                           },
-                                          textCancel: 'Batal',
                                         );
                                       },
                                     ),
@@ -602,10 +597,9 @@ class NakesCatalogView extends StatelessWidget {
                                 }
                                 Get.back();
                               } else {
-                                Get.snackbar(
+                                CustomPopup.showWarning(
                                   'Peringatan',
                                   'Harap isi semua bidang teks',
-                                  backgroundColor: Colors.white,
                                 );
                               }
                             },

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../widgets/custom_popup.dart';
 
 class InformasiData {
   final String id;
@@ -91,17 +92,14 @@ class NakesInformasiKesehatanController extends GetxController {
             'gambarBase64': gambarBase64,
             'createdAt': FieldValue.serverTimestamp(),
           });
-      Get.snackbar(
+      CustomPopup.showSuccess(
         'Sukses',
         'Informasi berhasil ditambahkan',
-        backgroundColor: Colors.white,
       );
     } catch (e) {
-      Get.snackbar(
+      CustomPopup.showError(
         'Error',
         'Gagal menambahkan informasi',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
       );
     }
   }
@@ -131,17 +129,14 @@ class NakesInformasiKesehatanController extends GetxController {
             'gambarBase64': gambarBase64,
             'updatedAt': FieldValue.serverTimestamp(),
           });
-      Get.snackbar(
+      CustomPopup.showSuccess(
         'Sukses',
         'Informasi berhasil diperbarui',
-        backgroundColor: Colors.white,
       );
     } catch (e) {
-      Get.snackbar(
+      CustomPopup.showError(
         'Error',
         'Gagal memperbarui informasi',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
       );
     }
   }
@@ -159,17 +154,14 @@ class NakesInformasiKesehatanController extends GetxController {
           .collection('informasi_kesehatan')
           .doc(id)
           .delete();
-      Get.snackbar(
+      CustomPopup.showSuccess(
         'Sukses',
         'Informasi berhasil dihapus',
-        backgroundColor: Colors.white,
       );
     } catch (e) {
-      Get.snackbar(
+      CustomPopup.showError(
         'Error',
         'Gagal menghapus informasi',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
       );
     }
   }

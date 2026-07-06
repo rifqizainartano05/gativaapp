@@ -284,9 +284,9 @@ class LensaNatriumView extends GetView<LensaNatriumController> {
                                         builder: (context) {
                                           final int sodiumMg = (item['natrium'] as num?)?.toInt() ?? (item['sodium'] as num?)?.toInt() ?? 0;
                                           Color statusColor;
-                                          if (sodiumMg > 1000) {
+                                          if (sodiumMg >= 1000) {
                                             statusColor = Colors.red;
-                                          } else if (sodiumMg > 600) {
+                                          } else if (sodiumMg >= 600) {
                                             statusColor = Colors.orange;
                                           } else {
                                             statusColor = Colors.green;

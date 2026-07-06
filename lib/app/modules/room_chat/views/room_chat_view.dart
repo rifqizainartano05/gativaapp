@@ -4,78 +4,10 @@ import 'package:get/get.dart';
 import '../../../routes/app_pages.dart';
 import '../controllers/room_chat_controller.dart';
 import '../../chat/controllers/chat_controller.dart';
+import '../../../widgets/custom_popup.dart';
 
 class RoomChatView extends GetView<RoomChatController> {
   const RoomChatView({super.key});
-
-  void _showRatingDialog(BuildContext context, String doctorId) {
-    int rating = 0;
-    Get.dialog(
-      StatefulBuilder(
-        builder: (context, setState) {
-          return Dialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text("Beri Penilaian", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  const Text(
-                    "Seberapa puas Anda dengan layanan konsultan kami?",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.black54, fontSize: 13),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(5, (index) {
-                      return IconButton(
-                        icon: Icon(
-                          index < rating ? Icons.star_rounded : Icons.star_border_rounded,
-                          color: Colors.amber,
-                          size: 36,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            rating = index + 1;
-                          });
-                        },
-                      );
-                    }),
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: () {
-                      if (rating > 0) {
-                        Get.back();
-                        if (Get.isRegistered<ChatController>()) {
-                          Get.find<ChatController>().updateDoctorRating(doctorId, rating);
-                          Get.snackbar(
-                            "Terima Kasih", 
-                            "Rating Anda berhasil dikirim",
-                            backgroundColor: Colors.white,
-                            colorText: Colors.black,
-                          );
-                        }
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2E7D32),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      minimumSize: const Size(double.infinity, 48),
-                    ),
-                    child: const Text("Kirim", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
-      )
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -215,12 +147,6 @@ class RoomChatView extends GetView<RoomChatController> {
                                           hintStyle: TextStyle(fontSize: 14, color: Colors.black45),
                                         ),
                                         onSubmitted: (val) {
-                                          if (val.trim().toLowerCase().contains("terima kasih") || val.trim().toLowerCase().contains("terimakasih")) {
-                                            if (doc != null && doc['id'] != null && !controller.hasShownRating.value) {
-                                              controller.hasShownRating.value = true;
-                                              _showRatingDialog(context, doc['id']);
-                                            }
-                                          }
                                           controller.sendMessage(val);
                                           textController.clear();
                                         },
@@ -232,12 +158,6 @@ class RoomChatView extends GetView<RoomChatController> {
                                     onTap: () {
                                       if (textController.text.trim().isNotEmpty) {
                                         final val = textController.text;
-                                        if (val.trim().toLowerCase().contains("terima kasih") || val.trim().toLowerCase().contains("terimakasih")) {
-                                          if (doc != null && doc['id'] != null && !controller.hasShownRating.value) {
-                                            controller.hasShownRating.value = true;
-                                            _showRatingDialog(context, doc['id']);
-                                          }
-                                        }
                                         controller.sendMessage(val);
                                         textController.clear();
                                       }
@@ -399,25 +319,17 @@ class RoomChatView extends GetView<RoomChatController> {
               ),
               Obx(() {
                 if (controller.selectedDoctor.value != null) {
-                  return PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
-                    onSelected: (value) {
-                      if (value == 'delete') {
-                        _showDeleteChatDialog();
-                      }
+                  return IconButton(
+                    icon: const Icon(Icons.delete_outline_rounded, color: Colors.white),
+                    onPressed: () {
+                      CustomPopup.showConfirm(
+                        title: 'Hapus Semua Chat?',
+                        message: 'Apakah Anda yakin ingin menghapus seluruh riwayat chat ini? Tindakan ini tidak dapat dibatalkan.',
+                        onConfirm: () {
+                          controller.deleteChat();
+                        },
+                      );
                     },
-                    itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                      const PopupMenuItem<String>(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete_outline, color: Colors.red),
-                            SizedBox(width: 8),
-                            Text('Hapus Chat', style: TextStyle(color: Colors.red)),
-                          ],
-                        ),
-                      ),
-                    ],
                   );
                 }
                 return const SizedBox.shrink();
@@ -429,94 +341,6 @@ class RoomChatView extends GetView<RoomChatController> {
     );
   }
 
-  void _showDeleteChatDialog() {
-    Get.dialog(
-      Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        backgroundColor: Colors.transparent,
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Stack(
-            children: [
-              Positioned(
-                right: -20,
-                bottom: -20,
-                child: Opacity(
-                  opacity: 0.05,
-                  child: Icon(Icons.delete_sweep_rounded, size: 140, color: Colors.red.shade900),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade50,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(Icons.delete_outline_rounded, color: Colors.red.shade600, size: 40),
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      "Hapus Semua Chat?", 
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFF1E293B)),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      "Apakah Anda yakin ingin menghapus seluruh riwayat chat ini? Tindakan ini tidak dapat dibatalkan.",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 13, color: Colors.grey.shade600, height: 1.5),
-                    ),
-                    const SizedBox(height: 28),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              side: BorderSide(color: Colors.grey.shade300)
-                            ),
-                            onPressed: () => Get.back(),
-                            child: const Text("Batal", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red.shade600,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              elevation: 0,
-                            ),
-                            onPressed: () {
-                              Get.back();
-                              controller.deleteChat();
-                            },
-                            child: const Text("Hapus", style: TextStyle(fontWeight: FontWeight.bold)),
-                          ),
-                        ),
-                      ],
-                    )
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      )
-    );
-  }
 }
 
 class _ChatBubble extends StatelessWidget {

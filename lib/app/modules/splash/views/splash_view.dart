@@ -11,81 +11,75 @@ class SplashView extends GetView<SplashController> {
     // Inisialisasi controller agar onInit berjalan
     Get.put(SplashController());
 
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
+    return Obx(() => AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: Color(0xFF2E7D32),
-        systemNavigationBarIconBrightness: Brightness.light,
+        statusBarIconBrightness: controller.isNavWhite.value ? Brightness.dark : Brightness.light,
+        systemNavigationBarColor: controller.isNavWhite.value ? Colors.white : const Color(0xFF2E7D32),
+        systemNavigationBarIconBrightness: controller.isNavWhite.value ? Brightness.dark : Brightness.light,
       ),
       child: Scaffold(
         backgroundColor: const Color(0xFF2E7D32),
         body: Stack(
+          alignment: Alignment.center,
           children: [
-            Positioned(
-              right: -40,
-              top: -20,
-              child: Icon(
-                Icons.medical_information,
-                size: 200,
-                color: Colors.white.withOpacity(0.08),
-              ),
-            ),
+            // Konten Logo & Loading (di atas lingkaran putih)
             Center(
               child: TweenAnimationBuilder(
-                tween: Tween<double>(begin: 0.5, end: 1.0),
-                duration: const Duration(seconds: 2),
+                tween: Tween<double>(begin: 0.8, end: 1.0),
+                duration: const Duration(seconds: 1),
                 curve: Curves.elasticOut,
                 builder: (context, double value, child) {
-                  double opacityValue = (value - 0.5) * 2;
-                  if (opacityValue < 0) opacityValue = 0;
-                  if (opacityValue > 1) opacityValue = 1;
-
                   return Transform.scale(
                     scale: value,
-                    child: Opacity(
-                      opacity: opacityValue,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
+                    child: Obx(() => Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Lingkaran Loading (0-4 detik) atau Ripple Effect (4-6 detik)
+                        if (!controller.isRippleStarted.value)
+                          const SizedBox(
+                            width: 150,
+                            height: 150,
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              strokeWidth: 3,
                             ),
-                            child: ClipOval(
-                              child: Image.asset(
-                                'assets/logo.png',
-                                width: 120,
-                                height: 120,
-                                fit: BoxFit.cover,
-                              ),
+                          )
+                        else
+                          const _RippleBackground(),
+
+                        // Logo Statis yang mulai berdenyut
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 500),
+                          curve: Curves.easeInOut,
+                          transform: Matrix4.identity()
+                            ..scale(controller.isRippleStarted.value ? 1.05 : 1.0),
+                          transformAlignment: Alignment.center,
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: controller.isRippleStarted.value
+                                ? [
+                                    BoxShadow(
+                                      color: Colors.white.withOpacity(0.5),
+                                      blurRadius: 20,
+                                      spreadRadius: 5,
+                                    )
+                                  ]
+                                : [],
+                          ),
+                          child: ClipOval(
+                            child: Image.asset(
+                              'assets/logo.png',
+                              width: 100,
+                              height: 100,
+                              fit: BoxFit.cover,
                             ),
                           ),
-                          const SizedBox(height: 24),
-                          const Text(
-                            'GATIVA',
-                            style: TextStyle(
-                              fontSize: 44,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                              letterSpacing: 10,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Kawal Kesehatan Keluarga Bersama',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.white.withOpacity(0.85),
-                              letterSpacing: 1.2,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                        ),
+                      ],
+                    )),
                   );
                 },
               ),
@@ -93,6 +87,68 @@ class SplashView extends GetView<SplashController> {
           ],
         ),
       ),
+    ));
+  }
+}
+
+class _RippleBackground extends StatefulWidget {
+  const _RippleBackground();
+  @override
+  __RippleBackgroundState createState() => __RippleBackgroundState();
+}
+
+class __RippleBackgroundState extends State<_RippleBackground> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Widget _buildRipple(double radius, double opacity) {
+    return OverflowBox(
+      maxWidth: double.infinity,
+      maxHeight: double.infinity,
+      child: Container(
+        width: radius,
+        height: radius,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white.withOpacity(opacity.clamp(0.0, 1.0)),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        // Gunakan Curve easeInOut agar merambat pelan, mulus, dan konstan tanpa lonjakan mendadak
+        final curve = Curves.easeInOut.transform(_controller.value);
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            // Outermost (paling transparan, diameter maksimal ~3000 sangat cukup untuk menutupi layar)
+            _buildRipple(120 + (3000 * curve), 0.2),
+            // Middle
+            _buildRipple(120 + (2500 * curve), 0.5),
+            // Innermost (putih solid, diameter maksimal ~2000 untuk menutup semua sisa warna hijau)
+            _buildRipple(120 + (2000 * curve), 1.0),
+          ],
+        );
+      },
     );
   }
 }

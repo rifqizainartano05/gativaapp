@@ -2,6 +2,8 @@ import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../services/auth_service.dart';
+import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class HomeController extends GetxController {
   final RxString userName = "Pengguna".obs;
@@ -60,6 +62,41 @@ class HomeController extends GetxController {
   void onInit() {
     super.onInit();
     fetchUserData();
+    Future.delayed(const Duration(seconds: 2), checkNotificationPermission);
+  }
+
+  Future<void> checkNotificationPermission() async {
+    final status = await Permission.notification.status;
+    if (!status.isGranted) {
+      Get.dialog(
+        AlertDialog(
+          title: const Text("Izin Notifikasi", style: TextStyle(fontWeight: FontWeight.bold)),
+          content: const Text("Untuk menerima pengingat harian gamifikasi dan peringatan penting, mohon izinkan notifikasi untuk aplikasi Gativa."),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(),
+              child: Text("Nanti", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Get.back();
+                final result = await Permission.notification.request();
+                if (result.isPermanentlyDenied) {
+                  openAppSettings();
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2E7D32),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text("Izinkan", style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   double calculateDailyLimit(int age, String condition) {

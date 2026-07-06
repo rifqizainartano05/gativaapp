@@ -127,16 +127,45 @@ class FaqController extends GetxController {
                             ),
                             onPressed: () async {
                                 try {
-                                  User? user = FirebaseAuth.instance.currentUser;
-                                  if (user != null) {
-                                    // Delete user data in firestore
-                                    await Get.find<AuthService>()
-                                        .getUserReference(user.uid)
-                                        .delete();
-                                    // Delete the auth user
-                                    await user.delete();
-                                    await FirebaseAuth.instance.signOut();
-                                    Get.offAllNamed(Routes.LOGIN);
+                                    User? user = FirebaseAuth.instance.currentUser;
+                                    if (user != null) {
+                                      String uid = user.uid;
+                                      final userRef = Get.find<AuthService>().getUserReference(uid);
+                                      
+                                      // 1. Hapus diri sendiri dari daftar anggota milik orang lain
+                                      try {
+                                        final anggotaSnapshot = await userRef.collection('anggota').where('dataType', isEqualTo: 'Anggota').get();
+                                        for (var doc in anggotaSnapshot.docs) {
+                                          String memberUid = doc.id;
+                                          await FirebaseFirestore.instance
+                                              .collection('mobile')
+                                              .doc('roles')
+                                              .collection('pasien')
+                                              .doc(memberUid)
+                                              .collection('anggota')
+                                              .doc(uid)
+                                              .delete();
+                                        }
+                                        
+                                        // 2. Hapus semua dokumen di subkoleksi milik diri sendiri
+                                        final allAnggota = await userRef.collection('anggota').get();
+                                        for (var d in allAnggota.docs) { await d.reference.delete(); }
+                                        
+                                        final allRiwayat = await userRef.collection('riwayat').get();
+                                        for (var d in allRiwayat.docs) { await d.reference.delete(); }
+                                        
+                                        final allReqs = await userRef.collection('group_requests').get();
+                                        for (var d in allReqs.docs) { await d.reference.delete(); }
+                                      } catch (e) {
+                                        debugPrint("Gagal menghapus relasi anggota: $e");
+                                      }
+
+                                      // Delete user data in firestore
+                                      await userRef.delete();
+                                      // Delete the auth user
+                                      await user.delete();
+                                      await FirebaseAuth.instance.signOut();
+                                      Get.offAllNamed(Routes.LOGIN);
                                     Get.snackbar(
                                       "Berhasil",
                                       "Akun Anda telah dihapus secara permanen.",

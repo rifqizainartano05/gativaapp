@@ -100,6 +100,31 @@ class ProfileController extends GetxController {
     }
   }
 
+  Future<void> resetDataNatrium() async {
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final docs = await Get.find<AuthService>()
+            .getUserReference(user.uid)
+            .collection('label gizi makanan')
+            .get();
+        for (var doc in docs.docs) {
+          await doc.reference.delete();
+        }
+        
+        await Get.find<AuthService>()
+            .getUserReference(user.uid)
+            .update({'totalNatrium': 0});
+
+        Get.snackbar("Berhasil", "Semua data natrium telah dihapus.",
+            backgroundColor: Colors.green.shade100, colorText: Colors.green.shade800);
+      }
+    } catch (e) {
+      Get.snackbar("Gagal", "Gagal menghapus data: $e",
+          backgroundColor: Colors.red.shade100, colorText: Colors.red.shade800);
+    }
+  }
+
   void _initNotifications() async {
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');

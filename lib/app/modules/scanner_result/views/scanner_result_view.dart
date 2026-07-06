@@ -51,17 +51,18 @@ class ScannerResultView extends GetView<ScannerResultController> {
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark.copyWith(systemNavigationBarColor: Colors.white, systemNavigationBarIconBrightness: Brightness.dark),
-      child: Obx(() {
-        bool canGoBack = true;
+      child: Builder(
+        builder: (context) {
+          bool canGoBack = true;
 
-        return PopScope(
-          canPop: canGoBack,
-          onPopInvoked: (didPop) {
-            if (didPop) return;
-          },
-          child: Scaffold(
-            backgroundColor: Colors.white,
-          body: Stack(
+          return PopScope(
+            canPop: canGoBack,
+            onPopInvoked: (didPop) {
+              if (didPop) return;
+            },
+            child: Scaffold(
+              backgroundColor: Colors.white,
+            body: Stack(
         children: [
           // Background Watermark (Receipt)
           Positioned(
@@ -386,8 +387,9 @@ class ScannerResultView extends GetView<ScannerResultController> {
       ),
     ),
   );
-  }),
-  );
+        },
+      ),
+    );
   }
 
   Widget _buildInfoRow(String label, String value) {

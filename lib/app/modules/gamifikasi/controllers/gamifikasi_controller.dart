@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:http/http.dart' as http;
 import '../../../services/auth_service.dart';
 import '../../../services/notification_service.dart';
 
@@ -133,7 +135,7 @@ class GamifikasiController extends GetxController {
         id: 'm${i + 1}',
         level: i + 1,
         title: titles[i],
-        description: "Jawab pertanyaan singkat di bawah ini dengan tepat untuk melanjutkan perjalanan Detox Natrium.",
+        description: "Jawab pertanyaan singkat di bawah ini dengan tepat untuk melanjutkan perjalanan sehat Anda mengurangi konsumsi natrium berlebih.",
         question: question,
         rewardPoints: 10 + (i * 5),
         isCompleted: false,
@@ -213,6 +215,263 @@ class GamifikasiController extends GetxController {
     return (newLimit / 10).round() * 10; // Bulatkan ke puluhan terdekat
   }
 
+  Future<void> verifyMissionAnswer(Mission mission, String answer) async {
+    if (answer.trim().isEmpty) {
+      Get.snackbar('Perhatian', 'Jawaban tidak boleh kosong!', backgroundColor: Colors.orange, colorText: Colors.white);
+      return;
+    }
+
+    Get.dialog(
+      const Center(
+        child: CircularProgressIndicator(color: Color(0xFF2E7D32)),
+      ),
+      barrierDismissible: false,
+    );
+
+    try {
+      const apiKey = 'YOUR_GROQ_API_KEY_HERE'; // TODO: Setup environment variable or get from config
+      final prompt = '''
+      Anda adalah asisten kesehatan ahli gizi dan penilai kuis.
+      Pertanyaan: "${mission.question}"
+      Jawaban Pengguna: "$answer"
+      
+      Aturan:
+      1. Jika jawaban pengguna BENAR atau esensinya sudah tepat, balas dengan satu kata saja: "BENAR".
+      2. Jika jawaban pengguna SALAH, melenceng, atau ngawur, balas dengan awalan "SALAH". Setelah itu, spasi, dan beritahu apa JAWABAN YANG BENAR secara singkat dan ramah (maksimal 2 kalimat).
+      
+      Contoh 1 (Jika pengguna jawab benar):
+      BENAR
+      Contoh 2 (Jika pengguna jawab salah):
+      SALAH. Kurang tepat. Yang benar adalah Ginjal, karena ginjal bertugas menyaring sisa metabolisme dan natrium berlebih.
+      ''';
+
+      final response = await http.post(
+        Uri.parse('https://api.groq.com/openai/v1/chat/completions'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $apiKey',
+        },
+        body: jsonEncode({
+          'model': 'llama-3.1-8b-instant',
+          'messages': [
+            {'role': 'user', 'content': prompt}
+          ],
+          'temperature': 0.1,
+          'max_tokens': 150,
+        }),
+      );
+
+      Get.back(); // Tutup loading
+
+      if (response.statusCode == 200) {
+        final jsonResponse = jsonDecode(response.body);
+        final String botMessage = jsonResponse['choices'][0]['message']['content'].toString().trim();
+        
+        bool isCorrect = botMessage.toUpperCase().startsWith("BENAR");
+        String explanation = botMessage.replaceFirst(RegExp(r'^(BENAR|SALAH)[.\s]*', caseSensitive: false), '').trim();
+
+        if (isCorrect) {
+          completeMission(mission.id);
+          Get.dialog(
+            Dialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              backgroundColor: Colors.white,
+              elevation: 10,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: Stack(
+                  children: [
+                    // Watermark
+                    Positioned(
+                      right: -40,
+                      bottom: -20,
+                      child: Icon(
+                        Icons.emoji_events_rounded,
+                        size: 200,
+                        color: const Color(0xFF2E7D32).withOpacity(0.05),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2E7D32).withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.check_circle_rounded,
+                              color: Color(0xFF2E7D32),
+                              size: 48,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            "Jawaban Benar! 🎉",
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF2E7D32),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            "Luar biasa! Kamu berhasil menyelesaikan misi ini.",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.black87,
+                              height: 1.5,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () => Get.back(),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF2E7D32),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: const Text(
+                                "Lanjut",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        } else {
+          Get.dialog(
+            Dialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              backgroundColor: Colors.white,
+              elevation: 10,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: Stack(
+                  children: [
+                    // Watermark
+                    Positioned(
+                      right: -40,
+                      bottom: -20,
+                      child: Icon(
+                        Icons.cancel_rounded,
+                        size: 200,
+                        color: Colors.red.withOpacity(0.05),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade50,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.close_rounded,
+                              color: Colors.red,
+                              size: 48,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            "Jawaban Salah",
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            explanation.isNotEmpty ? explanation : 'Jawaban kamu masih keliru, coba lagi yuk!',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.black87,
+                              height: 1.5,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () => Get.back(),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: const Text(
+                                "Tutup & Coba Lagi",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+      } else {
+        // Fallback jika API bermasalah, langsung anggap benar
+        completeMission(mission.id);
+        Get.defaultDialog(
+          title: "Server Sibuk",
+          middleText: "Koneksi ke API gagal, tapi misi Anda tetap diselesaikan!",
+          textConfirm: "Lanjut",
+          confirmTextColor: Colors.white,
+          buttonColor: Colors.orange,
+          onConfirm: () => Get.back(),
+        );
+      }
+    } catch (e) {
+      Get.back();
+      completeMission(mission.id); // fallback
+      Get.defaultDialog(
+        title: "Error",
+        middleText: "Gagal memverifikasi jawaban. Misi tetap dilanjutkan.",
+        textConfirm: "Lanjut",
+        confirmTextColor: Colors.white,
+        buttonColor: Colors.orange,
+        onConfirm: () => Get.back(),
+      );
+    }
+  }
+
   void completeMission(String id) async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -259,102 +518,6 @@ class GamifikasiController extends GetxController {
         print("Firebase update for mission failed (network issue?), but UI is updated optimistically: $e");
       }
 
-      Get.dialog(
-        Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          backgroundColor: Colors.transparent,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: Stack(
-              children: [
-                Positioned(
-                  right: -20,
-                  bottom: -20,
-                  child: Icon(
-                    Icons.emoji_events_rounded,
-                    size: 150,
-                    color: const Color(0xFF2E7D32).withOpacity(0.05),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF2E7D32).withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.emoji_events_rounded,
-                          color: Color(0xFF2E7D32),
-                          size: 48,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Level ${missions[index].level} Selesai! 🎉',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 22,
-                          color: Colors.black87,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Anda mendapatkan ${missions[index].rewardPoints} poin.',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.black54,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () => Get.back(),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF2E7D32),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: const Text(
-                            'Tutup',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        barrierDismissible: false,
-      );
     }
   }
 

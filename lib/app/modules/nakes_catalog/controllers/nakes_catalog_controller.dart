@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../widgets/custom_popup.dart';
 
 class AlternativeFood {
   final String id;
@@ -108,10 +108,9 @@ class NakesCatalogController extends GetxController {
   }
 
   void selectAlternativeForCalculator(AlternativeFood food) {
-    Get.snackbar(
+    CustomPopup.showSuccess(
       "Dihitung",
       "Memproyeksikan ${food.alternativeFood} ke dalam asupan harian...",
-      backgroundColor: Get.theme.scaffoldBackgroundColor,
     );
   }
 
@@ -124,16 +123,14 @@ class NakesCatalogController extends GetxController {
         'makanan_alternatif': alternatif,
         'hemat_natrium_mg': hemat,
       });
-      Get.snackbar(
+      CustomPopup.showSuccess(
         'Sukses',
         'Data makanan berhasil ditambahkan',
-        backgroundColor: Colors.white,
       );
     } catch (e) {
-      Get.snackbar(
+      CustomPopup.showError(
         'Error',
         'Gagal menambahkan data: $e',
-        backgroundColor: Colors.white,
       );
     }
   }
@@ -152,16 +149,14 @@ class NakesCatalogController extends GetxController {
         'makanan_alternatif': alternatif,
         'hemat_natrium_mg': hemat,
       });
-      Get.snackbar(
+      CustomPopup.showSuccess(
         'Sukses',
         'Data makanan berhasil diperbarui',
-        backgroundColor: Colors.white,
       );
     } catch (e) {
-      Get.snackbar(
+      CustomPopup.showError(
         'Error',
         'Gagal memperbarui data: $e',
-        backgroundColor: Colors.white,
       );
     }
   }
@@ -171,16 +166,14 @@ class NakesCatalogController extends GetxController {
     
     try {
       await _katalogRef!.doc(id).delete();
-      Get.snackbar(
+      CustomPopup.showSuccess(
         'Sukses',
         'Data makanan berhasil dihapus',
-        backgroundColor: Colors.white,
       );
     } catch (e) {
-      Get.snackbar(
+      CustomPopup.showError(
         'Error',
         'Gagal menghapus data: $e',
-        backgroundColor: Colors.white,
       );
     }
   }

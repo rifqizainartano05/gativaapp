@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../controllers/edukasi_controller.dart';
+import '../../../widgets/custom_popup.dart';
 
 class EdukasiView extends GetView<EdukasiController> {
   const EdukasiView({super.key});
@@ -23,12 +24,9 @@ class EdukasiView extends GetView<EdukasiController> {
           onPopInvoked: (didPop) {
             if (didPop) return;
             if (!canGoBack) {
-              Get.snackbar(
+              CustomPopup.showWarning(
                 'Perhatian',
                 'Harap tunggu materi edukasi termuat untuk menyelesaikan misi.',
-                backgroundColor: Colors.orange,
-                colorText: Colors.white,
-                snackPosition: SnackPosition.BOTTOM,
               );
             }
           },
@@ -75,12 +73,9 @@ class EdukasiView extends GetView<EdukasiController> {
                       InkWell(
                         onTap: () {
                           if (!canGoBack) {
-                            Get.snackbar(
+                            CustomPopup.showWarning(
                               'Perhatian',
                               'Harap tunggu materi edukasi termuat untuk menyelesaikan misi.',
-                              backgroundColor: Colors.orange,
-                              colorText: Colors.white,
-                              snackPosition: SnackPosition.BOTTOM,
                             );
                           } else {
                             Get.back();

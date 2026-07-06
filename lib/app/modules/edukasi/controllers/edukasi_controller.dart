@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import '../../gamifikasi/controllers/gamifikasi_controller.dart';
+import '../../../widgets/custom_popup.dart';
 
 class EdukasiController extends GetxController {
   final RxList<Map<String, dynamic>> edukasiList = <Map<String, dynamic>>[].obs;
@@ -32,7 +33,7 @@ class EdukasiController extends GetxController {
         if (m1 || m2) isMissionCompleted.value = true;
       }
     }, onError: (e) {
-      Get.snackbar('Error', 'Gagal memuat data edukasi: $e');
+      CustomPopup.showError('Error', 'Gagal memuat data edukasi: $e');
       isLoading.value = false;
     });
   }

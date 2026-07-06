@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../../services/auth_service.dart';
 import '../../gamifikasi/controllers/gamifikasi_controller.dart';
+import '../../../widgets/custom_popup.dart';
 
 class SodiumLog {
   final String id;
@@ -185,17 +186,9 @@ class RiwayatController extends GetxController {
           transaction.delete(docRef);
         });
 
-        Get.snackbar(
-          "Terhapus",
-          "Catatan telah dihapus.",
-          backgroundColor: Get.theme.scaffoldBackgroundColor,
-        );
+        CustomPopup.showSuccess("Terhapus", "Catatan telah dihapus.");
       } catch (e) {
-        Get.snackbar(
-          "Gagal",
-          "Gagal menghapus data: $e",
-          backgroundColor: Colors.red.withOpacity(0.1),
-        );
+        CustomPopup.showError("Gagal", "Gagal menghapus data: $e");
       }
     }
   }

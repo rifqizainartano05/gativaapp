@@ -46,8 +46,10 @@ class NotificationService {
           'gativa_general_channel',
           'Notifikasi Umum',
           channelDescription: 'Notifikasi sistem dan pengingat',
-          importance: Importance.high,
-          priority: Priority.high,
+          importance: Importance.max,
+          priority: Priority.max,
+          enableVibration: true,
+          playSound: true,
         );
     const NotificationDetails platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,
