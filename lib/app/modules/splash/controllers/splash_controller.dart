@@ -32,15 +32,13 @@ class SplashController extends GetxController {
       // Jadi kita hapus sesi aktif Firebase saat splash agar user dipaksa login setiap buka aplikasi.
       if (FirebaseAuth.instance.currentUser != null) {
         await FirebaseAuth.instance.signOut();
-      }
-
-      if (hasSeenOnboarding) {
         nextRoute = Routes.LOGIN;
       } else {
+        // Jika belum register / tidak ada sesi, selalu mulai dari Onboarding
         nextRoute = Routes.ONBOARDING;
       }
     } catch (e) {
-      debugPrint('SharedPreferences error: $e');
+      debugPrint('Error routing in splash: $e');
     }
 
     // Pastikan loading minimal 4 detik
