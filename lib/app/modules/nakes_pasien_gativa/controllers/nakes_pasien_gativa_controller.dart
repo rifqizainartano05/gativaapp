@@ -36,6 +36,7 @@ class NakesPasienGativaController extends GetxController {
       }).toList();
       isLoading.value = false;
     }, onError: (e) {
+      if (FirebaseAuth.instance.currentUser == null) return; // Ignore error when logging out
       CustomPopup.showError('Error', 'Gagal memuat data pasien: $e');
       isLoading.value = false;
     });

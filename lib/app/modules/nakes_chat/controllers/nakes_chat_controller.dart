@@ -40,6 +40,8 @@ class NakesChatController extends GetxController {
   }
   
   final isLoadingDoctors = false.obs;
+  
+  final Map<String, StreamSubscription<DocumentSnapshot>> _presenceSubscriptions = {};
 
   @override
   void onInit() {
@@ -73,7 +75,32 @@ class NakesChatController extends GetxController {
       final List<Map<String, dynamic>> tempPatients = [];
       for (var doc in snapshot.docs) {
         final data = doc.data();
-        tempPatients.add({'id': doc.id, ...data});
+        final patientId = doc.id;
+        final patientData = {'id': patientId, ...data};
+        tempPatients.add(patientData);
+        
+        // Listen to real-time presence
+        if (!_presenceSubscriptions.containsKey(patientId)) {
+          _presenceSubscriptions[patientId] = FirebaseFirestore.instance
+              .collection('mobile')
+              .doc('roles')
+              .collection('pasien')
+              .doc(patientId)
+              .snapshots()
+              .listen((patientSnapshot) {
+            if (patientSnapshot.exists) {
+              final isOnline = patientSnapshot.data()?['isOnline'] ?? false;
+              // Update the specific patient in the doctors list
+              final index = doctors.indexWhere((p) => p['id'] == patientId);
+              if (index != -1) {
+                final updatedPatient = Map<String, dynamic>.from(doctors[index]);
+                updatedPatient['isOnline'] = isOnline;
+                doctors[index] = updatedPatient;
+                doctors.refresh();
+              }
+            }
+          });
+        }
       }
 
       doctors.value = tempPatients; // Reusing doctors variable for patients to avoid massive refactoring
@@ -89,6 +116,10 @@ class NakesChatController extends GetxController {
 
   @override
   void onClose() {
+    for (var sub in _presenceSubscriptions.values) {
+      sub.cancel();
+    }
+    _presenceSubscriptions.clear();
     super.onClose();
   }
 }

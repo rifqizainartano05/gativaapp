@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -6,6 +7,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../routes/app_pages.dart';
 import '../../../services/auth_service.dart';
+import '../../../services/notification_service.dart';
+import 'dart:async';
 
 class ProfileController extends GetxController {
   final RxString name = "Pengguna".obs;
@@ -25,6 +28,15 @@ class ProfileController extends GetxController {
   final RxString nakesName = "-".obs;
   final RxString nakesUid = "".obs;
   final RxString nakesPhotoBase64 = "".obs;
+
+  StreamSubscription? _chatSubscription;
+  DateTime? _lastNotificationTime;
+
+  @override
+  void onClose() {
+    _chatSubscription?.cancel();
+    super.onClose();
+  }
 
   @override
   void onInit() {
@@ -52,6 +64,11 @@ class ProfileController extends GetxController {
           if (data['nakesUid'] != null && data['nakesUid'].toString().isNotEmpty) {
             nakesUid.value = data['nakesUid'];
             _fetchNakesPhoto(nakesUid.value);
+            
+            // Re-initiate listening if notification is already enabled
+            if (isNotificationEnabled.value) {
+              _listenToIncomingChats();
+            }
           }
 
           // Format dailyLimit to int string correctly
@@ -81,8 +98,42 @@ class ProfileController extends GetxController {
           }
         }
         totalNatrium.value = dailyTotal.toInt();
-      });
+      },
+    );
     }
+  }
+
+  void _listenToIncomingChats() {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user == null || nakesUid.value.isEmpty) return;
+
+    _chatSubscription?.cancel();
+    _lastNotificationTime = DateTime.now(); 
+
+    _chatSubscription = Get.find<AuthService>()
+        .getUserReference(user.uid)
+        .collection('chats')
+        .doc(nakesUid.value)
+        .collection('messages')
+        .orderBy('timestamp', descending: true)
+        .limit(1)
+        .snapshots()
+        .listen((snapshot) {
+      if (snapshot.docs.isNotEmpty) {
+        final data = snapshot.docs.first.data();
+        final senderRole = data['senderRole'] ?? '';
+        final timestamp = (data['timestamp'] as Timestamp?)?.toDate();
+        
+        if (senderRole == 'nakes' && timestamp != null && timestamp.isAfter(_lastNotificationTime!)) {
+           _lastNotificationTime = DateTime.now();
+           NotificationService.showNotification(
+             id: 101, 
+             title: "Pesan Baru dari ${nakesName.value}", 
+             body: data['text'] ?? "Ada pesan masuk!"
+           );
+        }
+      }
+    });
   }
 
   Future<void> _fetchNakesPhoto(String uid) async {
@@ -99,6 +150,8 @@ class ProfileController extends GetxController {
       // ignore
     }
   }
+
+
 
   Future<void> resetDataNatrium() async {
     try {
@@ -135,11 +188,135 @@ class ProfileController extends GetxController {
     );
   }
 
-  void toggleNotification(bool value) {
-    isNotificationEnabled.value = value;
+  Future<void> toggleNotification(bool value) async {
     if (value) {
-      _evaluateSodiumAndNotify();
+      final status = await Permission.notification.request();
+      if (status.isGranted) {
+        isNotificationEnabled.value = true;
+        _listenToIncomingChats(); // Mulai mendengarkan chat Nakes
+        _showNotificationDialog(
+          isActive: true,
+          title: "Notifikasi Aktif!",
+          message: "Anda akan menerima notifikasi jika ada pesan masuk dari Nakes.",
+          icon: Icons.notifications_active_rounded,
+          color: const Color(0xFF2E7D32),
+        );
+      } else {
+        isNotificationEnabled.value = false;
+        Get.snackbar(
+          "Izin Ditolak",
+          "Gagal mengaktifkan notifikasi karena izin tidak diberikan.",
+          backgroundColor: Colors.orange.shade100,
+          colorText: Colors.orange.shade900,
+        );
+      }
+    } else {
+      isNotificationEnabled.value = false;
+      _chatSubscription?.cancel(); // Berhenti mendengarkan chat
+      _showNotificationDialog(
+        isActive: false,
+        title: "Notifikasi Dimatikan",
+        message: "Anda tidak akan menerima notifikasi pesan baru lagi.",
+        icon: Icons.notifications_off_rounded,
+        color: Colors.orange.shade800,
+      );
     }
+  }
+
+  void _showNotificationDialog({
+    required bool isActive,
+    required String title,
+    required String message,
+    required IconData icon,
+    required Color color,
+  }) {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 10,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Stack(
+            children: [
+              Positioned(
+                right: -40,
+                bottom: -20,
+                child: Icon(
+                  icon,
+                  size: 200,
+                  color: color.withOpacity(0.05),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        icon,
+                        color: color,
+                        size: 48,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: color,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      message,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black87,
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () => Get.back(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: color,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text(
+                          "Mengerti",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _evaluateSodiumAndNotify() async {
@@ -683,6 +860,21 @@ class ProfileController extends GetxController {
                             ),
                             onPressed: () async {
                               Get.back(); // tutup dialog
+                              
+                              // Set isOnline to false if user is a patient
+                              final user = FirebaseAuth.instance.currentUser;
+                              if (user != null) {
+                                try {
+                                  final roleSnapshot = await FirebaseFirestore.instance.collection('mobile').doc('roles').collection('pasien').doc(user.uid).get();
+                                  if (roleSnapshot.exists) {
+                                    await FirebaseFirestore.instance.collection('mobile').doc('roles').collection('pasien').doc(user.uid).update({
+                                      'isOnline': false,
+                                      'lastSeen': FieldValue.serverTimestamp(),
+                                    });
+                                  }
+                                } catch (_) {}
+                              }
+                              
                               await FirebaseAuth.instance.signOut();
                               Get.offAllNamed(Routes.LOGIN);
                             },

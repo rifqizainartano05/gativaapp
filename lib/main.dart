@@ -8,6 +8,8 @@ import 'app/routes/app_pages.dart';
 import 'app/services/auth_service.dart';
 
 import 'app/services/notification_service.dart';
+import 'app/services/network_service.dart';
+import 'app/services/presence_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,8 +29,10 @@ void main() async {
   // Inisialisasi AuthService secara terpisah (misal fetch role)
   try {
     await authService.init();
+    Get.put(NetworkService()).init();
+    Get.put(PresenceService()).init();
   } catch (e) {
-    debugPrint('AuthService init error: $e');
+    debugPrint('Service init error: $e');
   }
 
   SystemChrome.setSystemUIOverlayStyle(

@@ -29,6 +29,11 @@ class RoomChatController extends GetxController {
   final selectedDoctor = Rxn<Map<String, dynamic>>();
   final RxBool hasShownRating = false.obs;
   StreamSubscription<QuerySnapshot>? _chatSubscription;
+  StreamSubscription<DocumentSnapshot>? _typingSubscription;
+  final RxBool partnerIsTyping = false.obs;
+  final RxBool isWithinSchedule = false.obs;
+  Timer? _typingTimer;
+  Timer? _scheduleTimer;
 
   @override
   void onInit() {
@@ -36,14 +41,123 @@ class RoomChatController extends GetxController {
     final args = Get.arguments;
     if (args != null && args is Map<String, dynamic>) {
       selectedDoctor.value = args;
+      _checkSchedule();
       _listenToFirebaseChat();
+      _listenToPartnerTyping();
+      
+      _scheduleTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+        _checkSchedule();
+      });
     }
+  }
+
+  void _checkSchedule() {
+    final doc = selectedDoctor.value;
+    if (doc == null) return;
+    
+    final jadwalOnline = doc['jadwal_online']?.toString() ?? '';
+    if (jadwalOnline.isEmpty) {
+      isWithinSchedule.value = false;
+      return;
+    }
+    
+    try {
+      final parts = jadwalOnline.split('-');
+      if (parts.length == 2) {
+        final startParts = parts[0].trim().split(':');
+        final endParts = parts[1].trim().split(':');
+        if (startParts.length == 2 && endParts.length == 2) {
+          final now = DateTime.now();
+          final startTime = DateTime(now.year, now.month, now.day, int.parse(startParts[0]), int.parse(startParts[1]));
+          final endTime = DateTime(now.year, now.month, now.day, int.parse(endParts[0]), int.parse(endParts[1]));
+          isWithinSchedule.value = now.isAfter(startTime) && now.isBefore(endTime);
+          return;
+        }
+      }
+    } catch (_) {}
+    isWithinSchedule.value = false;
+  }
+
+  @override
+  void onClose() {
+    _chatSubscription?.cancel();
+    _typingSubscription?.cancel();
+    _typingTimer?.cancel();
+    _scheduleTimer?.cancel();
+    _updateTypingStatus(false);
+    super.onClose();
+  }
+
+  void onTextChanged(String text) {
+    if (text.isNotEmpty) {
+      _updateTypingStatus(true);
+      _typingTimer?.cancel();
+      _typingTimer = Timer(const Duration(seconds: 2), () {
+        _updateTypingStatus(false);
+      });
+    } else {
+      _updateTypingStatus(false);
+      _typingTimer?.cancel();
+    }
+  }
+
+  Future<void> _updateTypingStatus(bool isTyping) async {
+    final user = FirebaseAuth.instance.currentUser;
+    final userId = user?.uid ?? 'anonymous';
+    final doctorId = selectedDoctor.value?['id'] ?? '';
+    if (doctorId.isEmpty) return;
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('mobile')
+          .doc('roles')
+          .collection('tenaga_kesehatan')
+          .doc(doctorId)
+          .collection('chats')
+          .doc(userId)
+          .set({'isTyping': isTyping}, SetOptions(merge: true));
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  void _listenToPartnerTyping() {
+    final user = FirebaseAuth.instance.currentUser;
+    final userId = user?.uid ?? 'anonymous';
+    final doctorId = selectedDoctor.value?['id'] ?? '';
+    if (doctorId.isEmpty) return;
+
+    _typingSubscription?.cancel();
+    _typingSubscription = Get.find<AuthService>()
+        .getUserReference(userId)
+        .collection('chats')
+        .doc(doctorId)
+        .snapshots()
+        .listen((snapshot) {
+      if (snapshot.exists && snapshot.data() != null) {
+        final data = snapshot.data() as Map<String, dynamic>;
+        partnerIsTyping.value = data['isTyping'] ?? false;
+      }
+    });
   }
 
   void sendMessage(String text) async {
     if (text.trim().isEmpty) return;
 
     if (selectedDoctor.value != null) {
+      // Optimistic update
+      final user = FirebaseAuth.instance.currentUser;
+      final userName = user?.displayName ?? 'Pasien';
+      final msg = ChatMessage(
+        id: DateTime.now().millisecondsSinceEpoch.toString(), // temporary ID
+        text: text,
+        isUser: true,
+        time: DateTime.now(),
+        senderName: userName,
+        senderRole: 'pasien',
+      );
+      messages.insert(0, msg);
+
       _sendToFirebase(text);
     }
   }
@@ -245,11 +359,6 @@ class RoomChatController extends GetxController {
     }
   }
 
-  @override
-  void onClose() {
-    _chatSubscription?.cancel();
-    super.onClose();
-  }
 }
 
 

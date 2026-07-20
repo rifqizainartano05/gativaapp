@@ -13,53 +13,53 @@ class NakesProfileView extends GetView<NakesProfileController> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
-      appBar: AppBar(
-        title: const Text(
-          'Profil Tenaga Kesehatan',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-        centerTitle: true,
-        backgroundColor: const Color(0xFF2E7D32),
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(32),
-              decoration: const BoxDecoration(color: Color(0xFF2E7D32)),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Positioned(
-                    right: -40,
-                    top: -20,
-                    child: Icon(
-                      Icons.medical_information,
-                      size: 160,
-                      color: Colors.white.withOpacity(0.08),
-                    ),
+      body: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + 32,
+              left: 32,
+              right: 32,
+              bottom: 32,
+            ),
+            decoration: const BoxDecoration(
+              color: Color(0xFF2E7D32),
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Positioned(
+                  right: -40,
+                  top: -20,
+                  child: Icon(
+                    Icons.medical_information,
+                    size: 160,
+                    color: Colors.white.withOpacity(0.08),
                   ),
+                ),
 
-                  Column(
+                Column(
                     children: [
                       Obx(
-                        () => CircleAvatar(
-                          radius: 50,
-                          backgroundColor: Colors.white24,
-                          backgroundImage: controller.imageBytes.value != null
-                              ? MemoryImage(controller.imageBytes.value!)
-                              : null,
-                          child: controller.imageBytes.value == null
-                              ? const Icon(
-                                  Icons.person,
-                                  color: Colors.white,
-                                  size: 64,
-                                )
-                              : null,
-                        ),
+                        () {
+                          final bool hasImage = controller.imageBytes.value != null && controller.imageBytes.value!.isNotEmpty;
+                          return CircleAvatar(
+                            radius: 50,
+                            backgroundColor: Colors.white24,
+                            backgroundImage: hasImage
+                                ? MemoryImage(controller.imageBytes.value!)
+                                : null,
+                            onBackgroundImageError: hasImage ? (exception, stackTrace) {} : null,
+                            child: !hasImage
+                                ? const Icon(
+                                    Icons.person,
+                                    color: Colors.white,
+                                    size: 64,
+                                  )
+                                : null,
+                          );
+                        },
                       ),
                       const SizedBox(height: 16),
                       Obx(
@@ -87,14 +87,18 @@ class NakesProfileView extends GetView<NakesProfileController> {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: GestureDetector(
-                onTap: controller.showBarcodeDialog,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 24),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: GestureDetector(
+                        onTap: controller.showBarcodeDialog,
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
@@ -172,20 +176,58 @@ class NakesProfileView extends GetView<NakesProfileController> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _buildProfileOption(
-                    icon: Icons.person_outline_rounded,
-                    title: 'Edit Profil',
-                    subtitle: 'Ubah data diri dan informasi dasar',
-                    color: const Color(0xFF2196F3),
-                    onTap: () => Get.toNamed(Routes.NAKES_EDIT_PROFILE),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildProfileOption(
-                    icon: Icons.security_rounded,
-                    title: 'Ganti Kata Sandi',
-                    subtitle: 'Perbarui kata sandi Anda',
-                    color: const Color(0xFFFF9800),
-                    onTap: () => Get.toNamed(Routes.NAKES_GANTI_KATA_SANDI),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.02),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        _buildProfileOption(
+                          icon: Icons.person_outline_rounded,
+                          title: 'Edit Profil',
+                          subtitle: 'Ubah data diri dan informasi dasar',
+                          color: const Color(0xFF2196F3),
+                          onTap: () => Get.toNamed(Routes.NAKES_EDIT_PROFILE),
+                        ),
+                        Divider(height: 1, indent: 56, color: Colors.grey.withOpacity(0.2)),
+                        _buildProfileOption(
+                          icon: Icons.security_rounded,
+                          title: 'Ganti Kata Sandi',
+                          subtitle: 'Perbarui kata sandi Anda',
+                          color: const Color(0xFFFF9800),
+                          onTap: () => Get.toNamed(Routes.NAKES_GANTI_KATA_SANDI),
+                        ),
+                        Divider(height: 1, indent: 56, color: Colors.grey.withOpacity(0.2)),
+                        _buildProfileOption(
+                          icon: Icons.notifications_active_rounded,
+                          title: 'Notifikasi',
+                          subtitle: 'Pengaturan notifikasi pesan dan pengingat',
+                          color: const Color(0xFF2E7D32),
+                          trailing: Obx(
+                            () => Switch(
+                              value: controller.isNotificationEnabled.value,
+                              onChanged: (value) => controller.toggleNotification(value),
+                              activeColor: const Color(0xFF2E7D32),
+                              activeTrackColor: const Color(0xFF2E7D32).withOpacity(0.3),
+                              inactiveThumbColor: Colors.grey,
+                              inactiveTrackColor: Colors.grey.withOpacity(0.3),
+                            ),
+                          ),
+                          onTap: () {
+                            controller.toggleNotification(!controller.isNotificationEnabled.value);
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 32),
                   const Text(
@@ -197,20 +239,38 @@ class NakesProfileView extends GetView<NakesProfileController> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _buildProfileOption(
-                    icon: Icons.info_outline_rounded,
-                    title: 'Tentang Aplikasi',
-                    subtitle: 'Informasi versi & detail aplikasi',
-                    color: const Color(0xFF9C27B0),
-                    onTap: () => Get.toNamed(Routes.NAKES_TENTANG_APLIKASI),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildProfileOption(
-                    icon: Icons.help_outline_rounded,
-                    title: 'Bantuan/FAQ',
-                    subtitle: 'Panduan penggunaan aplikasi',
-                    color: const Color(0xFF00BCD4),
-                    onTap: () => Get.toNamed(Routes.NAKES_BANTUAN_FAQ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.02),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        _buildProfileOption(
+                          icon: Icons.info_outline_rounded,
+                          title: 'Tentang Aplikasi',
+                          subtitle: 'Informasi versi & detail aplikasi',
+                          color: const Color(0xFF9C27B0),
+                          onTap: () => Get.toNamed(Routes.NAKES_TENTANG_APLIKASI),
+                        ),
+                        Divider(height: 1, indent: 56, color: Colors.grey.withOpacity(0.2)),
+                        _buildProfileOption(
+                          icon: Icons.help_outline_rounded,
+                          title: 'Bantuan/FAQ',
+                          subtitle: 'Panduan penggunaan aplikasi',
+                          color: const Color(0xFF00BCD4),
+                          onTap: () => Get.toNamed(Routes.NAKES_BANTUAN_FAQ),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 32),
                   const Text(
@@ -222,21 +282,42 @@ class NakesProfileView extends GetView<NakesProfileController> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _buildProfileOption(
-                    icon: Icons.logout_rounded,
-                    title: 'Keluar',
-                    subtitle: 'Akhiri sesi Anda',
-                    color: const Color(0xFFF44336),
-                    onTap: () {
-                      controller.logout();
-                    },
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.grey.withOpacity(0.2)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.02),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        _buildProfileOption(
+                          icon: Icons.logout_rounded,
+                          title: 'Keluar',
+                          subtitle: 'Akhiri sesi Anda',
+                          color: const Color(0xFFF44336),
+                          onTap: () {
+                            controller.logout();
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 40),
                 ],
               ),
             ),
-          ],
-        ),
+                ], // close Expanded's Column children
+              ), // close Expanded's Column
+            ), // close SingleChildScrollView
+          ), // close Expanded
+        ],
       ),
     );
   }
@@ -247,68 +328,54 @@ class NakesProfileView extends GetView<NakesProfileController> {
     required String subtitle,
     required Color color,
     required VoidCallback onTap,
-    bool showDivider = true,
+    Widget? trailing,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(icon, color: color, size: 24),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.15),
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
+                child: Icon(icon, color: color, size: 24),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade600,
-                        ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  color: Colors.grey.shade400,
-                  size: 16,
-                ),
-              ],
-            ),
+              ),
+              trailing ?? Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: Colors.grey.shade400,
+                size: 16,
+              ),
+            ],
           ),
         ),
       ),

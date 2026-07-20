@@ -7,7 +7,6 @@ import '../../../widgets/custom_popup.dart';
 class DetailTenagaKesehatanController extends GetxController {
   final isLoading = true.obs;
   final doctorData = <String, dynamic>{}.obs;
-  final isOnline = false.obs;
   final scheduleText = 'Belum ada jadwal'.obs;
   final rating = 0.obs;
   final hasRated = false.obs;
@@ -18,54 +17,16 @@ class DetailTenagaKesehatanController extends GetxController {
     final args = Get.arguments;
     if (args != null && args is Map<String, dynamic>) {
       doctorData.value = args;
-      _checkOnlineStatus(args['jadwal_online']?.toString());
+      if (args['jadwal_online'] != null && args['jadwal_online'].toString().isNotEmpty) {
+        scheduleText.value = args['jadwal_online'].toString();
+      }
       fetchDoctorDetails(args['id']);
     } else {
       isLoading.value = false;
     }
   }
 
-  void _checkOnlineStatus(String? jadwal) {
-    if (jadwal == null || jadwal.isEmpty) {
-      isOnline.value = false;
-      scheduleText.value = 'Belum ada jadwal';
-      return;
-    }
 
-    scheduleText.value = jadwal;
-    // Asumsi format jadwal adalah "08:00 - 16:00"
-    try {
-      final parts = jadwal.split('-');
-      if (parts.length == 2) {
-        final startPart = parts[0].trim();
-        final endPart = parts[1].trim();
-
-        final startParts = startPart.split(':');
-        final endParts = endPart.split(':');
-
-        if (startParts.length == 2 && endParts.length == 2) {
-          final startHour = int.parse(startParts[0]);
-          final startMinute = int.parse(startParts[1]);
-          final endHour = int.parse(endParts[0]);
-          final endMinute = int.parse(endParts[1]);
-
-          final now = DateTime.now();
-          final startTime = DateTime(now.year, now.month, now.day, startHour, startMinute);
-          final endTime = DateTime(now.year, now.month, now.day, endHour, endMinute);
-
-          if (now.isAfter(startTime) && now.isBefore(endTime)) {
-            isOnline.value = true;
-          } else {
-            isOnline.value = false;
-          }
-          return;
-        }
-      }
-    } catch (e) {
-      // Abaikan jika format salah
-    }
-    isOnline.value = false;
-  }
 
   void fetchDoctorDetails(String? id) async {
     if (id == null) {
@@ -83,7 +44,9 @@ class DetailTenagaKesehatanController extends GetxController {
       if (doc.exists) {
         final data = doc.data() as Map<String, dynamic>;
         doctorData.value = data;
-        _checkOnlineStatus(data['jadwal_online']?.toString());
+        if (data['jadwal_online'] != null && data['jadwal_online'].toString().isNotEmpty) {
+          scheduleText.value = data['jadwal_online'].toString();
+        }
         
         // Cek rating sebelumnya
         final user = FirebaseAuth.instance.currentUser;

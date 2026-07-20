@@ -106,7 +106,6 @@ class DetailTenagaKesehatanView extends GetView<DetailTenagaKesehatanController>
                   );
                 }
 
-                final isOnline = controller.isOnline.value;
                 final photoBase64 = data['photoBase64'] ?? '';
 
                 return SingleChildScrollView(
@@ -178,38 +177,7 @@ class DetailTenagaKesehatanView extends GetView<DetailTenagaKesehatanController>
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
-                                const SizedBox(height: 8),
-                                // Badge Online / Offline
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: isOnline ? const Color(0xFFE8F5E9) : Colors.red.shade50,
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(
-                                      color: isOnline ? Colors.green.shade200 : Colors.red.shade200,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        isOnline ? Icons.check_circle_rounded : Icons.cancel_rounded,
-                                        color: isOnline ? const Color(0xFF2E7D32) : Colors.red.shade700,
-                                        size: 16,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        isOnline ? "Online" : "Offline",
-                                        style: TextStyle(
-                                          color: isOnline ? const Color(0xFF2E7D32) : Colors.red.shade700,
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 32),
+                                const SizedBox(height: 12),
                                 // List Info
                                 _buildInfoRow(Icons.schedule_rounded, "Jadwal Praktek", controller.scheduleText.value),
                                 const Padding(

@@ -38,9 +38,14 @@ class NotifikasiController extends GetxController {
   List<NotifikasiModel> _edukasiNotifs = [];
   List<NotifikasiModel> _infoNotifs = [];
 
-  void fetchNotifications() {
+  void fetchNotifications() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
+      final authService = Get.find<AuthService>();
+      if (authService.userRole.value.isEmpty) {
+        await authService.fetchUserRole(user.uid);
+      }
+      
       // 1. Fetch User Notifications
       Get.find<AuthService>()
           .getUserReference(user.uid)

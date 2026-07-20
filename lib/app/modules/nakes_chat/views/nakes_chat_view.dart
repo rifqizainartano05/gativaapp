@@ -175,9 +175,8 @@ class NakesChatView extends GetView<NakesChatController> {
                 final name = doc['name'] ?? 'Pasien';
                 final int antreanCount = int.tryParse(doc['antrean']?.toString() ?? '0') ?? 0;
                 final photoBase64 = doc['strImageBase64'] ?? '';
-                // Since this is the patient list from nakes side, we assume they are always available for chat
-                // Alternatively, we could check last seen, but for now we'll just show 'Tersedia'
-                final bool isOnline = true; 
+                // Check real-time presence for patient
+                final bool isOnline = doc['isOnline'] == true;
 
                 return Material(
                   color: Colors.transparent,

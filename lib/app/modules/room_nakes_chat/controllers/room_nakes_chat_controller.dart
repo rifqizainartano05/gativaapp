@@ -29,7 +29,17 @@ class RoomNakesChatController extends GetxController {
   
   // Live Chat Data
   final selectedDoctor = Rxn<Map<String, dynamic>>();
+  final RxBool partnerIsOnline = false.obs;
+  final Rx<DateTime?> partnerLastSeen = Rx<DateTime?>(null);
   StreamSubscription<QuerySnapshot>? _chatSubscription;
+  StreamSubscription<DocumentSnapshot>? _presenceSubscription;
+  StreamSubscription<DocumentSnapshot>? _typingSubscription;
+  StreamSubscription<DocumentSnapshot>? _myProfileSubscription;
+  final RxBool partnerIsTyping = false.obs;
+  final RxBool isWithinSchedule = true.obs;
+  Timer? _typingTimer;
+  Timer? _scheduleTimer;
+  String _jadwalOnline = '';
 
   @override
   void onInit() {
@@ -37,13 +47,168 @@ class RoomNakesChatController extends GetxController {
     if (Get.arguments != null) {
       selectedDoctor.value = Get.arguments as Map<String, dynamic>;
       _listenToFirebaseChat();
+      _listenToPartnerPresence();
+      _listenToPartnerTyping();
+      _listenToMyProfile();
+      
+      _scheduleTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+        _checkSchedule();
+      });
     }
+  }
+
+  @override
+  void onClose() {
+    _chatSubscription?.cancel();
+    _presenceSubscription?.cancel();
+    _typingSubscription?.cancel();
+    _myProfileSubscription?.cancel();
+    _typingTimer?.cancel();
+    _scheduleTimer?.cancel();
+    _updateTypingStatus(false);
+    super.onClose();
+  }
+
+  void onTextChanged(String text) {
+    if (text.isNotEmpty) {
+      _updateTypingStatus(true);
+      _typingTimer?.cancel();
+      _typingTimer = Timer(const Duration(seconds: 2), () {
+        _updateTypingStatus(false);
+      });
+    } else {
+      _updateTypingStatus(false);
+      _typingTimer?.cancel();
+    }
+  }
+
+  Future<void> _updateTypingStatus(bool isTyping) async {
+    final user = FirebaseAuth.instance.currentUser;
+    final userId = user?.uid ?? 'anonymous';
+    final doctorId = selectedDoctor.value?['id'] ?? '';
+    if (doctorId.isEmpty) return;
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('mobile')
+          .doc('roles')
+          .collection('pasien')
+          .doc(doctorId)
+          .collection('chats')
+          .doc(userId)
+          .set({'isTyping': isTyping}, SetOptions(merge: true));
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  void _listenToPartnerTyping() {
+    final user = FirebaseAuth.instance.currentUser;
+    final userId = user?.uid ?? 'anonymous';
+    final doctorId = selectedDoctor.value?['id'] ?? '';
+    if (doctorId.isEmpty) return;
+
+    _typingSubscription?.cancel();
+    _typingSubscription = Get.find<AuthService>()
+        .getUserReference(userId)
+        .collection('chats')
+        .doc(doctorId)
+        .snapshots()
+        .listen((snapshot) {
+      if (snapshot.exists && snapshot.data() != null) {
+        final data = snapshot.data() as Map<String, dynamic>;
+        partnerIsTyping.value = data['isTyping'] ?? false;
+      }
+    });
+  }
+
+  void _listenToPartnerPresence() {
+    final pasienId = selectedDoctor.value?['id'] ?? '';
+    if (pasienId.isEmpty) return;
+
+    _presenceSubscription?.cancel();
+    _presenceSubscription = FirebaseFirestore.instance
+        .collection('mobile')
+        .doc('roles')
+        .collection('pasien')
+        .doc(pasienId)
+        .snapshots()
+        .listen((snapshot) {
+      if (snapshot.exists) {
+        partnerIsOnline.value = snapshot.data()?['isOnline'] ?? false;
+        
+        final lastSeenData = snapshot.data()?['lastSeen'];
+        if (lastSeenData != null) {
+          if (lastSeenData is Timestamp) {
+            partnerLastSeen.value = lastSeenData.toDate();
+          }
+        } else {
+          partnerLastSeen.value = null;
+        }
+      }
+    });
+  }
+
+  void _listenToMyProfile() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    _myProfileSubscription?.cancel();
+    _myProfileSubscription = FirebaseFirestore.instance
+        .collection('mobile')
+        .doc('roles')
+        .collection('tenaga_kesehatan')
+        .doc(user.uid)
+        .snapshots()
+        .listen((snapshot) {
+      if (snapshot.exists) {
+        _jadwalOnline = snapshot.data()?['jadwal_online'] ?? '';
+        _checkSchedule();
+      }
+    });
+  }
+
+  void _checkSchedule() {
+    if (_jadwalOnline.isEmpty) {
+      isWithinSchedule.value = false;
+      return;
+    }
+    try {
+      final parts = _jadwalOnline.split('-');
+      if (parts.length == 2) {
+        final startParts = parts[0].trim().split(':');
+        final endParts = parts[1].trim().split(':');
+        if (startParts.length == 2 && endParts.length == 2) {
+          final now = DateTime.now();
+          final startTime = DateTime(now.year, now.month, now.day,
+              int.parse(startParts[0]), int.parse(startParts[1]));
+          final endTime = DateTime(now.year, now.month, now.day,
+              int.parse(endParts[0]), int.parse(endParts[1]));
+          isWithinSchedule.value = now.isAfter(startTime) && now.isBefore(endTime);
+          return;
+        }
+      }
+    } catch (_) {}
+    isWithinSchedule.value = false;
   }
 
   void sendMessage(String text) async {
     if (text.trim().isEmpty) return;
 
     if (selectedDoctor.value != null) {
+      // Optimistic update
+      final user = FirebaseAuth.instance.currentUser;
+      final userName = user?.displayName ?? 'Nakes';
+      final msg = ChatMessage(
+        id: DateTime.now().millisecondsSinceEpoch.toString(), // temporary ID
+        text: text,
+        isUser: true,
+        time: DateTime.now(),
+        senderName: userName,
+        senderRole: 'nakes',
+      );
+      messages.insert(0, msg);
+
       if (text.toLowerCase().contains('terima kasih')) {
         _sendToFirebase(text);
         exitChat();
@@ -256,9 +421,4 @@ class RoomNakesChatController extends GetxController {
     }
   }
 
-  @override
-  void onClose() {
-    _chatSubscription?.cancel();
-    super.onClose();
-  }
 }

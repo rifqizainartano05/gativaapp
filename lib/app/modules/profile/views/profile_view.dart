@@ -24,7 +24,10 @@ class ProfileView extends GetView<ProfileController> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light.copyWith(systemNavigationBarColor: Colors.white, systemNavigationBarIconBrightness: Brightness.dark),
+      value: SystemUiOverlayStyle.light.copyWith(
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
       child: Scaffold(
         backgroundColor: const Color(0xFFF4F6F8),
         body: Column(
@@ -138,12 +141,16 @@ class ProfileView extends GetView<ProfileController> {
                             ),
                             child: Column(
                               children: [
-                                Obx(() => _buildSimpleMenuTile(
-                                  icon: Icons.medical_services_rounded,
-                                  title: "Tenaga Kesehatan",
-                                  subtitle: controller.nakesName.value == '-' ? "Belum terhubung" : controller.nakesName.value,
-                                  onTap: () => controller.showNakesDialog(),
-                                )),
+                                Obx(
+                                  () => _buildSimpleMenuTile(
+                                    icon: Icons.medical_services_rounded,
+                                    title: "Tenaga Kesehatan",
+                                    subtitle: controller.nakesName.value == '-'
+                                        ? "Belum terhubung"
+                                        : controller.nakesName.value,
+                                    onTap: () => controller.showNakesDialog(),
+                                  ),
+                                ),
                                 const Divider(
                                   height: 1,
                                   indent: 56,
@@ -153,8 +160,7 @@ class ProfileView extends GetView<ProfileController> {
                                   icon: Icons.person_outline_rounded,
                                   title: "Edit Profil",
                                   subtitle: "Perbarui data diri",
-                                  onTap: () =>
-                                      Get.toNamed(Routes.EDIT_PROFILE),
+                                  onTap: () => Get.toNamed(Routes.EDIT_PROFILE),
                                 ),
                                 const Divider(
                                   height: 1,
@@ -177,7 +183,8 @@ class ProfileView extends GetView<ProfileController> {
                                   icon: Icons.assignment_ind_rounded,
                                   title: "Catatan Nakes",
                                   subtitle: "Lihat pesan dari tenaga kesehatan",
-                                  onTap: () => Get.toNamed(Routes.CATATAN_NAKES),
+                                  onTap: () =>
+                                      Get.toNamed(Routes.CATATAN_NAKES),
                                 ),
                                 const Divider(
                                   height: 1,
@@ -188,7 +195,8 @@ class ProfileView extends GetView<ProfileController> {
                                   icon: Icons.lock_outline_rounded,
                                   title: "Ganti Kata Sandi",
                                   subtitle: "Perbarui kata sandi Anda",
-                                  onTap: () => Get.toNamed(Routes.GANTI_KATA_SANDI),
+                                  onTap: () =>
+                                      Get.toNamed(Routes.GANTI_KATA_SANDI),
                                 ),
                                 const Divider(
                                   height: 1,
@@ -197,21 +205,21 @@ class ProfileView extends GetView<ProfileController> {
                                 ),
                                 _buildSimpleMenuTile(
                                   icon: Icons.notifications_active_rounded,
-                                  title: "Notifikasi Pengingat",
-                                  subtitle: "Pengingat selalu aktif",
-                                  trailing: const Text(
-                                    "Aktif",
-                                    style: TextStyle(
-                                      color: AppColors.primary,
-                                      fontWeight: FontWeight.bold,
+                                  title: "Notifikasi",
+                                  subtitle: "Pengaturan notifikasi pesan dan pengingat",
+                                  trailing: Obx(
+                                    () => Switch(
+                                      value: controller.isNotificationEnabled.value,
+                                      onChanged: (value) => controller.toggleNotification(value),
+                                      activeColor: AppColors.primary,
+                                      activeTrackColor: AppColors.primary.withOpacity(0.3),
+                                      inactiveThumbColor: Colors.grey,
+                                      inactiveTrackColor: Colors.grey.withOpacity(0.3),
                                     ),
                                   ),
                                   onTap: () {
-                                    Get.snackbar(
-                                      "Info",
-                                      "Notifikasi pengingat diatur untuk selalu aktif secara permanen.",
-                                      snackPosition: SnackPosition.BOTTOM,
-                                    );
+                                    // Toggle switch on tap as well
+                                    controller.toggleNotification(!controller.isNotificationEnabled.value);
                                   },
                                 ),
                               ],
@@ -253,7 +261,8 @@ class ProfileView extends GetView<ProfileController> {
                                   icon: Icons.info_outline_rounded,
                                   title: "Tentang Aplikasi",
                                   subtitle: "Informasi versi & detail",
-                                  onTap: () => Get.toNamed(Routes.TENTANG_APLIKASI),
+                                  onTap: () =>
+                                      Get.toNamed(Routes.TENTANG_APLIKASI),
                                 ),
                               ],
                             ),
@@ -347,7 +356,7 @@ class ProfileView extends GetView<ProfileController> {
                           shape: BoxShape.circle,
                         ),
                         child: Obx(() {
-                          if (controller.photoBase64.value.isNotEmpty) {
+                          if (controller.photoBase64.value.isNotEmpty && controller.photoBase64.value.length > 50) {
                             try {
                               return CircleAvatar(
                                 radius: 36,
@@ -357,6 +366,7 @@ class ProfileView extends GetView<ProfileController> {
                                     controller.photoBase64.value,
                                   ),
                                 ),
+                                onBackgroundImageError: (exception, stackTrace) {},
                               );
                             } catch (e) {
                               return const CircleAvatar(
@@ -472,7 +482,12 @@ class ProfileView extends GetView<ProfileController> {
     );
   }
 
-  Widget _buildInnerStatItem(String title, String value, IconData icon, {VoidCallback? onTap}) {
+  Widget _buildInnerStatItem(
+    String title,
+    String value,
+    IconData icon, {
+    VoidCallback? onTap,
+  }) {
     Widget content = Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -519,7 +534,7 @@ class ProfileView extends GetView<ProfileController> {
         ),
       );
     }
-    
+
     return content;
   }
 

@@ -40,16 +40,21 @@ class ChatController extends GetxController {
   final messages = <ChatMessage>[].obs;
   final selectedDoctor = Rxn<Map<String, dynamic>>();
   StreamSubscription<QuerySnapshot>? _chatSubscription;
+  StreamSubscription<QuerySnapshot>? _nakesSubscription;
+  Timer? _scheduleTimer;
 
   @override
   void onInit() {
     super.onInit();
     fetchNakes();
+    _scheduleTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      nakesList.refresh();
+    });
   }
 
   void fetchNakes() {
     isLoading.value = true;
-    FirebaseFirestore.instance
+    _nakesSubscription = FirebaseFirestore.instance
         .collection('mobile')
         .doc('roles')
         .collection('tenaga_kesehatan')
@@ -113,6 +118,9 @@ class ChatController extends GetxController {
 
   @override
   void onClose() {
+    _scheduleTimer?.cancel();
+    _nakesSubscription?.cancel();
+    _chatSubscription?.cancel();
     super.onClose();
   }
 }
