@@ -107,4 +107,44 @@ class NakesDetailPasienChatController extends GetxController {
     usiaController.dispose();
     super.onClose();
   }
+
+  double calculateDailyLimit(int age, String condition) {
+    String c = condition.trim().toLowerCase();
+    if (age >= 5 && age <= 9) {
+      if (c.contains('sehat')) return 1200;
+      if (c.contains('hipertensi')) return 1200;
+      if (c.contains('kardiovaskular')) return 1000;
+      if (c.contains('jantung')) return 1000;
+      if (c.contains('ginjal')) return 1000;
+      if (c.contains('stroke')) return 0;
+      return 1200;
+    } else if (age >= 10 && age <= 17) {
+      if (c.contains('sehat')) return 1500;
+      if (c.contains('hipertensi')) return 1200;
+      if (c.contains('kardiovaskular')) return 1000;
+      if (c.contains('jantung')) return 1000;
+      if (c.contains('ginjal')) return 1000;
+      if (c.contains('stroke')) return 0;
+      return 1500;
+    } else if (age >= 18 && age <= 59) {
+      if (c.contains('sehat')) return 2000;
+      if (c.contains('hipertensi')) return 1500;
+      if (c.contains('kardiovaskular')) return 1500;
+      if (c.contains('jantung')) return 1500;
+      if (c.contains('ginjal')) return 1500;
+      if (c.contains('stroke')) return 1500;
+      return 2000;
+    } else if (age >= 60) {
+      if (c.contains('sehat')) return 1200;
+      if (c.contains('hipertensi')) return 1000;
+      if (c.contains('kardiovaskular')) return 1200;
+      if (c.contains('jantung')) return 1200;
+      if (c.contains('ginjal')) return 1000;
+      if (c.contains('stroke')) return 1000;
+      if (c.contains('osteoporosis')) return 2300;
+      return 1200;
+    }
+    return 2000;
+  }
 }
+

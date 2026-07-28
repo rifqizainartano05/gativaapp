@@ -98,7 +98,9 @@ class NakesDetailPasienChatView
                     // Natrium Box (Moved to top & Beautified)
                     Obx(() {
                       final natrium = controller.pasienData['natrium'] ?? controller.pasienData['totalNatrium'] ?? controller.pasienData['sodium'] ?? 0;
-                      final dailyLimit = controller.pasienData['dailyLimit'] ?? controller.pasienData['limitNatrium'] ?? 2000;
+                      int age = controller.pasienData['age'] ?? 28;
+                      String condition = controller.pasienData['kondisi_kesehatan'] ?? controller.pasienData['kondisi'] ?? 'Sehat';
+                      final dailyLimit = controller.pasienData['dailyLimit'] ?? controller.pasienData['limitNatrium'] ?? controller.calculateDailyLimit(age, condition);
                       // Calculate percentage for progress
                       final double percentage = (dailyLimit > 0) ? (natrium / dailyLimit).clamp(0.0, 1.0) : 0.0;
                       final bool isWarning = natrium >= dailyLimit;

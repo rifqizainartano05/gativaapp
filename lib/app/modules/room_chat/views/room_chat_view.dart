@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../../routes/app_pages.dart';
 import '../controllers/room_chat_controller.dart';
@@ -13,7 +14,14 @@ class RoomChatView extends GetView<RoomChatController> {
   Widget build(BuildContext context) {
     final TextEditingController textController = TextEditingController();
 
-    return Scaffold(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
       backgroundColor: const Color(
         0xFFF8FAFC,
       ), // Warna background modern yang sangat soft
@@ -240,7 +248,7 @@ class RoomChatView extends GetView<RoomChatController> {
           ),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildCustomHeader(BuildContext context) {
@@ -362,9 +370,7 @@ class RoomChatView extends GetView<RoomChatController> {
                                       style: TextStyle(
                                         fontWeight: FontWeight.normal,
                                         fontSize: 12,
-                                        color: isOnline
-                                            ? Colors.white70
-                                            : Colors.red.shade200,
+                                        color: Colors.white70,
                                       ),
                                     );
                                   }),

@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../controllers/nakes_tentang_aplikasi_controller.dart';
 
-
 class NakesTentangAplikasiView extends GetView<NakesTentangAplikasiController> {
   const NakesTentangAplikasiView({Key? key}) : super(key: key);
 
@@ -17,16 +16,13 @@ class NakesTentangAplikasiView extends GetView<NakesTentangAplikasiController> {
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF4F6F8),
+        backgroundColor: const Color(0xFF2E7D32),
         body: Column(
           children: [
+            // Top Green Header
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.only(top: 60, left: 24, right: 24, bottom: 32),
-              decoration: const BoxDecoration(
-                color: Color(0xFF2E7D32),
-                // Tidak melengkung sesuai permintaan
-              ),
+              padding: const EdgeInsets.only(top: 60, left: 24, right: 24, bottom: 40),
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -78,9 +74,9 @@ class NakesTentangAplikasiView extends GetView<NakesTentangAplikasiController> {
                       ),
                       const SizedBox(height: 4),
                       Padding(
-                        padding: const EdgeInsets.only(left: 52), // 36 (icon size) + 16 (spacing)
+                        padding: const EdgeInsets.only(left: 52),
                         child: Text(
-                          'Portal Nakes - Versi 1.0.0',
+                          'Versi 1.0.0',
                           style: TextStyle(
                             fontSize: 13,
                             color: Colors.white.withOpacity(0.8),
@@ -92,28 +88,29 @@ class NakesTentangAplikasiView extends GetView<NakesTentangAplikasiController> {
                 ],
               ),
             ),
+            
+            // Bottom White Area
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
+              child: Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                ),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Center(
+                        child: Image.asset(
+                          'assets/logo.png',
+                          width: 120,
+                          height: 120,
+                        ),
+                      ),
+                      const SizedBox(height: 32),
                       const Text(
-                        'GATIVA untuk Nakes',
+                        'Deskripsi',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -129,7 +126,7 @@ class NakesTentangAplikasiView extends GetView<NakesTentangAplikasiController> {
                           height: 1.6,
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 32),
                       const Text(
                         'Fungsi Utama Nakes',
                         style: TextStyle(
@@ -138,10 +135,11 @@ class NakesTentangAplikasiView extends GetView<NakesTentangAplikasiController> {
                           color: Colors.black87,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       _buildFeatureItem(Icons.people_alt_rounded, 'Manajemen & pantauan pasien'),
                       _buildFeatureItem(Icons.question_answer_rounded, 'Tanggapan konsultasi real-time'),
                       _buildFeatureItem(Icons.note_alt_rounded, 'Pencatatan rekam dan anjuran kesehatan'),
+                      const SizedBox(height: 40),
                     ],
                   ),
                 ),
@@ -153,17 +151,32 @@ class NakesTentangAplikasiView extends GetView<NakesTentangAplikasiController> {
     );
   }
 
-  Widget _buildFeatureItem(IconData icon, String text) {
+  Widget _buildFeatureItem(IconData icon, String title) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         children: [
-          Icon(icon, color: Color(0xFF2E7D32), size: 20),
-          const SizedBox(width: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2E7D32).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              color: const Color(0xFF2E7D32),
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 16),
           Expanded(
             child: Text(
-              text,
-              style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
+              title,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
+              ),
             ),
           ),
         ],

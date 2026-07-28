@@ -26,26 +26,33 @@ class LensaNatriumDetailView extends GetView<LensaNatriumDetailController> {
         (food['sodium'] as num?)?.toInt() ??
         0;
 
-    Color statusColor;
-    String statusText;
-    String statusDesc;
+    return Obx(() {
+      final double limit = controller.dailyLimit.value;
+      
+      Color statusColor;
+      String statusText;
+      String statusDesc;
 
-    if (sodiumMg > 1000) {
-      statusColor = AppColors.danger;
-      statusText = "Sangat Tinggi Natrium";
-      statusDesc =
-          "Konsumsi jajanan ini akan menghabiskan lebih dari setengah batas harian natrium Anda. Sangat disarankan untuk membatasinya.";
-    } else if (sodiumMg > 600) {
-      statusColor = AppColors.warning;
-      statusText = "Natrium Sedang";
-      statusDesc =
-          "Kandungan natrium cukup tinggi. Sebaiknya perhatikan asupan makanan lain hari ini agar tidak melebihi batas.";
-    } else {
-      statusColor = AppColors.safe;
-      statusText = "Natrium Relatif Aman";
-      statusDesc =
-          "Kandungan natrium masih dalam batas yang wajar untuk satu kali ngemil.";
-    }
+      if (limit == 0) {
+        statusColor = AppColors.danger;
+        statusText = "Sangat Dilarang";
+        statusDesc = "Kondisi Anda saat ini sangat disarankan untuk menghindari natrium berlebih sama sekali.";
+      } else if (sodiumMg > (limit * 0.5)) {
+        statusColor = AppColors.danger;
+        statusText = "Sangat Tinggi Natrium";
+        statusDesc =
+            "Konsumsi jajanan ini akan menghabiskan lebih dari setengah batas harian natrium Anda. Sangat disarankan untuk membatasinya.";
+      } else if (sodiumMg > (limit * 0.3)) {
+        statusColor = AppColors.warning;
+        statusText = "Natrium Sedang";
+        statusDesc =
+            "Kandungan natrium cukup tinggi. Sebaiknya perhatikan asupan makanan lain hari ini agar tidak melebihi batas.";
+      } else {
+        statusColor = AppColors.safe;
+        statusText = "Natrium Relatif Aman";
+        statusDesc =
+            "Kandungan natrium masih dalam batas yang wajar untuk satu kali ngemil.";
+      }
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -212,7 +219,7 @@ class LensaNatriumDetailView extends GetView<LensaNatriumDetailController> {
                         child: Row(
                           children: [
                             Icon(
-                              sodiumMg > 1000
+                              (limit > 0 && sodiumMg > (limit * 0.5))
                                   ? Icons.warning_rounded
                                   : Icons.info_outline_rounded,
                               color: statusColor,
@@ -288,7 +295,7 @@ class LensaNatriumDetailView extends GetView<LensaNatriumDetailController> {
                             const SizedBox(height: 8),
                             Text(
                               food['health_tip'] ??
-                                  "Batas konsumsi natrium harian yang disarankan oleh WHO adalah sekitar 2000 mg (setara dengan 1 sendok teh garam). Jajanan jalanan sering kali kaya akan MSG dan garam bumbu yang bisa membuat Anda tanpa sadar melebihi batas tersebut.",
+                                  "Batas konsumsi natrium harian yang disarankan untuk Anda (${controller.ageGroup.value} dengan kondisi ${controller.conditionName.value}) adalah maksimal ${limit.toInt()} mg (menyesuaikan kepatuhan sistem aplikasi Gativa). Jajanan jalanan sering kali kaya akan MSG dan garam bumbu yang bisa membuat Anda tanpa sadar melebihi batas tersebut.",
                               style: const TextStyle(
                                 fontSize: 13,
                                 color: AppColors.textSecondary,
@@ -310,5 +317,6 @@ class LensaNatriumDetailView extends GetView<LensaNatriumDetailController> {
         ),
       ),
     );
+    });
   }
 }

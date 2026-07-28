@@ -11,6 +11,45 @@ class EditProfileController extends GetxController {
   final isLoading = false.obs;
   final photoBase64 = ''.obs;
 
+  double calculateDailyLimit(int age, String condition) {
+    String c = condition.trim().toLowerCase();
+    if (age >= 5 && age <= 9) {
+      if (c.contains('sehat')) return 1200;
+      if (c.contains('hipertensi')) return 1200;
+      if (c.contains('kardiovaskular')) return 1000;
+      if (c.contains('jantung')) return 1000;
+      if (c.contains('ginjal')) return 1000;
+      if (c.contains('stroke')) return 0;
+      return 1200;
+    } else if (age >= 10 && age <= 17) {
+      if (c.contains('sehat')) return 1500;
+      if (c.contains('hipertensi')) return 1200;
+      if (c.contains('kardiovaskular')) return 1000;
+      if (c.contains('jantung')) return 1000;
+      if (c.contains('ginjal')) return 1000;
+      if (c.contains('stroke')) return 0;
+      return 1500;
+    } else if (age >= 18 && age <= 59) {
+      if (c.contains('sehat')) return 2000;
+      if (c.contains('hipertensi')) return 1500;
+      if (c.contains('kardiovaskular')) return 1500;
+      if (c.contains('jantung')) return 1500;
+      if (c.contains('ginjal')) return 1500;
+      if (c.contains('stroke')) return 1500;
+      return 2000;
+    } else if (age >= 60) {
+      if (c.contains('sehat')) return 1200;
+      if (c.contains('hipertensi')) return 1000;
+      if (c.contains('kardiovaskular')) return 1200;
+      if (c.contains('jantung')) return 1200;
+      if (c.contains('ginjal')) return 1000;
+      if (c.contains('stroke')) return 1000;
+      if (c.contains('osteoporosis')) return 2300;
+      return 1200;
+    }
+    return 2000;
+  }
+
   final nameController = TextEditingController();
   final ageController = TextEditingController();
   final tensiController = TextEditingController();
@@ -79,9 +118,11 @@ class EditProfileController extends GetxController {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
+        int age = int.tryParse(ageController.text.trim()) ?? 0;
         final dataToUpdate = <String, dynamic>{
           'name': nameController.text.trim(),
-          'age': int.tryParse(ageController.text.trim()) ?? 0,
+          'age': age,
+          'dailyLimit': calculateDailyLimit(age, selectedCondition.value),
         };
         
         if (photoBase64.value.isNotEmpty) {

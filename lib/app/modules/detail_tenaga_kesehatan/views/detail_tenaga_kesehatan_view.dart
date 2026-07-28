@@ -13,6 +13,8 @@ class DetailTenagaKesehatanView extends GetView<DetailTenagaKesehatanController>
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.light,
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
         backgroundColor: const Color(0xFFF4F6F8),
@@ -180,19 +182,37 @@ class DetailTenagaKesehatanView extends GetView<DetailTenagaKesehatanController>
                                 const SizedBox(height: 12),
                                 // List Info
                                 _buildInfoRow(Icons.schedule_rounded, "Jadwal Praktek", controller.scheduleText.value),
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 12),
-                                  child: Divider(height: 1, color: Color(0xFFEEEEEE)),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 24),
+                                  child: Container(
+                                    height: 3,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFFF1F5F9),
+                                      borderRadius: BorderRadius.all(Radius.circular(2)),
+                                    ),
+                                  ),
                                 ),
                                 _buildInfoRow(Icons.work_history_rounded, "Role", data['role'] ?? 'Tenaga Kesehatan'),
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 12),
-                                  child: Divider(height: 1, color: Color(0xFFEEEEEE)),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 24),
+                                  child: Container(
+                                    height: 3,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFFF1F5F9),
+                                      borderRadius: BorderRadius.all(Radius.circular(2)),
+                                    ),
+                                  ),
                                 ),
                                 _buildInfoRow(Icons.school_rounded, "Lulusan", data['universitas'] ?? data['lulusan'] ?? 'Lulusan Terkemuka'),
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 12),
-                                  child: Divider(height: 1, color: Color(0xFFEEEEEE)),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 24),
+                                  child: Container(
+                                    height: 3,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFFF1F5F9),
+                                      borderRadius: BorderRadius.all(Radius.circular(2)),
+                                    ),
+                                  ),
                                 ),
                                 Builder(
                                   builder: (context) {
@@ -209,22 +229,40 @@ class DetailTenagaKesehatanView extends GetView<DetailTenagaKesehatanController>
                                     return _buildInfoRow(Icons.star_rounded, "Pengalaman", "$pengalaman Tahun Praktik");
                                   },
                                 ),
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 12),
-                                  child: Divider(height: 1, color: Color(0xFFEEEEEE)),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 24),
+                                  child: Container(
+                                    height: 3,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFFF1F5F9),
+                                      borderRadius: BorderRadius.all(Radius.circular(2)),
+                                    ),
+                                  ),
                                 ),
                                 if (data['strNumber'] != null && data['strNumber'].toString().isNotEmpty) ...[
                                   _buildInfoRow(Icons.pin_rounded, "STR Number", data['strNumber'].toString()),
-                                  const Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 12),
-                                    child: Divider(height: 1, color: Color(0xFFEEEEEE)),
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 24),
+                                    child: Container(
+                                    height: 3,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFFF1F5F9),
+                                      borderRadius: BorderRadius.all(Radius.circular(2)),
+                                    ),
+                                  ),
                                   ),
                                 ],
                                 if (data['age'] != null && data['age'].toString().isNotEmpty) ...[
                                   _buildInfoRow(Icons.cake_rounded, "Umur", "${data['age']} Tahun"),
-                                  const Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 12),
-                                    child: Divider(height: 1, color: Color(0xFFEEEEEE)),
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 24),
+                                    child: Container(
+                                    height: 3,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFFF1F5F9),
+                                      borderRadius: BorderRadius.all(Radius.circular(2)),
+                                    ),
+                                  ),
                                   ),
                                 ],
 
@@ -292,7 +330,7 @@ class DetailTenagaKesehatanView extends GetView<DetailTenagaKesehatanController>
                                 const SizedBox(height: 16),
 
                                 ...data.entries.where((e) {
-                                  final excludedKeys = ['photoBase64', 'strImageBase64', 'id', 'name', 'nama', 'username', 'role', 'universitas', 'lulusan', 'pengalaman', 'mulai_praktik', 'jadwal_online', 'detail_tenaga_kesehatan', 'strNumber', 'age', 'email', 'createdAt', 'created_at', 'kode_akses', 'status'];
+                                  final excludedKeys = ['photoBase64', 'strImageBase64', 'id', 'name', 'nama', 'username', 'role', 'universitas', 'lulusan', 'pengalaman', 'mulai_praktik', 'jadwal_online', 'detail_tenaga_kesehatan', 'strNumber', 'age', 'email', 'createdAt', 'created_at', 'kode_akses', 'status', 'isOnline', 'isonline'];
                                   return !excludedKeys.contains(e.key) && e.value != null && e.value.toString().isNotEmpty;
                                 }).map((e) {
                                   // Format key to Title Case

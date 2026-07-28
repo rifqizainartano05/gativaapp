@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../../routes/app_pages.dart';
 import '../controllers/room_nakes_chat_controller.dart';
@@ -12,7 +13,14 @@ class RoomNakesChatView extends GetView<RoomNakesChatController> {
   Widget build(BuildContext context) {
     final TextEditingController textController = TextEditingController();
 
-    return Scaffold(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: Column(
         children: [
@@ -135,9 +143,7 @@ class RoomNakesChatView extends GetView<RoomNakesChatController> {
                                         return Text(
                                           statusText,
                                           style: TextStyle(
-                                            color: isOnline
-                                                ? Colors.white70
-                                                : Colors.red.shade200,
+                                            color: Colors.white70,
                                             fontSize: 12,
                                           ),
                                         );
@@ -389,7 +395,7 @@ class RoomNakesChatView extends GetView<RoomNakesChatController> {
           ),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildTypingBubble() {

@@ -1,4 +1,6 @@
+import '../../../widgets/custom_popup.dart';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -10,7 +12,7 @@ import '../../../services/auth_service.dart';
 import '../../../services/notification_service.dart';
 import 'dart:async';
 
-class ProfileController extends GetxController {
+class ProfileController extends GetxController with WidgetsBindingObserver {
   final RxString name = "Pengguna".obs;
   final RxInt age = 28.obs;
   final RxString bloodPressure = "120/80".obs;
@@ -22,25 +24,67 @@ class ProfileController extends GetxController {
   final RxString healthTargetText = "".obs;
 
   final RxString photoBase64 = "".obs;
+  final Rx<Uint8List?> imageBytes = Rx<Uint8List?>(null);
+  
   final RxString beratBadan = "Belum ada".obs;
   final RxString tinggiBadan = "Belum ada".obs;
   final RxString kondisiKesehatan = "Belum ada".obs;
   final RxString nakesName = "-".obs;
   final RxString nakesUid = "".obs;
   final RxString nakesPhotoBase64 = "".obs;
+  final Rx<Uint8List?> nakesImageBytes = Rx<Uint8List?>(null);
 
   StreamSubscription? _chatSubscription;
   DateTime? _lastNotificationTime;
 
   @override
   void onClose() {
+    WidgetsBinding.instance.removeObserver(this);
     _chatSubscription?.cancel();
     super.onClose();
+  }
+
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _initNotifications();
+    }
   }
 
   @override
   void onInit() {
     super.onInit();
+    WidgetsBinding.instance.addObserver(this);
+    
+    ever(photoBase64, (String b64) {
+      if (b64.isEmpty) {
+        imageBytes.value = null;
+        return;
+      }
+      try {
+        if (b64.contains(',')) b64 = b64.split(',').last;
+        b64 = b64.replaceAll(RegExp(r'\s+'), '');
+        imageBytes.value = base64Decode(b64);
+      } catch (e) {
+        imageBytes.value = null;
+      }
+    });
+
+    ever(nakesPhotoBase64, (String b64) {
+      if (b64.isEmpty) {
+        nakesImageBytes.value = null;
+        return;
+      }
+      try {
+        if (b64.contains(',')) b64 = b64.split(',').last;
+        b64 = b64.replaceAll(RegExp(r'\s+'), '');
+        nakesImageBytes.value = base64Decode(b64);
+      } catch (e) {
+        nakesImageBytes.value = null;
+      }
+    });
+    
     _initNotifications();
     fetchUserData();
   }
@@ -72,11 +116,11 @@ class ProfileController extends GetxController {
           }
 
           // Format dailyLimit to int string correctly
-          if (data['dailyLimit'] != null) {
+          if (data['dailyLimit'] != null && data['dailyLimit'] != 0) {
             double limit = (data['dailyLimit'] as num).toDouble();
             healthTargetText.value = limit.toInt().toString();
           } else {
-            healthTargetText.value = "2000";
+            healthTargetText.value = calculateDailyLimit(age.value, kondisiKesehatan.value).toInt().toString();
           }
 
           bloodPressure.value = data['tekanan_darah'] ?? data['tensi'] ?? "Belum ada";
@@ -186,40 +230,38 @@ class ProfileController extends GetxController {
     await flutterLocalNotificationsPlugin.initialize(
       settings: initializationSettings,
     );
+    
+    // Cek status izin notifikasi di OS
+    final status = await Permission.notification.status;
+    if (status.isGranted) {
+      isNotificationEnabled.value = true;
+      _listenToIncomingChats();
+    } else {
+      isNotificationEnabled.value = false;
+    }
   }
 
   Future<void> toggleNotification(bool value) async {
-    if (value) {
-      final status = await Permission.notification.request();
-      if (status.isGranted) {
-        isNotificationEnabled.value = true;
-        _listenToIncomingChats(); // Mulai mendengarkan chat Nakes
-        _showNotificationDialog(
-          isActive: true,
-          title: "Notifikasi Aktif!",
-          message: "Anda akan menerima notifikasi jika ada pesan masuk dari Nakes.",
-          icon: Icons.notifications_active_rounded,
-          color: const Color(0xFF2E7D32),
-        );
-      } else {
-        isNotificationEnabled.value = false;
-        Get.snackbar(
-          "Izin Ditolak",
-          "Gagal mengaktifkan notifikasi karena izin tidak diberikan.",
-          backgroundColor: Colors.orange.shade100,
-          colorText: Colors.orange.shade900,
-        );
-      }
+    final status = await Permission.notification.status;
+    if (status.isGranted) {
+      CustomPopup.showWarning("Pengaturan Perangkat", "Notifikasi saat ini diaktifkan oleh sistem. Untuk mematikannya, silakan ubah di Pengaturan HP Anda.");
+      Future.delayed(const Duration(seconds: 2), () {
+        openAppSettings();
+      });
+      _initNotifications(); // Re-check
     } else {
-      isNotificationEnabled.value = false;
-      _chatSubscription?.cancel(); // Berhenti mendengarkan chat
-      _showNotificationDialog(
-        isActive: false,
-        title: "Notifikasi Dimatikan",
-        message: "Anda tidak akan menerima notifikasi pesan baru lagi.",
-        icon: Icons.notifications_off_rounded,
-        color: Colors.orange.shade800,
-      );
+      final result = await Permission.notification.request();
+      if (result.isGranted) {
+        isNotificationEnabled.value = true;
+        _listenToIncomingChats();
+        CustomPopup.showSuccess("Sukses", "Notifikasi berhasil diaktifkan!");
+        } else {
+        CustomPopup.showWarning("Pengaturan Perangkat", "Notifikasi dimatikan oleh sistem. Untuk menghidupkannya, silakan ubah di Pengaturan HP Anda.");
+        Future.delayed(const Duration(seconds: 2), () {
+          openAppSettings();
+        });
+        isNotificationEnabled.value = false;
+      }
     }
   }
 
@@ -362,10 +404,8 @@ class ProfileController extends GetxController {
   }
 
   void showNakesDialog() {
-    String nameToShow = nakesName.value;
-    if (nameToShow == '-' || nameToShow.isEmpty) {
-      nameToShow = 'Belum Terhubung';
-    }
+    bool isConnected = nakesName.value != '-' && nakesName.value.isNotEmpty;
+    String nameToShow = isConnected ? nakesName.value : 'Belum Terhubung';
     
     Get.dialog(
       Dialog(
@@ -382,14 +422,14 @@ class ProfileController extends GetxController {
                 decoration: BoxDecoration(
                   color: const Color(0xFF2E7D32).withOpacity(0.1),
                   shape: BoxShape.circle,
-                  image: nakesPhotoBase64.value.isNotEmpty
+                  image: nakesImageBytes.value != null
                       ? DecorationImage(
-                          image: MemoryImage(base64Decode(nakesPhotoBase64.value)),
+                          image: MemoryImage(nakesImageBytes.value!),
                           fit: BoxFit.cover,
                         )
                       : null,
                 ),
-                child: nakesPhotoBase64.value.isEmpty
+                child: nakesImageBytes.value == null
                     ? const Icon(
                         Icons.medical_services_rounded,
                         size: 40,
@@ -417,27 +457,77 @@ class ProfileController extends GetxController {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Get.back(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2E7D32),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              if (!isConnected) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Get.back();
+                      Get.toNamed(Routes.SCAN_TENAGA_KESEHATAN_AKSES);
+                    },
+                    icon: const Icon(Icons.qr_code_scanner_rounded, color: Colors.white),
+                    label: const Text(
+                      'Scan Akses',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  child: const Text(
-                    'Tutup',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2E7D32),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                   ),
                 ),
-              ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () => Get.back(),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Colors.grey),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: const Text(
+                      'Tutup',
+                      style: TextStyle(
+                        color: Colors.black54,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ] else ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Get.back(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2E7D32),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: const Text(
+                      'Tutup',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -900,5 +990,43 @@ class ProfileController extends GetxController {
       barrierDismissible: true,
     );
   }
-}
 
+  double calculateDailyLimit(int age, String condition) {
+    String c = condition.trim().toLowerCase();
+    if (age >= 5 && age <= 9) {
+      if (c.contains('sehat')) return 1200;
+      if (c.contains('hipertensi')) return 1200;
+      if (c.contains('kardiovaskular')) return 1000;
+      if (c.contains('jantung')) return 1000;
+      if (c.contains('ginjal')) return 1000;
+      if (c.contains('stroke')) return 0;
+      return 1200;
+    } else if (age >= 10 && age <= 17) {
+      if (c.contains('sehat')) return 1500;
+      if (c.contains('hipertensi')) return 1200;
+      if (c.contains('kardiovaskular')) return 1000;
+      if (c.contains('jantung')) return 1000;
+      if (c.contains('ginjal')) return 1000;
+      if (c.contains('stroke')) return 0;
+      return 1500;
+    } else if (age >= 18 && age <= 59) {
+      if (c.contains('sehat')) return 2000;
+      if (c.contains('hipertensi')) return 1500;
+      if (c.contains('kardiovaskular')) return 1500;
+      if (c.contains('jantung')) return 1500;
+      if (c.contains('ginjal')) return 1500;
+      if (c.contains('stroke')) return 1500;
+      return 2000;
+    } else if (age >= 60) {
+      if (c.contains('sehat')) return 1200;
+      if (c.contains('hipertensi')) return 1000;
+      if (c.contains('kardiovaskular')) return 1200;
+      if (c.contains('jantung')) return 1200;
+      if (c.contains('ginjal')) return 1000;
+      if (c.contains('stroke')) return 1000;
+      if (c.contains('osteoporosis')) return 2300;
+      return 1200;
+    }
+    return 2000;
+  }
+}

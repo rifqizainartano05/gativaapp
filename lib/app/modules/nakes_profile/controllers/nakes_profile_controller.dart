@@ -1,3 +1,4 @@
+import '../../../widgets/custom_popup.dart';
 import 'dart:convert';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:typed_data';
@@ -11,7 +12,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
 import '../../../services/notification_service.dart';
 
-class NakesProfileController extends GetxController {
+class NakesProfileController extends GetxController with WidgetsBindingObserver {
   final RxString nakesName = 'Tenaga Kesehatan'.obs;
   final RxString nakesEmail = ''.obs;
   final RxString photoBase64 = ''.obs;
@@ -25,6 +26,7 @@ class NakesProfileController extends GetxController {
 
   @override
   void onClose() {
+    WidgetsBinding.instance.removeObserver(this);
     _cancelAllChatSubscriptions();
     super.onClose();
   }
@@ -36,9 +38,20 @@ class NakesProfileController extends GetxController {
     _chatSubscriptions.clear();
   }
 
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _initNotifications();
+    }
+  }
+
   @override
   void onInit() {
     super.onInit();
+    WidgetsBinding.instance.addObserver(this);
+    
+    _initNotifications();
 
     ever(photoBase64, (String b64) {
       if (b64.isEmpty) {
@@ -55,6 +68,16 @@ class NakesProfileController extends GetxController {
     });
 
     fetchProfileData();
+  }
+
+  void _initNotifications() async {
+    final status = await Permission.notification.status;
+    if (status.isGranted) {
+      isNotificationEnabled.value = true;
+      _listenToIncomingChats();
+    } else {
+      isNotificationEnabled.value = false;
+    }
   }
 
   void fetchProfileData() {
@@ -141,37 +164,26 @@ class NakesProfileController extends GetxController {
   }
 
   Future<void> toggleNotification(bool value) async {
-    if (value) {
-      final status = await Permission.notification.request();
-      if (status.isGranted) {
-        isNotificationEnabled.value = true;
-        _listenToIncomingChats(); // Mulai mendengarkan chat dari semua Pasien
-        _showNotificationDialog(
-          isActive: true,
-          title: "Notifikasi Aktif!",
-          message: "Anda akan menerima notifikasi jika ada chat masuk dari pasien.",
-          icon: Icons.notifications_active_rounded,
-          color: const Color(0xFF2E7D32),
-        );
-      } else {
-        isNotificationEnabled.value = false;
-        Get.snackbar(
-          "Izin Ditolak",
-          "Gagal mengaktifkan notifikasi karena izin tidak diberikan.",
-          backgroundColor: Colors.orange.shade100,
-          colorText: Colors.orange.shade900,
-        );
-      }
+    final status = await Permission.notification.status;
+    if (status.isGranted) {
+      CustomPopup.showWarning("Pengaturan Perangkat", "Notifikasi saat ini diaktifkan oleh sistem. Untuk mematikannya, silakan ubah di Pengaturan HP Anda.");
+      Future.delayed(const Duration(seconds: 2), () {
+        openAppSettings();
+      });
+      _initNotifications(); // Re-check
     } else {
-      isNotificationEnabled.value = false;
-      _cancelAllChatSubscriptions(); // Berhenti mendengarkan chat
-      _showNotificationDialog(
-        isActive: false,
-        title: "Notifikasi Dimatikan",
-        message: "Anda tidak akan menerima notifikasi chat baru lagi.",
-        icon: Icons.notifications_off_rounded,
-        color: Colors.orange.shade800,
-      );
+      final result = await Permission.notification.request();
+      if (result.isGranted) {
+        isNotificationEnabled.value = true;
+        _listenToIncomingChats();
+        CustomPopup.showSuccess("Sukses", "Notifikasi berhasil diaktifkan!");
+        } else {
+        CustomPopup.showWarning("Pengaturan Perangkat", "Notifikasi dimatikan oleh sistem. Untuk menghidupkannya, silakan ubah di Pengaturan HP Anda.");
+        Future.delayed(const Duration(seconds: 2), () {
+          openAppSettings();
+        });
+        isNotificationEnabled.value = false;
+      }
     }
   }
 

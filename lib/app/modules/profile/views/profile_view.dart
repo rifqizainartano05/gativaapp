@@ -144,6 +144,12 @@ class ProfileView extends GetView<ProfileController> {
                                 Obx(
                                   () => _buildSimpleMenuTile(
                                     icon: Icons.medical_services_rounded,
+                                    customIcon: controller.nakesImageBytes.value != null
+                                        ? CircleAvatar(
+                                            radius: 12,
+                                            backgroundImage: MemoryImage(controller.nakesImageBytes.value!),
+                                          )
+                                        : null,
                                     title: "Tenaga Kesehatan",
                                     subtitle: controller.nakesName.value == '-'
                                         ? "Belum terhubung"
@@ -356,29 +362,15 @@ class ProfileView extends GetView<ProfileController> {
                           shape: BoxShape.circle,
                         ),
                         child: Obx(() {
-                          if (controller.photoBase64.value.isNotEmpty && controller.photoBase64.value.length > 50) {
-                            try {
-                              return CircleAvatar(
-                                radius: 36,
-                                backgroundColor: Colors.white,
-                                backgroundImage: MemoryImage(
-                                  const Base64Decoder().convert(
-                                    controller.photoBase64.value,
-                                  ),
-                                ),
-                                onBackgroundImageError: (exception, stackTrace) {},
-                              );
-                            } catch (e) {
-                              return const CircleAvatar(
-                                radius: 36,
-                                backgroundColor: Colors.white,
-                                child: Icon(
-                                  Icons.person_rounded,
-                                  color: AppColors.primary,
-                                  size: 45,
-                                ),
-                              );
-                            }
+                          if (controller.imageBytes.value != null) {
+                            return CircleAvatar(
+                              radius: 36,
+                              backgroundColor: Colors.white,
+                              backgroundImage: MemoryImage(
+                                controller.imageBytes.value!,
+                              ),
+                              onBackgroundImageError: (exception, stackTrace) {},
+                            );
                           }
                           return const CircleAvatar(
                             radius: 36,
@@ -540,6 +532,7 @@ class ProfileView extends GetView<ProfileController> {
 
   Widget _buildSimpleMenuTile({
     required IconData icon,
+    Widget? customIcon,
     required String title,
     String? subtitle,
     bool hideArrow = false,
@@ -554,7 +547,10 @@ class ProfileView extends GetView<ProfileController> {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         child: Row(
           children: [
-            Icon(icon, color: iconColor ?? Colors.black87, size: 24),
+            if (customIcon != null)
+              customIcon
+            else
+              Icon(icon, color: iconColor ?? Colors.black87, size: 24),
             const SizedBox(width: 16),
             Expanded(
               child: Column(

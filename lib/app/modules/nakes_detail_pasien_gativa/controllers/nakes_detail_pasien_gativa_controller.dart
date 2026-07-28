@@ -140,14 +140,18 @@ class NakesDetailPasienGativaController extends GetxController {
       final kondisiKey = pasienData.containsKey('kondisi') && !pasienData.containsKey('kondisi_kesehatan') ? 'kondisi' : 'kondisi_kesehatan';
       final ageKey = pasienData.containsKey('usia') && !pasienData.containsKey('age') ? 'usia' : 'age';
 
+      int ageToSave = int.tryParse(usiaController.text.trim()) ?? (pasienData[ageKey] ?? 28);
+      String conditionToSave = kondisiKesehatanController.text.trim();
+
       final currentData = {
         nameKey: nameController.text.trim(),
         'tekanan_darah': tekananDarahController.text.trim(),
         'tinggi_badan': tinggiBadanController.text.trim(),
         'berat_badan': beratBadanController.text.trim(),
-        kondisiKey: kondisiKesehatanController.text.trim(),
-        ageKey: int.tryParse(usiaController.text.trim()) ?? usiaController.text.trim(),
+        kondisiKey: conditionToSave,
+        ageKey: ageToSave,
         'catatan_nakes': catatanList.toList(),
+        'dailyLimit': calculateDailyLimit(ageToSave, conditionToSave),
       };
 
       final updatedData = <String, dynamic>{};
@@ -197,6 +201,46 @@ class NakesDetailPasienGativaController extends GetxController {
       isLoading.value = false;
     }
   }
+
+  double calculateDailyLimit(int age, String condition) {
+    String c = condition.trim().toLowerCase();
+    if (age >= 5 && age <= 9) {
+      if (c.contains('sehat')) return 1200;
+      if (c.contains('hipertensi')) return 1200;
+      if (c.contains('kardiovaskular')) return 1000;
+      if (c.contains('jantung')) return 1000;
+      if (c.contains('ginjal')) return 1000;
+      if (c.contains('stroke')) return 0;
+      return 1200;
+    } else if (age >= 10 && age <= 17) {
+      if (c.contains('sehat')) return 1500;
+      if (c.contains('hipertensi')) return 1200;
+      if (c.contains('kardiovaskular')) return 1000;
+      if (c.contains('jantung')) return 1000;
+      if (c.contains('ginjal')) return 1000;
+      if (c.contains('stroke')) return 0;
+      return 1500;
+    } else if (age >= 18 && age <= 59) {
+      if (c.contains('sehat')) return 2000;
+      if (c.contains('hipertensi')) return 1500;
+      if (c.contains('kardiovaskular')) return 1500;
+      if (c.contains('jantung')) return 1500;
+      if (c.contains('ginjal')) return 1500;
+      if (c.contains('stroke')) return 1500;
+      return 2000;
+    } else if (age >= 60) {
+      if (c.contains('sehat')) return 1200;
+      if (c.contains('hipertensi')) return 1000;
+      if (c.contains('kardiovaskular')) return 1200;
+      if (c.contains('jantung')) return 1200;
+      if (c.contains('ginjal')) return 1000;
+      if (c.contains('stroke')) return 1000;
+      if (c.contains('osteoporosis')) return 2300;
+      return 1200;
+    }
+    return 2000;
+  }
 }
+
 
 

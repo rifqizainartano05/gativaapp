@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../controllers/scan_tenaga_kesehatan_akses_controller.dart';
@@ -8,7 +9,14 @@ class ScanTenagaKesehatanAksesView extends GetView<ScanTenagaKesehatanAksesContr
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
         children: [
@@ -90,7 +98,7 @@ class ScanTenagaKesehatanAksesView extends GetView<ScanTenagaKesehatanAksesContr
           ),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildCircleButton({required IconData icon, required VoidCallback onTap}) {

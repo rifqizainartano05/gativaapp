@@ -94,10 +94,19 @@ class ScannerController extends GetxController {
       if (cameras.isNotEmpty) {
         cameraController = CameraController(
           cameras.first,
-          ResolutionPreset.high,
+          ResolutionPreset.max, // Resolusi maksimal untuk OCR yang lebih akurat pada bungkus melengkung
           enableAudio: false,
         );
         await cameraController!.initialize();
+        
+        // Mengaktifkan fokus otomatis dan pencahayaan (flash) agar hasil scan terang dan fokus
+        try {
+          await cameraController!.setFocusMode(FocusMode.auto);
+          await cameraController!.setFlashMode(FlashMode.torch);
+        } catch (e) {
+          print("Tidak dapat mengatur fokus atau flash: $e");
+        }
+
         isCameraInitialized.value = true;
         isCameraSupported.value = true;
       } else {

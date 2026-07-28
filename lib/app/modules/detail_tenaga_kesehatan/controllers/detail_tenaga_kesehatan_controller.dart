@@ -10,6 +10,7 @@ class DetailTenagaKesehatanController extends GetxController {
   final scheduleText = 'Belum ada jadwal'.obs;
   final rating = 0.obs;
   final hasRated = false.obs;
+  String? currentDoctorId;
 
   @override
   void onInit() {
@@ -17,6 +18,9 @@ class DetailTenagaKesehatanController extends GetxController {
     final args = Get.arguments;
     if (args != null && args is Map<String, dynamic>) {
       doctorData.value = args;
+      if (args['id'] != null) {
+        currentDoctorId = args['id'].toString();
+      }
       if (args['jadwal_online'] != null && args['jadwal_online'].toString().isNotEmpty) {
         scheduleText.value = args['jadwal_online'].toString();
       }
@@ -43,6 +47,8 @@ class DetailTenagaKesehatanController extends GetxController {
 
       if (doc.exists) {
         final data = doc.data() as Map<String, dynamic>;
+        data['id'] = doc.id;
+        currentDoctorId = doc.id;
         doctorData.value = data;
         if (data['jadwal_online'] != null && data['jadwal_online'].toString().isNotEmpty) {
           scheduleText.value = data['jadwal_online'].toString();
@@ -77,18 +83,30 @@ class DetailTenagaKesehatanController extends GetxController {
   }
 
   void updateDoctorRating(String? doctorId, int ratingValue) async {
-    if (doctorId == null || doctorId.isEmpty) return;
+    final targetId = doctorId ?? currentDoctorId;
+    if (targetId == null || targetId.isEmpty) return;
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
       
+      // Simpan di sub-collection tenaga_kesehatan
       await FirebaseFirestore.instance
           .collection('mobile')
           .doc('roles')
           .collection('tenaga_kesehatan')
-          .doc(doctorId)
+          .doc(targetId)
           .collection('pasien')
           .doc(user.uid)
+          .set({'rating': ratingValue}, SetOptions(merge: true));
+          
+      // Simpan juga di sub-collection pasien
+      await FirebaseFirestore.instance
+          .collection('mobile')
+          .doc('roles')
+          .collection('pasien')
+          .doc(user.uid)
+          .collection('tenaga_kesehatan')
+          .doc(targetId)
           .set({'rating': ratingValue}, SetOptions(merge: true));
           
       hasRated.value = true;

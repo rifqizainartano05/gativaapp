@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import '../../gamifikasi/controllers/gamifikasi_controller.dart';
 import '../../../widgets/custom_popup.dart';
@@ -15,6 +16,11 @@ class EdukasiController extends GetxController {
   }
 
   void fetchEdukasi() {
+    if (FirebaseAuth.instance.currentUser == null) {
+      isLoading.value = false;
+      return;
+    }
+    
     isLoading.value = true;
     FirebaseFirestore.instance
         .collectionGroup('edukasi')
@@ -33,7 +39,12 @@ class EdukasiController extends GetxController {
         if (m1 || m2) isMissionCompleted.value = true;
       }
     }, onError: (e) {
-      CustomPopup.showError('Error', 'Gagal memuat data edukasi: $e');
+      if (e.toString().contains('permission-denied')) {
+        // Abaikan error permission-denied yang biasanya terjadi saat logout
+        Get.log('Edukasi permission denied (likely not logged in)');
+      } else {
+        CustomPopup.showError('Error', 'Gagal memuat data edukasi: $e');
+      }
       isLoading.value = false;
     });
   }

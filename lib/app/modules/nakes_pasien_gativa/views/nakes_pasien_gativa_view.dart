@@ -72,7 +72,7 @@ class NakesPasienGativaView extends GetView<NakesPasienGativaController> {
                       ),
                       const SizedBox(width: 16),
                       const Text(
-                        'Daftar Pasien',
+                        'Pasien Gativa',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: Colors.white,

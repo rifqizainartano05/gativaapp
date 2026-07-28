@@ -21,6 +21,66 @@ class LensaNatriumController extends GetxController {
   void onInit() {
     super.onInit();
     _fetchJajananFromFirebase();
+    _fetchUserDailyLimit();
+  }
+
+  final RxDouble dailyLimit = 2000.0.obs;
+
+  void _fetchUserDailyLimit() {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      Get.find<AuthService>().getUserReference(user.uid).snapshots().listen((doc) {
+        if (doc.exists) {
+          final data = doc.data() as Map<String, dynamic>;
+          if (data['dailyLimit'] != null) {
+            dailyLimit.value = (data['dailyLimit'] as num).toDouble();
+          } else {
+            int age = data['age'] ?? 28;
+            String condition = data['kondisi_kesehatan'] ?? data['kondisi'] ?? 'Sehat';
+            dailyLimit.value = calculateDailyLimit(age, condition);
+          }
+        }
+      });
+    }
+  }
+
+  double calculateDailyLimit(int age, String condition) {
+    String c = condition.trim().toLowerCase();
+    if (age >= 5 && age <= 9) {
+      if (c.contains('sehat')) return 1200;
+      if (c.contains('hipertensi')) return 1200;
+      if (c.contains('kardiovaskular')) return 1000;
+      if (c.contains('jantung')) return 1000;
+      if (c.contains('ginjal')) return 1000;
+      if (c.contains('stroke')) return 0;
+      return 1200;
+    } else if (age >= 10 && age <= 17) {
+      if (c.contains('sehat')) return 1500;
+      if (c.contains('hipertensi')) return 1200;
+      if (c.contains('kardiovaskular')) return 1000;
+      if (c.contains('jantung')) return 1000;
+      if (c.contains('ginjal')) return 1000;
+      if (c.contains('stroke')) return 0;
+      return 1500;
+    } else if (age >= 18 && age <= 59) {
+      if (c.contains('sehat')) return 2000;
+      if (c.contains('hipertensi')) return 1500;
+      if (c.contains('kardiovaskular')) return 1500;
+      if (c.contains('jantung')) return 1500;
+      if (c.contains('ginjal')) return 1500;
+      if (c.contains('stroke')) return 1500;
+      return 2000;
+    } else if (age >= 60) {
+      if (c.contains('sehat')) return 1200;
+      if (c.contains('hipertensi')) return 1000;
+      if (c.contains('kardiovaskular')) return 1200;
+      if (c.contains('jantung')) return 1200;
+      if (c.contains('ginjal')) return 1000;
+      if (c.contains('stroke')) return 1000;
+      if (c.contains('osteoporosis')) return 2300;
+      return 1200;
+    }
+    return 2000;
   }
 
   List<Map<String, dynamic>> _globalJajanan = [];

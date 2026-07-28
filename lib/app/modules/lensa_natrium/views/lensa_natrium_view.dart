@@ -184,7 +184,7 @@ class LensaNatriumView extends GetView<LensaNatriumController> {
                               ),
                               child: IconButton(
                                 icon: const Icon(
-                                  Icons.qr_code_scanner_rounded,
+                                  Icons.document_scanner_rounded,
                                   color: AppColors.primary,
                                 ),
                                 onPressed: () => _showScannerDialog(context),
@@ -283,10 +283,13 @@ class LensaNatriumView extends GetView<LensaNatriumController> {
                                       Builder(
                                         builder: (context) {
                                           final int sodiumMg = (item['natrium'] as num?)?.toInt() ?? (item['sodium'] as num?)?.toInt() ?? 0;
+                                          final double limit = controller.dailyLimit.value;
                                           Color statusColor;
-                                          if (sodiumMg >= 1000) {
+                                          if (limit == 0) {
                                             statusColor = Colors.red;
-                                          } else if (sodiumMg >= 600) {
+                                          } else if (sodiumMg > (limit * 0.5)) {
+                                            statusColor = Colors.red;
+                                          } else if (sodiumMg > (limit * 0.3)) {
                                             statusColor = Colors.orange;
                                           } else {
                                             statusColor = Colors.green;
@@ -352,7 +355,7 @@ class LensaNatriumView extends GetView<LensaNatriumController> {
                 right: -20,
                 bottom: -20,
                 child: Icon(
-                  Icons.qr_code_scanner_rounded,
+                  Icons.document_scanner_rounded,
                   size: 150,
                   color: AppColors.primary.withOpacity(0.05),
                 ),

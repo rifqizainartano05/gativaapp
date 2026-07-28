@@ -41,48 +41,46 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBnZBzKo1GlCN3rh2lQNJFWE3jVuhzrB4s',
-    appId: '1:164136426035:web:75caf21dbb9675ecfa6146',
-    messagingSenderId: '164136426035',
-    projectId: 'gativa-5a54e',
-    authDomain: 'gativa-5a54e.firebaseapp.com',
-    storageBucket: 'gativa-5a54e.firebasestorage.app',
-    measurementId: 'G-GLXF23WRXP',
+    apiKey: 'AIzaSyAztnH2lzN4OJdvTgC9FSfZ6eocR6SFdF0',
+    appId: '1:215341321165:web:4960582edc0b7ac3849284',
+    messagingSenderId: '215341321165',
+    projectId: 'gativa',
+    authDomain: 'gativa.firebaseapp.com',
+    storageBucket: 'gativa.firebasestorage.app',
+    measurementId: 'G-KR5HRYRJEX',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyA6wnl-SRgx_QAzik-w0cU0N8Bo41bLpb4',
-    appId: '1:164136426035:android:98343032da436cc7fa6146',
-    messagingSenderId: '164136426035',
-    projectId: 'gativa-5a54e',
-    storageBucket: 'gativa-5a54e.firebasestorage.app',
+    apiKey: 'AIzaSyA7Vz0f19dVGJPTVabmut8HLZNzsXDLJkw',
+    appId: '1:215341321165:android:0f5ff541b15fcbc2849284',
+    messagingSenderId: '215341321165',
+    projectId: 'gativa',
+    storageBucket: 'gativa.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAh16Y5_cEkBocC4sG-W_wh1x49QhLjLm0',
-    appId: '1:164136426035:ios:3325aab26fc32283fa6146',
-    messagingSenderId: '164136426035',
-    projectId: 'gativa-5a54e',
-    storageBucket: 'gativa-5a54e.firebasestorage.app',
-    iosBundleId: 'com.example.gativa',
+    apiKey: 'AIzaSyACPKS-eyQ-QUwdubAEpTP60ntsyOOSha0',
+    appId: '1:215341321165:ios:453e40c6e35cf902849284',
+    messagingSenderId: '215341321165',
+    projectId: 'gativa',
+    storageBucket: 'gativa.firebasestorage.app',
+    iosBundleId: 'com.example.garda',
   );
-
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyAh16Y5_cEkBocC4sG-W_wh1x49QhLjLm0',
-    appId: '1:164136426035:ios:3325aab26fc32283fa6146',
-    messagingSenderId: '164136426035',
-    projectId: 'gativa-5a54e',
-    storageBucket: 'gativa-5a54e.firebasestorage.app',
-    iosBundleId: 'com.example.gativa',
+    apiKey: 'AIzaSyACPKS-eyQ-QUwdubAEpTP60ntsyOOSha0',
+    appId: '1:215341321165:ios:453e40c6e35cf902849284',
+    messagingSenderId: '215341321165',
+    projectId: 'gativa',
+    storageBucket: 'gativa.firebasestorage.app',
+    iosBundleId: 'com.example.garda',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyBnZBzKo1GlCN3rh2lQNJFWE3jVuhzrB4s',
-    appId: '1:164136426035:web:a7a858e9fe84e5f7fa6146',
-    messagingSenderId: '164136426035',
-    projectId: 'gativa-5a54e',
-    authDomain: 'gativa-5a54e.firebaseapp.com',
-    storageBucket: 'gativa-5a54e.firebasestorage.app',
-    measurementId: 'G-SR1SDJTVN0',
+    apiKey: 'AIzaSyAztnH2lzN4OJdvTgC9FSfZ6eocR6SFdF0',
+    appId: '1:215341321165:web:74cef1f6e5e6781f849284',
+    messagingSenderId: '215341321165',
+    projectId: 'gativa',
+    authDomain: 'gativa.firebaseapp.com',
+    storageBucket: 'gativa.firebasestorage.app',
+    measurementId: 'G-NSWMG9HYFZ',
   );
 }

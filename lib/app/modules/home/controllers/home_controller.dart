@@ -100,75 +100,42 @@ class HomeController extends GetxController {
   }
 
   double calculateDailyLimit(int age, String condition) {
+    String c = condition.trim().toLowerCase();
     if (age >= 5 && age <= 9) {
-      switch (condition) {
-        case 'Sehat':
-          return 1200;
-        case 'Hipertensi':
-          return 1200;
-        case 'Penyakit kardiovaskular':
-          return 1000;
-        case 'Penyakit jantung koroner':
-          return 1000;
-        case 'Penyakit ginjal kronis':
-          return 800;
-        case 'Stroke':
-          return 0;
-        default:
-          return 1200;
-      }
+      if (c.contains('sehat')) return 1200;
+      if (c.contains('hipertensi')) return 1200;
+      if (c.contains('kardiovaskular')) return 1000;
+      if (c.contains('jantung')) return 1000;
+      if (c.contains('ginjal')) return 1000;
+      if (c.contains('stroke')) return 0;
+      return 1200;
     } else if (age >= 10 && age <= 17) {
-      switch (condition) {
-        case 'Sehat':
-          return 1500;
-        case 'Hipertensi':
-          return 1200;
-        case 'Penyakit kardiovaskular':
-          return 1000;
-        case 'Penyakit jantung koroner':
-          return 1000;
-        case 'Penyakit ginjal kronis':
-          return 800;
-        case 'Stroke':
-          return 0;
-        default:
-          return 1500;
-      }
+      if (c.contains('sehat')) return 1500;
+      if (c.contains('hipertensi')) return 1200;
+      if (c.contains('kardiovaskular')) return 1000;
+      if (c.contains('jantung')) return 1000;
+      if (c.contains('ginjal')) return 1000;
+      if (c.contains('stroke')) return 0;
+      return 1500;
     } else if (age >= 18 && age <= 59) {
-      switch (condition) {
-        case 'Sehat':
-          return 2000;
-        case 'Hipertensi':
-          return 1500;
-        case 'Penyakit kardiovaskular':
-          return 1500;
-        case 'Penyakit jantung koroner':
-          return 1500;
-        case 'Penyakit ginjal kronis':
-          return 1500;
-        case 'Stroke':
-          return 1500;
-        default:
-          return 2000;
-      }
-    } else {
-      switch (condition) {
-        case 'Sehat':
-          return 1200;
-        case 'Hipertensi':
-          return 1000;
-        case 'Penyakit kardiovaskular':
-          return 1000;
-        case 'Penyakit jantung koroner':
-          return 1000;
-        case 'Penyakit ginjal kronis':
-          return 1000;
-        case 'Stroke':
-          return 1000;
-        default:
-          return 1200;
-      }
+      if (c.contains('sehat')) return 2000;
+      if (c.contains('hipertensi')) return 1500;
+      if (c.contains('kardiovaskular')) return 1500;
+      if (c.contains('jantung')) return 1500;
+      if (c.contains('ginjal')) return 1500;
+      if (c.contains('stroke')) return 1500;
+      return 2000;
+    } else if (age >= 60) {
+      if (c.contains('sehat')) return 1200;
+      if (c.contains('hipertensi')) return 1000;
+      if (c.contains('kardiovaskular')) return 1200;
+      if (c.contains('jantung')) return 1200;
+      if (c.contains('ginjal')) return 1000;
+      if (c.contains('stroke')) return 1000;
+      if (c.contains('osteoporosis')) return 2300;
+      return 1200;
     }
+    return 2000;
   }
 
   void fetchUserData() {

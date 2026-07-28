@@ -28,7 +28,10 @@ class AnggotaMember {
     required this.dailyLimit,
   });
 
-  double get usagePercentage => consumedSodium / dailyLimit;
+  double get usagePercentage {
+    if (dailyLimit <= 0) return consumedSodium > 0 ? 1.0 : 0.0;
+    return consumedSodium / dailyLimit;
+  }
 
   Color get statusColor {
     if (usagePercentage >= 0.9) return Colors.red;
@@ -197,12 +200,16 @@ class AnggotaController extends GetxController {
           });
         }
 
+        int age = data['age'] ?? 28;
+        String condition = data['kondisi_kesehatan'] ?? data['kondisi'] ?? 'Sehat';
+        double calculatedLimit = calculateDailyLimit(age, condition);
+
         return AnggotaMember(
           id: doc.id,
           name: data['name'] ?? "Unknown",
           role: data['role'] ?? "Member",
           consumedSodium: (data['sodiumConsumed'] ?? 0).toDouble(), // Nilai sementara sebelum listener makanan terpanggil
-          dailyLimit: (data['limit'] ?? 2000).toDouble(),
+          dailyLimit: (data['limit'] ?? calculatedLimit).toDouble(),
           avatarUrl: (data['name'] ?? "U")[0].toString().toUpperCase(),
         );
       }).toList();
@@ -306,8 +313,11 @@ class AnggotaController extends GetxController {
       if (memberDoc.exists) {
         final data = memberDoc.data() as Map<String, dynamic>?;
         if (data != null) {
+          int age = data['age'] ?? 28;
+          String condition = data['kondisi_kesehatan'] ?? data['kondisi'] ?? 'Sehat';
+          memberLimit = calculateDailyLimit(age, condition);
           memberConsumed = (data['natrium'] ?? data['sodium'] ?? data['totalNatrium'] ?? 0).toDouble();
-          memberLimit = (data['dailyLimit'] ?? 2000).toDouble();
+          memberLimit = (data['dailyLimit'] ?? memberLimit).toDouble();
         }
       }
 
@@ -318,8 +328,11 @@ class AnggotaController extends GetxController {
       if (ownerDoc.exists) {
         final data = ownerDoc.data() as Map<String, dynamic>?;
         if (data != null) {
+          int age = data['age'] ?? 28;
+          String condition = data['kondisi_kesehatan'] ?? data['kondisi'] ?? 'Sehat';
+          ownerLimit = calculateDailyLimit(age, condition);
           ownerConsumed = (data['natrium'] ?? data['sodium'] ?? data['totalNatrium'] ?? 0).toDouble();
-          ownerLimit = (data['dailyLimit'] ?? 2000).toDouble();
+          ownerLimit = (data['dailyLimit'] ?? ownerLimit).toDouble();
         }
       }
 
@@ -437,5 +450,44 @@ class AnggotaController extends GetxController {
     } catch (e) {
       CustomPopup.showError('Error', 'Gagal menghapus ${member.name}.');
     }
+  }
+
+  double calculateDailyLimit(int age, String condition) {
+    String c = condition.trim().toLowerCase();
+    if (age >= 5 && age <= 9) {
+      if (c.contains('sehat')) return 1200;
+      if (c.contains('hipertensi')) return 1200;
+      if (c.contains('kardiovaskular')) return 1000;
+      if (c.contains('jantung')) return 1000;
+      if (c.contains('ginjal')) return 1000;
+      if (c.contains('stroke')) return 0;
+      return 1200;
+    } else if (age >= 10 && age <= 17) {
+      if (c.contains('sehat')) return 1500;
+      if (c.contains('hipertensi')) return 1200;
+      if (c.contains('kardiovaskular')) return 1000;
+      if (c.contains('jantung')) return 1000;
+      if (c.contains('ginjal')) return 1000;
+      if (c.contains('stroke')) return 0;
+      return 1500;
+    } else if (age >= 18 && age <= 59) {
+      if (c.contains('sehat')) return 2000;
+      if (c.contains('hipertensi')) return 1500;
+      if (c.contains('kardiovaskular')) return 1500;
+      if (c.contains('jantung')) return 1500;
+      if (c.contains('ginjal')) return 1500;
+      if (c.contains('stroke')) return 1500;
+      return 2000;
+    } else if (age >= 60) {
+      if (c.contains('sehat')) return 1200;
+      if (c.contains('hipertensi')) return 1000;
+      if (c.contains('kardiovaskular')) return 1200;
+      if (c.contains('jantung')) return 1200;
+      if (c.contains('ginjal')) return 1000;
+      if (c.contains('stroke')) return 1000;
+      if (c.contains('osteoporosis')) return 2300;
+      return 1200;
+    }
+    return 2000;
   }
 }

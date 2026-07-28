@@ -14,11 +14,9 @@ import 'app/services/presence_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
-    if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-    }
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
     await NotificationService.init();
   } catch (e) {
     debugPrint('Firebase gagal inisialisasi: $e');

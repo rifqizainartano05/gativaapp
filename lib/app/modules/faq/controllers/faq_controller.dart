@@ -10,7 +10,7 @@ class FaqController extends GetxController {
     {
       "question": "Berapa batas konsumsi natrium harian yang aman?",
       "answer":
-          "WHO merekomendasikan asupan natrium tidak lebih dari 2.000 mg (setara dengan kurang dari 5 gram atau 1 sendok teh garam) per hari untuk orang dewasa.",
+          "Batas aman konsumsi natrium bervariasi. Aplikasi Gativa akan secara otomatis menghitung batas harian maksimal (Daily Limit) Anda secara spesifik berdasarkan Usia dan Kondisi Kesehatan (seperti Hipertensi, Penyakit Jantung, Ginjal, dll) sesuai dengan standar pedoman kesehatan WHO.",
     },
     {
       "question": "Bagaimana cara memindai barcode makanan?",
@@ -23,9 +23,9 @@ class FaqController extends GetxController {
           "Fitur ini memungkinkan Anda memantau asupan natrium anggota grup, seperti orang tua, pasangan, anak, atau pendamping kesehatan, dan memberikan peringatan jika mereka mendekati batas harian.",
     },
     {
-      "question": "Bagaimana cara mengekspor laporan medis?",
+      "question": "Bagaimana cara berkonsultasi dengan Tenaga Kesehatan?",
       "answer":
-          "Masuk ke halaman Profil, lalu ketuk 'Ekspor Laporan Medis'. Pilih rentang tanggal yang diinginkan, dan aplikasi akan menghasilkan file PDF yang dapat dibagikan.",
+          "Masuk ke halaman Profil, lalu ketuk 'Tenaga Kesehatan'. Anda dapat melihat daftar tenaga kesehatan yang tersedia dan memulai obrolan (chat) untuk berkonsultasi mengenai asupan natrium dan kondisi kesehatan Anda.",
     },
   ];
 

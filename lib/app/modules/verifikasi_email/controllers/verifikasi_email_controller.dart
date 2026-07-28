@@ -30,6 +30,7 @@ class VerifikasiEmailController extends GetxController {
       await user.reload(); // Wajib agar data terbaru dari server ditarik
       if (user.emailVerified) {
         timer?.cancel();
+        await FirebaseAuth.instance.signOut(); // Pastikan sesi logout
         Get.offAllNamed(Routes.LOGIN);
         Get.snackbar(
           'Sukses',
@@ -66,7 +67,8 @@ class VerifikasiEmailController extends GetxController {
     }
   }
 
-  void goToLogin() {
+  void goToLogin() async {
+    await FirebaseAuth.instance.signOut();
     Get.offAllNamed(Routes.LOGIN);
   }
 }

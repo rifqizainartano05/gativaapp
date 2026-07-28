@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../controllers/verifikasi_email_controller.dart';
 
@@ -10,6 +11,12 @@ class VerifikasiEmailView extends GetView<VerifikasiEmailController> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark,
+          systemNavigationBarColor: Colors.white,
+          systemNavigationBarIconBrightness: Brightness.dark,
+        ),
         title: const Text(
           'Verifikasi Email',
           style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),

@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "481440771015",
-    "project_id": "garda-b67ed",
-    "storage_bucket": "garda-b67ed.firebasestorage.app"
+    "project_number": "215341321165",
+    "project_id": "gativa",
+    "storage_bucket": "gativa.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:481440771015:android:f122961a8f5f4c3793c7e2",
+        "mobilesdk_app_id": "1:215341321165:android:0f5ff541b15fcbc2849284",
         "android_client_info": {
           "package_name": "com.example.garda"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDJTnKcwGQ3pK6PMuowE2kcyzLivrOOG_o"
+          "current_key": "AIzaSyA7Vz0f19dVGJPTVabmut8HLZNzsXDLJkw"
         }
       ],
       "services": {

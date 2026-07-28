@@ -191,13 +191,19 @@ class NakesProfileView extends GetView<NakesProfileController> {
                     ),
                     child: Column(
                       children: [
-                        _buildProfileOption(
+                        Obx(() => _buildProfileOption(
                           icon: Icons.person_outline_rounded,
+                          customIcon: controller.imageBytes.value != null
+                              ? CircleAvatar(
+                                  radius: 12,
+                                  backgroundImage: MemoryImage(controller.imageBytes.value!),
+                                )
+                              : null,
                           title: 'Edit Profil',
                           subtitle: 'Ubah data diri dan informasi dasar',
                           color: const Color(0xFF2196F3),
                           onTap: () => Get.toNamed(Routes.NAKES_EDIT_PROFILE),
-                        ),
+                        )),
                         Divider(height: 1, indent: 56, color: Colors.grey.withOpacity(0.2)),
                         _buildProfileOption(
                           icon: Icons.security_rounded,
@@ -324,6 +330,7 @@ class NakesProfileView extends GetView<NakesProfileController> {
 
   Widget _buildProfileOption({
     required IconData icon,
+    Widget? customIcon,
     required String title,
     required String subtitle,
     required Color color,
@@ -338,14 +345,28 @@ class NakesProfileView extends GetView<NakesProfileController> {
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
           child: Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
-                  shape: BoxShape.circle,
+              if (customIcon != null)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: customIcon,
+                  ),
+                )
+              else
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: color, size: 24),
                 ),
-                child: Icon(icon, color: color, size: 24),
-              ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
