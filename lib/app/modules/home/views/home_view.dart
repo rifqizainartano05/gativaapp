@@ -316,7 +316,7 @@ class HomeView extends StatelessWidget {
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.only(bottom: 100, top: 20),
+                padding: const EdgeInsets.only(bottom: 32, top: 20),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20.0),
                   child: Column(
@@ -333,300 +333,58 @@ class HomeView extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.grey.shade200),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.02),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            _buildMenuItem(
-                              icon: Icons.science_outlined,
-                              label: 'Lensa\nNatrium',
-                              color: AppColors.primary,
-                              onTap: () => Get.toNamed(Routes.LENSA_NATRIUM),
-                            ),
-                            _buildMenuItem(
-                              icon: Icons.restaurant_menu_rounded,
-                              label: 'Katalog',
-                              color: AppColors.primary,
-                              onTap: () => Get.toNamed(Routes.KATALOG),
-                            ),
-                            _buildMenuItem(
-                              icon: Icons.history_rounded,
-                              label: 'Riwayat',
-                              color: AppColors.primary,
-                              onTap: () => Get.toNamed(Routes.RIWAYAT),
-                            ),
-                            _buildMenuItem(
-                              icon: Icons.grid_view_rounded,
-                              color: AppColors.primary,
-                              label: 'Semua\nMenu',
-                              onTap: () => Get.toNamed(Routes.SEMUA_MENU),
-                            ),
-                          ],
-                        ),
+                      Column(
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildGridItem(
+                                  icon: Icons.qr_code_scanner_rounded,
+                                  title: 'Lensa Natrium',
+                                  subtitle: 'Pindai Makanan',
+                                  isGreen: true,
+                                  onTap: () => Get.toNamed(Routes.LENSA_NATRIUM),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: _buildGridItem(
+                                  icon: Icons.chat_bubble_outline_rounded,
+                                  title: 'Chat Dokter',
+                                  subtitle: 'Konsultasi',
+                                  isGreen: false,
+                                  onTap: () => Get.toNamed(Routes.CHAT),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildGridItem(
+                                  icon: Icons.history_rounded,
+                                  title: 'Riwayat',
+                                  subtitle: 'Catatan Medis',
+                                  isGreen: false,
+                                  onTap: () => Get.toNamed(Routes.RIWAYAT),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: _buildGridItem(
+                                  icon: Icons.menu_book_rounded,
+                                  title: 'Edukasi',
+                                  subtitle: 'Artikel & Info',
+                                  isGreen: true,
+                                  onTap: () => Get.toNamed('/edukasi'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 32),
-
-                      // Proyeksi Kuota (Future Projection System)
-                      const Text(
-                        'PROYEKSI KUOTA NATRIUM',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                          color: AppColors.textSecondary,
-                          letterSpacing: 1.0,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.grey.shade200),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.02),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.analytics_outlined,
-                                  color: AppColors.primary,
-                                  size: 28,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: const [
-                                      Text(
-                                        'Simulasi Makan Berikutnya',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      SizedBox(height: 2),
-                                      Text(
-                                        'Geser slider untuk memproyeksikan asupan garam.',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: AppColors.textSecondary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-
-                            // Slider for Projection
-                            Obx(() {
-                              return Row(
-                                children: [
-                                  Expanded(
-                                    child: SliderTheme(
-                                      data: SliderThemeData(
-                                        activeTrackColor: AppColors.primary,
-                                        inactiveTrackColor:
-                                            Colors.grey.shade200,
-                                        thumbColor: AppColors.primary,
-                                        overlayColor: AppColors.primaryGlow,
-                                        trackHeight: 6,
-                                      ),
-                                      child: Slider(
-                                        value: controller
-                                            .projectionSodiumInput
-                                            .value,
-                                        min: 0,
-                                        max: controller.limit.value > 0
-                                            ? controller.limit.value
-                                            : 1500,
-                                        divisions: 30,
-                                        onChanged: (val) {
-                                          controller
-                                                  .projectionSodiumInput
-                                                  .value =
-                                              val;
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 8,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primary.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
-                                      children: [
-                                        Text(
-                                          '${NumberFormat.decimalPattern('id').format(controller.projectionSodiumInput.value.toInt())} mg',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                            color: AppColors.primary,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              );
-                            }),
-                            const SizedBox(height: 20),
-
-                            // Output Future Card
-                            Obx(() {
-                              final details = controller.getProjectionDetails();
-                              double futureIntake = details['futureIntake'];
-                              double remaining = details['futureRemaining'];
-                              double ratio = details['futureRatio'];
-                              String suggestion = details['suggestion'];
-
-                              Color futureColor = ratio < 0.6
-                                  ? AppColors.safe
-                                  : ratio <= 0.9
-                                  ? AppColors.warning
-                                  : AppColors.danger;
-
-                              return Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: futureColor.withOpacity(0.08),
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: futureColor.withOpacity(0.2),
-                                  ),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        const Text(
-                                          'Proyeksi Total Natrium:',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w600,
-                                            color: AppColors.textSecondary,
-                                          ),
-                                        ),
-                                        Text(
-                                          '${NumberFormat.decimalPattern('id').format(futureIntake.toInt())} mg',
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.bold,
-                                            color: AppColors.textPrimary,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        const Text(
-                                          'Proyeksi Sisa Kuota Hari Ini:',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w600,
-                                            color: AppColors.textSecondary,
-                                          ),
-                                        ),
-                                        Text(
-                                          '${NumberFormat.decimalPattern('id').format(remaining.toInt())} mg',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            color: futureColor,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Align(
-                                      alignment: Alignment.centerRight,
-                                      child: Text(
-                                        '(Setara ${(controller.projectionSodiumInput.value / 400).toStringAsFixed(1)} bungkus snack)',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: futureColor.withOpacity(0.8),
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Container(
-                                      height: 1,
-                                      color: futureColor.withOpacity(0.2),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Icon(
-                                          ratio > 0.9
-                                              ? Icons.warning_amber_rounded
-                                              : Icons
-                                                    .check_circle_outline_rounded,
-                                          color: futureColor,
-                                          size: 18,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: Text(
-                                            suggestion,
-                                            style: TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w600,
-                                              color: futureColor,
-                                              height: 1.4,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              );
-                            }),
-                          ],
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -638,37 +396,66 @@ class HomeView extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuItem({
+  Widget _buildGridItem({
     required IconData icon,
-    required String label,
-    required Color color,
+    required String title,
+    required String subtitle,
+    required bool isGreen,
     required VoidCallback onTap,
   }) {
+    Color bgColor = isGreen ? AppColors.primary : Colors.white;
+    Color iconBgColor = isGreen ? Colors.white.withOpacity(0.2) : AppColors.primary.withOpacity(0.1);
+    Color iconColor = isGreen ? Colors.white : AppColors.primary;
+    Color titleColor = isGreen ? Colors.white : AppColors.textPrimary;
+    Color subtitleColor = isGreen ? Colors.white.withOpacity(0.8) : AppColors.textSecondary;
+
     return GestureDetector(
       onTap: onTap,
-      child: SizedBox(
-        width: 70, // Lebar tetap agar sejajar dan tidak mepet
+      child: Container(
+        height: 140,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: AppColors.glassBorder, width: 0.5),
+        ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Container(
-              padding: const EdgeInsets.all(14), // padding diperbesar sedikit
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: iconBgColor,
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: color, size: 28),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-                height: 1.2,
+              child: Icon(
+                icon,
+                color: iconColor,
+                size: 28,
               ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: titleColor,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: subtitleColor,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

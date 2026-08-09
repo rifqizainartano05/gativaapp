@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../../services/auth_service.dart';
-import '../../gamifikasi/controllers/gamifikasi_controller.dart';
+
 import '../../../widgets/custom_popup.dart';
 
 class SodiumLog {
@@ -22,9 +22,63 @@ class SodiumLog {
   });
 }
 
+class ChartDataPoint {
+  final String label;
+  final double amanValue;
+  final double warningValue;
+  final double bahayaValue;
+
+  ChartDataPoint(this.label, this.amanValue, this.warningValue, this.bahayaValue);
+}
+
 class RiwayatController extends GetxController {
-  final RxString filterRange = "Minggu Ini".obs;
-  final List<String> filterRanges = ["Minggu Ini", "Bulan Ini", "Tahun Ini"];
+  final RxString filterOption = "".obs;
+  final Rx<DateTimeRange?> customDateRange = Rx<DateTimeRange?>(null);
+  
+  final List<String> filterOptionsList = [
+    "3 Hari Terakhir",
+    "5 Hari Terakhir",
+    "7 Hari Terakhir",
+    "14 Hari Terakhir",
+    "30 Hari Terakhir",
+    "3 Minggu Terakhir",
+    "4 Minggu Terakhir",
+    "8 Minggu Terakhir",
+    "12 Minggu Terakhir",
+    "3 Bulan Terakhir",
+    "6 Bulan Terakhir",
+    "9 Bulan Terakhir",
+    "12 Bulan Terakhir",
+    "3 Tahun Terakhir",
+    "5 Tahun Terakhir",
+    "Atur Tanggal",
+  ];
+
+  void setFilterOption(String option) {
+    filterOption.value = option;
+  }
+
+  // Helper to parse the current option
+  int get currentCount {
+    if (filterOption.value.isEmpty) return 7; // Default
+    if (filterOption.value == "Saat Ini") return 1;
+    final parts = filterOption.value.split(" ");
+    if (parts.isNotEmpty) {
+      return int.tryParse(parts[0]) ?? 1;
+    }
+    return 1;
+  }
+
+  String get currentUnit {
+    if (filterOption.value.isEmpty) return "Hari"; // Default
+    if (filterOption.value == "Saat Ini") return "Saat Ini";
+    if (filterOption.value == "Atur Tanggal") return "Atur Tanggal";
+    if (filterOption.value.contains("Hari")) return "Hari";
+    if (filterOption.value.contains("Minggu")) return "Minggu";
+    if (filterOption.value.contains("Bulan")) return "Bulan";
+    if (filterOption.value.contains("Tahun")) return "Tahun";
+    return "Hari";
+  }
 
   final RxList<SodiumLog> logs = <SodiumLog>[].obs;
   final RxDouble dailyLimit = 2000.0.obs;
@@ -95,62 +149,153 @@ class RiwayatController extends GetxController {
             rawLogs.sort((a, b) => b.timestamp.compareTo(a.timestamp));
             logs.value = rawLogs;
             
-            if (Get.isRegistered<GamifikasiController>()) {
-              bool done = Get.find<GamifikasiController>().completeMissionByLevel(12);
-              if (done) isMissionCompleted.value = true;
-            }
+
           });
     }
   }
 
   List<SodiumLog> get filteredLogs {
-    return logs.toList();
-  }
-
-  double getAverageDailyIntake() {
-    if (logs.isEmpty) return 0;
-
-    final foodLogs = logs.where((l) => l.type == 'makanan').toList();
-    if (foodLogs.isEmpty) return 0;
-
-    final days = foodLogs
-        .map(
-          (l) => "${l.timestamp.year}-${l.timestamp.month}-${l.timestamp.day}",
-        )
-        .toSet()
-        .length;
-    final totalFoodIntake = foodLogs.fold(0, (sum, item) => sum + item.amount);
-
-    return days > 0 ? (totalFoodIntake / days) : 0;
-  }
-
-  // Generate radial data for 3 concentric rings (harian, bulanan, tahunan)
-  Map<String, double> getRadialData() {
     final now = DateTime.now();
+    DateTime threshold;
     
-    double harian = 0;
-    double bulanan = 0;
-    double tahunan = 0;
-    
-    for (var log in logs) {
-      if (log.type == 'makanan') {
-        if (log.timestamp.year == now.year) {
-          tahunan += log.amount;
-          if (log.timestamp.month == now.month) {
-            bulanan += log.amount;
-            if (log.timestamp.day == now.day) {
-              harian += log.amount;
-            }
-          }
-        }
+    // HANYA data label gizi makanan (natrium dari makanan)
+    final foodLogs = logs.where((l) => l.type == 'makanan');
+
+    int count = currentCount;
+
+    if (currentUnit == 'Saat Ini') {
+      threshold = DateTime(now.year, now.month, now.day);
+    } else if (currentUnit == 'Hari') {
+      threshold = now.subtract(Duration(days: count));
+    } else if (currentUnit == 'Minggu') {
+      threshold = now.subtract(Duration(days: count * 7));
+    } else if (currentUnit == 'Bulan') {
+      threshold = DateTime(now.year, now.month - count, 1);
+    } else if (currentUnit == 'Tahun') {
+      threshold = DateTime(now.year - count, 1, 1);
+    } else if (currentUnit == 'Atur Tanggal') {
+      if (customDateRange.value != null) {
+        return foodLogs.where((l) => 
+          (l.timestamp.isAfter(customDateRange.value!.start) || l.timestamp.isAtSameMomentAs(customDateRange.value!.start)) &&
+          (l.timestamp.isBefore(customDateRange.value!.end.add(const Duration(days: 1))) || l.timestamp.isAtSameMomentAs(customDateRange.value!.end.add(const Duration(days: 1))))
+        ).toList();
       }
+      threshold = now.subtract(const Duration(days: 7));
+    } else {
+      threshold = DateTime(now.year - 4, 1, 1);
     }
     
-    return {
-      'harian': harian,
-      'bulanan': bulanan,
-      'tahunan': tahunan,
-    };
+    if (currentUnit == 'Saat Ini') {
+       return foodLogs.where((l) => l.timestamp.year == now.year && l.timestamp.month == now.month && l.timestamp.day == now.day).toList();
+    }
+    return foodLogs.where((l) => l.timestamp.isAfter(threshold) || l.timestamp.isAtSameMomentAs(threshold)).toList();
+  }
+
+  double get chartLimit {
+    if (currentUnit == 'Saat Ini') return dailyLimit.value;
+    if (currentUnit == 'Minggu') return dailyLimit.value * 7;
+    if (currentUnit == 'Bulan') return dailyLimit.value * 30;
+    if (currentUnit == 'Tahun') return dailyLimit.value * 365;
+    if (currentUnit == 'Atur Tanggal') return dailyLimit.value; // Displayed daily
+    return dailyLimit.value;
+  }
+
+  double getTotalIntake() {
+    final dataPoints = getChartData();
+    if (dataPoints.isEmpty) return 0;
+
+    double total = 0;
+    for (var point in dataPoints) {
+      total += point.amanValue + point.warningValue + point.bahayaValue;
+    }
+    return total;
+  }
+
+  double getAmanIntake() {
+    return filteredLogs.where((l) => l.amount <= dailyLimit.value * 0.1).fold(0.0, (sum, item) => sum + item.amount);
+  }
+
+  double getWarningIntake() {
+    return filteredLogs.where((l) => l.amount > dailyLimit.value * 0.1 && l.amount <= dailyLimit.value * 0.2).fold(0.0, (sum, item) => sum + item.amount);
+  }
+
+  double getBahayaIntake() {
+    return filteredLogs.where((l) => l.amount > dailyLimit.value * 0.2).fold(0.0, (sum, item) => sum + item.amount);
+  }
+
+
+  List<ChartDataPoint> getChartData() {
+    final now = DateTime.now();
+    List<ChartDataPoint> data = [];
+    final foodLogs = logs.where((l) => l.type == 'makanan').toList();
+    int count = currentCount;
+    void addData(String label, Iterable<SodiumLog> matchedLogs) {
+      double aman = 0, warning = 0, bahaya = 0;
+      for (var log in matchedLogs) {
+        if (log.amount >= 1000) {
+          bahaya += log.amount;
+        } else if (log.amount >= 600) {
+          warning += log.amount;
+        } else {
+          aman += log.amount;
+        }
+      }
+      data.add(ChartDataPoint(label, aman, warning, bahaya));
+    }
+
+    if (currentUnit == 'Saat Ini') {
+      DateTime targetDate = now;
+      var matched = foodLogs.where((log) => log.timestamp.year == targetDate.year && log.timestamp.month == targetDate.month && log.timestamp.day == targetDate.day);
+      addData("Hari Ini", matched);
+    } else if (currentUnit == 'Atur Tanggal' && customDateRange.value != null) {
+      DateTime start = customDateRange.value!.start;
+      DateTime end = customDateRange.value!.end;
+      int days = end.difference(start).inDays + 1;
+      
+      for (int i = 0; i < days; i++) {
+        DateTime targetDate = start.add(Duration(days: i));
+        var matched = foodLogs.where((log) => log.timestamp.year == targetDate.year && log.timestamp.month == targetDate.month && log.timestamp.day == targetDate.day);
+        String label = "${targetDate.day} ${["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"][targetDate.month - 1]}";
+        addData(label, matched);
+      }
+    } else if (currentUnit == 'Hari' || currentUnit == 'Atur Tanggal') {
+      // Last N days
+      for (int i = count - 1; i >= 0; i--) {
+        DateTime targetDate = now.subtract(Duration(days: i));
+        var matched = foodLogs.where((log) => log.timestamp.year == targetDate.year && log.timestamp.month == targetDate.month && log.timestamp.day == targetDate.day);
+        String label = "${targetDate.day} ${["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"][targetDate.month - 1]}";
+        addData(label, matched);
+      }
+    } else if (currentUnit == 'Minggu') {
+      // Last N weeks
+      for (int i = count - 1; i >= 0; i--) {
+        DateTime targetEnd = now.subtract(Duration(days: i * 7));
+        DateTime targetStart = targetEnd.subtract(const Duration(days: 6));
+        var matched = foodLogs.where((log) => log.timestamp.isAfter(targetStart.subtract(const Duration(seconds: 1))) && log.timestamp.isBefore(targetEnd.add(const Duration(days: 1))));
+        String label = "Mgg ${count - i}";
+        addData(label, matched);
+      }
+    } else if (currentUnit == 'Bulan') {
+      for (int i = count - 1; i >= 0; i--) {
+        int targetMonth = now.month - i;
+        int targetYear = now.year;
+        while (targetMonth <= 0) {
+          targetMonth += 12;
+          targetYear -= 1;
+        }
+        var matched = foodLogs.where((log) => log.timestamp.month == targetMonth && log.timestamp.year == targetYear);
+        String label = "${["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"][targetMonth - 1]}";
+        addData(label, matched);
+      }
+    } else if (currentUnit == 'Tahun') {
+      for (int i = count - 1; i >= 0; i--) {
+        int targetYear = now.year - i;
+        var matched = foodLogs.where((log) => log.timestamp.year == targetYear);
+        addData(targetYear.toString(), matched);
+      }
+    }
+
+    return data;
   }
 
   void deleteHistoryLog(String id) async {
@@ -177,15 +322,22 @@ class RiwayatController extends GetxController {
           );
           DocumentSnapshot userSnap = await transaction.get(userRef);
           if (userSnap.exists) {
-            num currentTotalNum =
-                (userSnap.data() as Map<String, dynamic>)['natrium'] ??
-                (userSnap.data() as Map<String, dynamic>)['sodium'] ??
-                (userSnap.data() as Map<String, dynamic>)['totalNatrium'] ??
-                0;
-            int currentTotal = currentTotalNum.toInt();
-            int newTotal = currentTotal - amount;
-            if (newTotal < 0) newTotal = 0;
-            transaction.update(userRef, {'natrium': newTotal});
+            // Check if the log is from today
+            DateTime? logDate = (logData['created_at'] as Timestamp?)?.toDate() ?? (logData['timestamp'] as Timestamp?)?.toDate();
+            final now = DateTime.now();
+            bool isToday = logDate != null && logDate.year == now.year && logDate.month == now.month && logDate.day == now.day;
+            
+            if (isToday) {
+              num currentTotalNum =
+                  (userSnap.data() as Map<String, dynamic>)['natrium'] ??
+                  (userSnap.data() as Map<String, dynamic>)['sodium'] ??
+                  (userSnap.data() as Map<String, dynamic>)['totalNatrium'] ??
+                  0;
+              int currentTotal = currentTotalNum.toInt();
+              int newTotal = currentTotal - amount;
+              if (newTotal < 0) newTotal = 0;
+              transaction.update(userRef, {'natrium': newTotal});
+            }
           }
           transaction.delete(docRef);
         });
@@ -199,40 +351,99 @@ class RiwayatController extends GetxController {
 
   double calculateDailyLimit(int age, String condition) {
     String c = condition.trim().toLowerCase();
-    if (age >= 5 && age <= 9) {
-      if (c.contains('sehat')) return 1200;
-      if (c.contains('hipertensi')) return 1200;
-      if (c.contains('kardiovaskular')) return 1000;
-      if (c.contains('jantung')) return 1000;
-      if (c.contains('ginjal')) return 1000;
-      if (c.contains('stroke')) return 0;
-      return 1200;
-    } else if (age >= 10 && age <= 17) {
-      if (c.contains('sehat')) return 1500;
-      if (c.contains('hipertensi')) return 1200;
-      if (c.contains('kardiovaskular')) return 1000;
-      if (c.contains('jantung')) return 1000;
-      if (c.contains('ginjal')) return 1000;
-      if (c.contains('stroke')) return 0;
-      return 1500;
-    } else if (age >= 18 && age <= 59) {
-      if (c.contains('sehat')) return 2000;
-      if (c.contains('hipertensi')) return 1500;
-      if (c.contains('kardiovaskular')) return 1500;
-      if (c.contains('jantung')) return 1500;
-      if (c.contains('ginjal')) return 1500;
-      if (c.contains('stroke')) return 1500;
-      return 2000;
-    } else if (age >= 60) {
-      if (c.contains('sehat')) return 1200;
-      if (c.contains('hipertensi')) return 1000;
-      if (c.contains('kardiovaskular')) return 1200;
-      if (c.contains('jantung')) return 1200;
-      if (c.contains('ginjal')) return 1000;
-      if (c.contains('stroke')) return 1000;
-      if (c.contains('osteoporosis')) return 2300;
-      return 1200;
+    List<String> conditions = c.split(',').map((e) => e.trim()).toList();
+    
+    double minLimit = 2000;
+
+    for (String cond in conditions) {
+      double limit = 2000;
+      
+      if (age >= 10 && age <= 18) {
+        if (cond.contains('sehat')) limit = 1500;
+        else if (cond.contains('hipertensi')) limit = 1200;
+        else if (cond.contains('kardiovaskular')) limit = 1000;
+        else if (cond.contains('jantung')) limit = 1000;
+        else if (cond.contains('ginjal')) limit = 800;
+        else if (cond.contains('stroke')) limit = 0;
+        else limit = 1500;
+      } else if (age >= 18 && age <= 59) {
+        if (cond.contains('sehat')) limit = 2000;
+        else if (cond.contains('hipertensi')) limit = 1500;
+        else if (cond.contains('kardiovaskular')) limit = 1500;
+        else if (cond.contains('jantung')) limit = 1500;
+        else if (cond.contains('ginjal')) limit = 1500;
+        else if (cond.contains('stroke')) limit = 1500;
+        else limit = 2000;
+      } else {
+        if (age >= 5 && age <= 9) {
+          if (cond.contains('sehat')) limit = 1200;
+          else if (cond.contains('hipertensi')) limit = 1200;
+          else if (cond.contains('kardiovaskular')) limit = 1000;
+          else if (cond.contains('jantung')) limit = 1000;
+          else if (cond.contains('ginjal')) limit = 1000;
+          else if (cond.contains('stroke')) limit = 0;
+          else limit = 1200;
+        } else if (age >= 60) {
+          if (cond.contains('sehat')) limit = 1200;
+          else if (cond.contains('hipertensi')) limit = 1000;
+          else if (cond.contains('kardiovaskular')) limit = 1200;
+          else if (cond.contains('jantung')) limit = 1200;
+          else if (cond.contains('ginjal')) limit = 1000;
+          else if (cond.contains('stroke')) limit = 1000;
+          else if (cond.contains('osteoporosis')) limit = 2300;
+          else limit = 1200;
+        }
+      }
+      if (limit < minLimit) {
+        minLimit = limit;
+      }
     }
-    return 2000;
+    
+    return minLimit;
+  }
+
+  double getAverageDailyIntake() {
+    if (logs.isEmpty) return 0.0;
+    
+    Map<String, double> dailySums = {};
+    for (var log in logs) {
+      if (log.type == 'makanan') {
+        String dateKey = "${log.timestamp.year}-${log.timestamp.month}-${log.timestamp.day}";
+        dailySums[dateKey] = (dailySums[dateKey] ?? 0.0) + log.amount;
+      }
+    }
+    
+    if (dailySums.isEmpty) return 0.0;
+    
+    double total = 0.0;
+    dailySums.forEach((key, value) {
+      total += value;
+    });
+    
+    return total / dailySums.length;
+  }
+  Map<String, double> getRadialData() {
+    final now = DateTime.now();
+    double harian = 0;
+    double bulanan = 0;
+    double tahunan = 0;
+    for (var log in logs) {
+      if (log.type == 'makanan') {
+        if (log.timestamp.year == now.year) {
+          tahunan += log.amount;
+          if (log.timestamp.month == now.month) {
+            bulanan += log.amount;
+            if (log.timestamp.day == now.day) {
+              harian += log.amount;
+            }
+          }
+        }
+      }
+    }
+    return {
+      'harian': harian,
+      'bulanan': bulanan,
+      'tahunan': tahunan,
+    };
   }
 }

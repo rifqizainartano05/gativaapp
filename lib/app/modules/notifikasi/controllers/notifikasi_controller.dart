@@ -35,7 +35,6 @@ class NotifikasiController extends GetxController {
   final _firestore = FirebaseFirestore.instance;
 
   List<NotifikasiModel> _userNotifs = [];
-  List<NotifikasiModel> _edukasiNotifs = [];
   List<NotifikasiModel> _infoNotifs = [];
 
   void fetchNotifications() async {
@@ -85,24 +84,7 @@ class NotifikasiController extends GetxController {
         _updateCombinedNotifs();
       }, onError: (e) => print(e));
 
-      // 2. Fetch Edukasi from Nakes
-      _firestore.collectionGroup('edukasi').snapshots().listen((snapshot) {
-        _edukasiNotifs = snapshot.docs.map((doc) {
-          final data = doc.data();
-          final timestamp = (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now();
-          return NotifikasiModel(
-            id: doc.id,
-            title: 'Edukasi: ${data['judul'] ?? 'Materi Baru'}',
-            message: 'Diunggah pada tanggal: ${timestamp.day}/${timestamp.month}/${timestamp.year} ${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}',
-            timestamp: timestamp,
-            isRead: true, // Asumsikan global post tidak ada unread state per user
-            type: 'edukasi',
-          );
-        }).toList();
-        _updateCombinedNotifs();
-      }, onError: (e) => print(e));
-
-      // 3. Fetch Informasi Kesehatan dari Nakes
+      // 3. Fetch Informasi Kesehatan dari Dokter
       _firestore.collectionGroup('informasi_kesehatan').snapshots().listen((snapshot) {
         _infoNotifs = snapshot.docs.map((doc) {
           final data = doc.data();
@@ -125,7 +107,7 @@ class NotifikasiController extends GetxController {
   }
 
   void _updateCombinedNotifs() {
-    final combined = [..._userNotifs, ..._edukasiNotifs, ..._infoNotifs];
+    final combined = [..._userNotifs, ..._infoNotifs];
     // Sort descending by timestamp
     combined.sort((a, b) => b.timestamp.compareTo(a.timestamp));
     notifications.value = combined;

@@ -12,6 +12,27 @@ class CustomPopup {
     );
   }
 
+  static void showLoading(String message) {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const CircularProgressIndicator(color: Color(0xFF2E7D32)),
+              const SizedBox(width: 16),
+              Text(message, style: const TextStyle(fontSize: 16)),
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+  }
+
   static void showWarning(String title, String message) {
     _showCustomDialog(
       title: title,

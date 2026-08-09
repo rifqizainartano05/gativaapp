@@ -5,6 +5,8 @@ import '../controllers/edukasi_controller.dart';
 class EdukasiBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<EdukasiController>(() => EdukasiController());
+    Get.lazyPut<EdukasiController>(
+      () => EdukasiController(),
+    );
   }
 }

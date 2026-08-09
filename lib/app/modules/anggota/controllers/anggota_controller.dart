@@ -454,40 +454,54 @@ class AnggotaController extends GetxController {
 
   double calculateDailyLimit(int age, String condition) {
     String c = condition.trim().toLowerCase();
-    if (age >= 5 && age <= 9) {
-      if (c.contains('sehat')) return 1200;
-      if (c.contains('hipertensi')) return 1200;
-      if (c.contains('kardiovaskular')) return 1000;
-      if (c.contains('jantung')) return 1000;
-      if (c.contains('ginjal')) return 1000;
-      if (c.contains('stroke')) return 0;
-      return 1200;
-    } else if (age >= 10 && age <= 17) {
-      if (c.contains('sehat')) return 1500;
-      if (c.contains('hipertensi')) return 1200;
-      if (c.contains('kardiovaskular')) return 1000;
-      if (c.contains('jantung')) return 1000;
-      if (c.contains('ginjal')) return 1000;
-      if (c.contains('stroke')) return 0;
-      return 1500;
-    } else if (age >= 18 && age <= 59) {
-      if (c.contains('sehat')) return 2000;
-      if (c.contains('hipertensi')) return 1500;
-      if (c.contains('kardiovaskular')) return 1500;
-      if (c.contains('jantung')) return 1500;
-      if (c.contains('ginjal')) return 1500;
-      if (c.contains('stroke')) return 1500;
-      return 2000;
-    } else if (age >= 60) {
-      if (c.contains('sehat')) return 1200;
-      if (c.contains('hipertensi')) return 1000;
-      if (c.contains('kardiovaskular')) return 1200;
-      if (c.contains('jantung')) return 1200;
-      if (c.contains('ginjal')) return 1000;
-      if (c.contains('stroke')) return 1000;
-      if (c.contains('osteoporosis')) return 2300;
-      return 1200;
+    List<String> conditions = c.split(',').map((e) => e.trim()).toList();
+    
+    double minLimit = 2000;
+
+    for (String cond in conditions) {
+      double limit = 2000;
+      
+      if (age >= 10 && age <= 18) {
+        if (cond.contains('sehat')) limit = 1500;
+        else if (cond.contains('hipertensi')) limit = 1200;
+        else if (cond.contains('kardiovaskular')) limit = 1000;
+        else if (cond.contains('jantung')) limit = 1000;
+        else if (cond.contains('ginjal')) limit = 800;
+        else if (cond.contains('stroke')) limit = 0;
+        else limit = 1500;
+      } else if (age >= 18 && age <= 59) {
+        if (cond.contains('sehat')) limit = 2000;
+        else if (cond.contains('hipertensi')) limit = 1500;
+        else if (cond.contains('kardiovaskular')) limit = 1500;
+        else if (cond.contains('jantung')) limit = 1500;
+        else if (cond.contains('ginjal')) limit = 1500;
+        else if (cond.contains('stroke')) limit = 1500;
+        else limit = 2000;
+      } else {
+        if (age >= 5 && age <= 9) {
+          if (cond.contains('sehat')) limit = 1200;
+          else if (cond.contains('hipertensi')) limit = 1200;
+          else if (cond.contains('kardiovaskular')) limit = 1000;
+          else if (cond.contains('jantung')) limit = 1000;
+          else if (cond.contains('ginjal')) limit = 1000;
+          else if (cond.contains('stroke')) limit = 0;
+          else limit = 1200;
+        } else if (age >= 60) {
+          if (cond.contains('sehat')) limit = 1200;
+          else if (cond.contains('hipertensi')) limit = 1000;
+          else if (cond.contains('kardiovaskular')) limit = 1200;
+          else if (cond.contains('jantung')) limit = 1200;
+          else if (cond.contains('ginjal')) limit = 1000;
+          else if (cond.contains('stroke')) limit = 1000;
+          else if (cond.contains('osteoporosis')) limit = 2300;
+          else limit = 1200;
+        }
+      }
+      if (limit < minLimit) {
+        minLimit = limit;
+      }
     }
-    return 2000;
+    
+    return minLimit;
   }
 }

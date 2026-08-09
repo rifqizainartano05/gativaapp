@@ -15,21 +15,8 @@ class NetworkService extends GetxService {
   }
 
   void _updateConnectionStatus(List<ConnectivityResult> results) {
-    final isOffline = results.isEmpty || results.every((r) => r == ConnectivityResult.none);
-
-    if (isOffline) {
-      if (!_isDialogShowing) {
-        _isDialogShowing = true;
-        _showNoNetworkDialog();
-      }
-    } else {
-      if (_isDialogShowing) {
-        _isDialogShowing = false;
-        if (Get.isDialogOpen ?? false) {
-          Get.back();
-        }
-      }
-    }
+    // Network detection disabled per user request
+    return;
   }
 
   void _showNoNetworkDialog() {

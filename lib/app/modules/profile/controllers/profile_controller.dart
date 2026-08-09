@@ -9,6 +9,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../routes/app_pages.dart';
 import '../../../services/auth_service.dart';
+import '../../../services/presence_service.dart';
 import '../../../services/notification_service.dart';
 import 'dart:async';
 
@@ -29,10 +30,10 @@ class ProfileController extends GetxController with WidgetsBindingObserver {
   final RxString beratBadan = "Belum ada".obs;
   final RxString tinggiBadan = "Belum ada".obs;
   final RxString kondisiKesehatan = "Belum ada".obs;
-  final RxString nakesName = "-".obs;
-  final RxString nakesUid = "".obs;
-  final RxString nakesPhotoBase64 = "".obs;
-  final Rx<Uint8List?> nakesImageBytes = Rx<Uint8List?>(null);
+  final RxString dokterName = "-".obs;
+  final RxString dokterUid = "".obs;
+  final RxString dokterPhotoBase64 = "".obs;
+  final Rx<Uint8List?> dokterImageBytes = Rx<Uint8List?>(null);
 
   StreamSubscription? _chatSubscription;
   DateTime? _lastNotificationTime;
@@ -71,17 +72,17 @@ class ProfileController extends GetxController with WidgetsBindingObserver {
       }
     });
 
-    ever(nakesPhotoBase64, (String b64) {
+    ever(dokterPhotoBase64, (String b64) {
       if (b64.isEmpty) {
-        nakesImageBytes.value = null;
+        dokterImageBytes.value = null;
         return;
       }
       try {
         if (b64.contains(',')) b64 = b64.split(',').last;
         b64 = b64.replaceAll(RegExp(r'\s+'), '');
-        nakesImageBytes.value = base64Decode(b64);
+        dokterImageBytes.value = base64Decode(b64);
       } catch (e) {
-        nakesImageBytes.value = null;
+        dokterImageBytes.value = null;
       }
     });
     
@@ -99,15 +100,15 @@ class ProfileController extends GetxController with WidgetsBindingObserver {
           final data = doc.data() as Map<String, dynamic>;
           name.value = data['name'] ?? data['nama'] ?? user.displayName ?? "Pengguna";
           age.value = data['age'] ?? data['usia'] ?? 28;
-          photoBase64.value = data['photoBase64'] ?? '';
+          photoBase64.value = data['strImageBase64'] ?? data['photoBase64'] ?? '';
           beratBadan.value = data['berat_badan']?.toString() ?? 'Belum ada';
           tinggiBadan.value = data['tinggi_badan']?.toString() ?? 'Belum ada';
           kondisiKesehatan.value = data['kondisi'] ?? data['kondisi_kesehatan'] ?? 'Belum ada';
-          nakesName.value = data['nakesName'] ?? '-';
+          dokterName.value = data['dokterName'] ?? '-';
           
-          if (data['nakesUid'] != null && data['nakesUid'].toString().isNotEmpty) {
-            nakesUid.value = data['nakesUid'];
-            _fetchNakesPhoto(nakesUid.value);
+          if (data['dokterUid'] != null && data['dokterUid'].toString().isNotEmpty) {
+            dokterUid.value = data['dokterUid'];
+            _fetchDokterPhoto(dokterUid.value);
             
             // Re-initiate listening if notification is already enabled
             if (isNotificationEnabled.value) {
@@ -149,7 +150,7 @@ class ProfileController extends GetxController with WidgetsBindingObserver {
 
   void _listenToIncomingChats() {
     User? user = FirebaseAuth.instance.currentUser;
-    if (user == null || nakesUid.value.isEmpty) return;
+    if (user == null || dokterUid.value.isEmpty) return;
 
     _chatSubscription?.cancel();
     _lastNotificationTime = DateTime.now(); 
@@ -157,7 +158,7 @@ class ProfileController extends GetxController with WidgetsBindingObserver {
     _chatSubscription = Get.find<AuthService>()
         .getUserReference(user.uid)
         .collection('chats')
-        .doc(nakesUid.value)
+        .doc(dokterUid.value)
         .collection('messages')
         .orderBy('timestamp', descending: true)
         .limit(1)
@@ -168,11 +169,11 @@ class ProfileController extends GetxController with WidgetsBindingObserver {
         final senderRole = data['senderRole'] ?? '';
         final timestamp = (data['timestamp'] as Timestamp?)?.toDate();
         
-        if (senderRole == 'nakes' && timestamp != null && timestamp.isAfter(_lastNotificationTime!)) {
+        if (senderRole == 'dokter' && timestamp != null && timestamp.isAfter(_lastNotificationTime!)) {
            _lastNotificationTime = DateTime.now();
            NotificationService.showNotification(
              id: 101, 
-             title: "Pesan Baru dari ${nakesName.value}", 
+             title: "Pesan Baru dari ${dokterName.value}", 
              body: data['text'] ?? "Ada pesan masuk!"
            );
         }
@@ -180,14 +181,14 @@ class ProfileController extends GetxController with WidgetsBindingObserver {
     });
   }
 
-  Future<void> _fetchNakesPhoto(String uid) async {
+  Future<void> _fetchDokterPhoto(String uid) async {
     try {
-      final doc = await FirebaseFirestore.instance.collection('mobile').doc('roles').collection('tenaga_kesehatan').doc(uid).get();
+      final doc = await FirebaseFirestore.instance.collection('mobile').doc('roles').collection('dokter').doc(uid).get();
       if (doc.exists) {
         final data = doc.data();
         if (data != null) {
-          nakesPhotoBase64.value = data['photoBase64'] ?? '';
-          nakesName.value = data['name'] ?? data['nama'] ?? nakesName.value;
+          dokterPhotoBase64.value = data['photoBase64'] ?? '';
+          dokterName.value = data['name'] ?? data['nama'] ?? dokterName.value;
         }
       }
     } catch (e) {
@@ -403,9 +404,9 @@ class ProfileController extends GetxController with WidgetsBindingObserver {
     );
   }
 
-  void showNakesDialog() {
-    bool isConnected = nakesName.value != '-' && nakesName.value.isNotEmpty;
-    String nameToShow = isConnected ? nakesName.value : 'Belum Terhubung';
+  void showDokterDialog() {
+    bool isConnected = dokterName.value != '-' && dokterName.value.isNotEmpty;
+    String nameToShow = isConnected ? dokterName.value : 'Belum Terhubung';
     
     Get.dialog(
       Dialog(
@@ -422,14 +423,14 @@ class ProfileController extends GetxController with WidgetsBindingObserver {
                 decoration: BoxDecoration(
                   color: const Color(0xFF2E7D32).withOpacity(0.1),
                   shape: BoxShape.circle,
-                  image: nakesImageBytes.value != null
+                  image: dokterImageBytes.value != null
                       ? DecorationImage(
-                          image: MemoryImage(nakesImageBytes.value!),
+                          image: MemoryImage(dokterImageBytes.value!),
                           fit: BoxFit.cover,
                         )
                       : null,
                 ),
-                child: nakesImageBytes.value == null
+                child: dokterImageBytes.value == null
                     ? const Icon(
                         Icons.medical_services_rounded,
                         size: 40,
@@ -457,77 +458,28 @@ class ProfileController extends GetxController with WidgetsBindingObserver {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
-              if (!isConnected) ...[
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Get.back();
-                      Get.toNamed(Routes.SCAN_TENAGA_KESEHATAN_AKSES);
-                    },
-                    icon: const Icon(Icons.qr_code_scanner_rounded, color: Colors.white),
-                    label: const Text(
-                      'Scan Akses',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Get.back(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2E7D32),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2E7D32),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: const Text(
+                    'Tutup',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: () => Get.back(),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Colors.grey),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    child: const Text(
-                      'Tutup',
-                      style: TextStyle(
-                        color: Colors.black54,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ] else ...[
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => Get.back(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2E7D32),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    child: const Text(
-                      'Tutup',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ],
           ),
         ),
@@ -951,18 +903,16 @@ class ProfileController extends GetxController with WidgetsBindingObserver {
                             onPressed: () async {
                               Get.back(); // tutup dialog
                               
-                              // Set isOnline to false if user is a patient
+                              // Set isOnline to false for any user
                               final user = FirebaseAuth.instance.currentUser;
                               if (user != null) {
                                 try {
-                                  final roleSnapshot = await FirebaseFirestore.instance.collection('mobile').doc('roles').collection('pasien').doc(user.uid).get();
-                                  if (roleSnapshot.exists) {
-                                    await FirebaseFirestore.instance.collection('mobile').doc('roles').collection('pasien').doc(user.uid).update({
-                                      'isOnline': false,
-                                      'lastSeen': FieldValue.serverTimestamp(),
-                                    });
+                                  if (Get.isRegistered<PresenceService>()) {
+                                    await Get.find<PresenceService>().updatePresence(false);
                                   }
-                                } catch (_) {}
+                                } catch (e) {
+                                  print('Error updating presence on logout: $e');
+                                }
                               }
                               
                               await FirebaseAuth.instance.signOut();
@@ -993,40 +943,54 @@ class ProfileController extends GetxController with WidgetsBindingObserver {
 
   double calculateDailyLimit(int age, String condition) {
     String c = condition.trim().toLowerCase();
-    if (age >= 5 && age <= 9) {
-      if (c.contains('sehat')) return 1200;
-      if (c.contains('hipertensi')) return 1200;
-      if (c.contains('kardiovaskular')) return 1000;
-      if (c.contains('jantung')) return 1000;
-      if (c.contains('ginjal')) return 1000;
-      if (c.contains('stroke')) return 0;
-      return 1200;
-    } else if (age >= 10 && age <= 17) {
-      if (c.contains('sehat')) return 1500;
-      if (c.contains('hipertensi')) return 1200;
-      if (c.contains('kardiovaskular')) return 1000;
-      if (c.contains('jantung')) return 1000;
-      if (c.contains('ginjal')) return 1000;
-      if (c.contains('stroke')) return 0;
-      return 1500;
-    } else if (age >= 18 && age <= 59) {
-      if (c.contains('sehat')) return 2000;
-      if (c.contains('hipertensi')) return 1500;
-      if (c.contains('kardiovaskular')) return 1500;
-      if (c.contains('jantung')) return 1500;
-      if (c.contains('ginjal')) return 1500;
-      if (c.contains('stroke')) return 1500;
-      return 2000;
-    } else if (age >= 60) {
-      if (c.contains('sehat')) return 1200;
-      if (c.contains('hipertensi')) return 1000;
-      if (c.contains('kardiovaskular')) return 1200;
-      if (c.contains('jantung')) return 1200;
-      if (c.contains('ginjal')) return 1000;
-      if (c.contains('stroke')) return 1000;
-      if (c.contains('osteoporosis')) return 2300;
-      return 1200;
+    List<String> conditions = c.split(',').map((e) => e.trim()).toList();
+    
+    double minLimit = 2000;
+
+    for (String cond in conditions) {
+      double limit = 2000;
+      
+      if (age >= 10 && age <= 18) {
+        if (cond.contains('sehat')) limit = 1500;
+        else if (cond.contains('hipertensi')) limit = 1200;
+        else if (cond.contains('kardiovaskular')) limit = 1000;
+        else if (cond.contains('jantung')) limit = 1000;
+        else if (cond.contains('ginjal')) limit = 800;
+        else if (cond.contains('stroke')) limit = 0;
+        else limit = 1500;
+      } else if (age >= 18 && age <= 59) {
+        if (cond.contains('sehat')) limit = 2000;
+        else if (cond.contains('hipertensi')) limit = 1500;
+        else if (cond.contains('kardiovaskular')) limit = 1500;
+        else if (cond.contains('jantung')) limit = 1500;
+        else if (cond.contains('ginjal')) limit = 1500;
+        else if (cond.contains('stroke')) limit = 1500;
+        else limit = 2000;
+      } else {
+        if (age >= 5 && age <= 9) {
+          if (cond.contains('sehat')) limit = 1200;
+          else if (cond.contains('hipertensi')) limit = 1200;
+          else if (cond.contains('kardiovaskular')) limit = 1000;
+          else if (cond.contains('jantung')) limit = 1000;
+          else if (cond.contains('ginjal')) limit = 1000;
+          else if (cond.contains('stroke')) limit = 0;
+          else limit = 1200;
+        } else if (age >= 60) {
+          if (cond.contains('sehat')) limit = 1200;
+          else if (cond.contains('hipertensi')) limit = 1000;
+          else if (cond.contains('kardiovaskular')) limit = 1200;
+          else if (cond.contains('jantung')) limit = 1200;
+          else if (cond.contains('ginjal')) limit = 1000;
+          else if (cond.contains('stroke')) limit = 1000;
+          else if (cond.contains('osteoporosis')) limit = 2300;
+          else limit = 1200;
+        }
+      }
+      if (limit < minLimit) {
+        minLimit = limit;
+      }
     }
-    return 2000;
+    
+    return minLimit;
   }
 }

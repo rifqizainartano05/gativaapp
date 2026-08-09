@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -13,17 +14,16 @@ class RegisterController extends GetxController {
   final confirmPasswordController = TextEditingController();
   final ageController = TextEditingController();
 
-  // Nakes specific
+  // Dokter specific
   final strController = TextEditingController();
   final strImageBase64 = ''.obs;
 
   final selectedRole = 'Pasien'.obs;
-  final roles = ['Pasien', 'Tenaga Kesehatan'];
+  final roles = ['Pasien', 'Dokter'];
 
-  final selectedCondition = 'Sehat'.obs;
+  final selectedConditions = <String>['Tidak terindikasi penyakit di atas'].obs;
 
   final List<String> conditions = [
-    'Sehat',
     'Hipertensi',
     'Penyakit kardiovaskular',
     'Penyakit ginjal kronis',
@@ -71,45 +71,59 @@ class RegisterController extends GetxController {
 
   double calculateDailyLimit(int age, String condition) {
     String c = condition.trim().toLowerCase();
-    if (age >= 5 && age <= 9) {
-      if (c.contains('sehat')) return 1200;
-      if (c.contains('hipertensi')) return 1200;
-      if (c.contains('kardiovaskular')) return 1000;
-      if (c.contains('jantung')) return 1000;
-      if (c.contains('ginjal')) return 1000;
-      if (c.contains('stroke')) return 0;
-      return 1200;
-    } else if (age >= 10 && age <= 17) {
-      if (c.contains('sehat')) return 1500;
-      if (c.contains('hipertensi')) return 1200;
-      if (c.contains('kardiovaskular')) return 1000;
-      if (c.contains('jantung')) return 1000;
-      if (c.contains('ginjal')) return 1000;
-      if (c.contains('stroke')) return 0;
-      return 1500;
-    } else if (age >= 18 && age <= 59) {
-      if (c.contains('sehat')) return 2000;
-      if (c.contains('hipertensi')) return 1500;
-      if (c.contains('kardiovaskular')) return 1500;
-      if (c.contains('jantung')) return 1500;
-      if (c.contains('ginjal')) return 1500;
-      if (c.contains('stroke')) return 1500;
-      return 2000;
-    } else if (age >= 60) {
-      if (c.contains('sehat')) return 1200;
-      if (c.contains('hipertensi')) return 1000;
-      if (c.contains('kardiovaskular')) return 1200;
-      if (c.contains('jantung')) return 1200;
-      if (c.contains('ginjal')) return 1000;
-      if (c.contains('stroke')) return 1000;
-      if (c.contains('osteoporosis')) return 2300;
-      return 1200;
+    List<String> conditions = c.split(',').map((e) => e.trim()).toList();
+    
+    double minLimit = 2000;
+
+    for (String cond in conditions) {
+      double limit = 2000;
+      
+      if (age >= 10 && age <= 18) {
+        if (cond.contains('sehat') || cond.contains('tidak terindikasi')) limit = 1500;
+        else if (cond.contains('hipertensi')) limit = 1200;
+        else if (cond.contains('kardiovaskular')) limit = 1000;
+        else if (cond.contains('jantung')) limit = 1000;
+        else if (cond.contains('ginjal')) limit = 800;
+        else if (cond.contains('stroke')) limit = 0;
+        else limit = 1500;
+      } else if (age >= 18 && age <= 59) {
+        if (cond.contains('sehat') || cond.contains('tidak terindikasi')) limit = 2000;
+        else if (cond.contains('hipertensi')) limit = 1500;
+        else if (cond.contains('kardiovaskular')) limit = 1500;
+        else if (cond.contains('jantung')) limit = 1500;
+        else if (cond.contains('ginjal')) limit = 1500;
+        else if (cond.contains('stroke')) limit = 1500;
+        else limit = 2000;
+      } else {
+        if (age >= 5 && age <= 9) {
+          if (cond.contains('sehat') || cond.contains('tidak terindikasi')) limit = 1200;
+          else if (cond.contains('hipertensi')) limit = 1200;
+          else if (cond.contains('kardiovaskular')) limit = 1000;
+          else if (cond.contains('jantung')) limit = 1000;
+          else if (cond.contains('ginjal')) limit = 1000;
+          else if (cond.contains('stroke')) limit = 0;
+          else limit = 1200;
+        } else if (age >= 60) {
+          if (cond.contains('sehat') || cond.contains('tidak terindikasi')) limit = 1200;
+          else if (cond.contains('hipertensi')) limit = 1000;
+          else if (cond.contains('kardiovaskular')) limit = 1200;
+          else if (cond.contains('jantung')) limit = 1200;
+          else if (cond.contains('ginjal')) limit = 1000;
+          else if (cond.contains('stroke')) limit = 1000;
+          else if (cond.contains('osteoporosis')) limit = 2300;
+          else limit = 1200;
+        }
+      }
+      if (limit < minLimit) {
+        minLimit = limit;
+      }
     }
-    return 2000;
+    
+    return minLimit;
   }
 
   Future<void> register() async {
-    if (selectedRole.value == 'Tenaga Kesehatan') {
+    if (selectedRole.value == 'Dokter') {
       if (strController.text.isEmpty) {
         Get.snackbar(
           'Input Kosong',
@@ -131,6 +145,7 @@ class RegisterController extends GetxController {
     }
 
     isLoading.value = true;
+    String? verificationStatus;
 
     try {
       await FirebaseAuth.instance.createUserWithEmailAndPassword(
@@ -146,7 +161,7 @@ class RegisterController extends GetxController {
         double? calculatedLimit;
 
         if (selectedRole.value == 'Pasien') {
-          calculatedLimit = calculateDailyLimit(age, selectedCondition.value);
+          calculatedLimit = calculateDailyLimit(age, selectedConditions.join(', '));
         }
 
         // Save to main role collection (no separate profile subcollection)
@@ -156,10 +171,12 @@ class RegisterController extends GetxController {
           'age': age,
           'role': selectedRole.value,
           'createdAt': FieldValue.serverTimestamp(),
+          'isOnline': false,
+          'lastSeen': FieldValue.serverTimestamp(),
         };
 
         if (selectedRole.value == 'Pasien') {
-          userData['kondisi_kesehatan'] = selectedCondition.value;
+          userData['kondisi_kesehatan'] = selectedConditions.join(', ');
           userData['dailyLimit'] = calculatedLimit;
         } else {
           userData['strNumber'] = strController.text.trim();
@@ -169,7 +186,7 @@ class RegisterController extends GetxController {
 
         String subCollectionName = selectedRole.value == 'Pasien'
             ? 'pasien'
-            : 'tenaga_kesehatan';
+            : 'dokter';
 
         final userDocRef = FirebaseFirestore.instance
             .collection('mobile')
@@ -177,171 +194,9 @@ class RegisterController extends GetxController {
             .collection(subCollectionName)
             .doc(user.uid);
 
-        // Save all data to the role document directly (status 'menunggu' untuk nakes)
+        // Save all data to the role document directly (status 'menunggu' untuk dokter)
         await userDocRef.set(userData);
 
-        if (selectedRole.value == 'Tenaga Kesehatan') {
-          isLoading.value = false; // Matikan loading agar popup terlihat jelas
-
-          // Meminta kode akses admin setelah data tersimpan (status masih menunggu)
-          final TextEditingController codeController = TextEditingController();
-          String? verificationStatus = await Get.dialog<String>(
-            Dialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              backgroundColor: Colors.white,
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  // Watermark Icon
-                  Positioned(
-                    right: -20,
-                    bottom: -20,
-                    child: Transform.rotate(
-                      angle: -0.2,
-                      child: Icon(
-                        Icons.admin_panel_settings_rounded,
-                        size: 150,
-                        color: const Color(0xFF2E7D32).withOpacity(0.05),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF2E7D32).withOpacity(0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.verified_user_rounded,
-                            color: Color(0xFF2E7D32),
-                            size: 32,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'Verifikasi Admin',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 12),
-                        const Text(
-                          'Masukkan kode akses dari admin untuk mendaftar sebagai Tenaga Kesehatan.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 14, color: Colors.grey),
-                        ),
-                        const SizedBox(height: 24),
-                        TextField(
-                          controller: codeController,
-                          decoration: InputDecoration(
-                            hintText: 'Kode Akses Admin (Wajib)',
-                            filled: true,
-                            fillColor: Colors.grey.shade100,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextButton(
-                                onPressed: () => Get.back(result: null),
-                                child: const Text('Batal', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: ElevatedButton(
-                                onPressed: () async {
-                                  final inputCode = codeController.text.trim();
-                                  
-                                  if (inputCode.isEmpty) {
-                                    Get.snackbar(
-                                      'Gagal',
-                                      'Kode akses wajib diisi.',
-                                      backgroundColor: Colors.red.withOpacity(0.1),
-                                      colorText: Colors.red,
-                                    );
-                                    return;
-                                  }
-                                  
-                                  try {
-                                    // Coba query sebagai String di dalam sub collection tenaga_kesehatan
-                                    var snapshot = await FirebaseFirestore.instance
-                                        .collection('mobile')
-                                        .doc('roles')
-                                        .collection('tenaga_kesehatan')
-                                        .where('kode_akses', isEqualTo: inputCode)
-                                        .limit(1)
-                                        .get();
-                                        
-                                    // Jika tidak ketemu, coba query sebagai integer
-                                    if (snapshot.docs.isEmpty) {
-                                      int? codeInt = int.tryParse(inputCode);
-                                      if (codeInt != null) {
-                                        snapshot = await FirebaseFirestore.instance
-                                            .collection('mobile')
-                                            .doc('roles')
-                                            .collection('tenaga_kesehatan')
-                                            .where('kode_akses', isEqualTo: codeInt)
-                                            .limit(1)
-                                            .get();
-                                      }
-                                    }
-                                    
-                                    if (snapshot.docs.isNotEmpty) {
-                                      // Jika kode ditemukan, biarkan lanjut
-                                      // Status tetap menunggu, tidak diubah ke disetujui
-                                      // agar setelah verifikasi email dan saat login, statusnya tetap menunggu persetujuan admin.
-                                      Get.back(result: 'menunggu'); 
-                                    } else {
-                                      Get.snackbar(
-                                        'Gagal',
-                                        'Kode akses admin tidak valid (tidak ditemukan).',
-                                        backgroundColor: Colors.red.withOpacity(0.1),
-                                        colorText: Colors.red,
-                                      );
-                                    }
-                                  } catch (e) {
-                                    Get.snackbar(
-                                      'Error',
-                                      'Gagal memeriksa kode: $e',
-                                      backgroundColor: Colors.red.withOpacity(0.1),
-                                      colorText: Colors.red,
-                                      duration: const Duration(seconds: 5),
-                                    );
-                                  }
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF2E7D32),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                ),
-                                child: const Text('Lanjutkan', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            barrierDismissible: false,
-          );
-
-          // Jika Batal (null), hentikan dan jangan ke halaman verifikasi email (user sudah dibuat dgn status menunggu)
-          if (verificationStatus == null) return;
-        }
 
         isLoading.value = true;
         // Send email verification
@@ -352,7 +207,11 @@ class RegisterController extends GetxController {
 
       isLoading.value = false;
       // Semua role diarahkan ke VERIFIKASI_EMAIL terlebih dahulu
-      Get.offAllNamed(Routes.VERIFIKASI_EMAIL);
+      if (selectedRole.value == 'Dokter') {
+         Get.offAllNamed(Routes.VERIFIKASI_EMAIL, arguments: {'role': 'Dokter', 'strNumber': strController.text.trim(), 'name': nameController.text.trim()});
+      } else {
+         Get.offAllNamed(Routes.VERIFIKASI_EMAIL);
+      }
     } on FirebaseAuthException catch (e) {
       isLoading.value = false;
       String message = 'Terjadi kesalahan saat mendaftar.';

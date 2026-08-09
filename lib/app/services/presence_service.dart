@@ -7,7 +7,7 @@ import 'auth_service.dart';
 class PresenceService extends GetxService with WidgetsBindingObserver {
   Future<PresenceService> init() async {
     WidgetsBinding.instance.addObserver(this);
-    _updatePresence(true);
+    updatePresence(true);
     return this;
   }
 
@@ -15,15 +15,15 @@ class PresenceService extends GetxService with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
-      _updatePresence(true);
+      updatePresence(true);
     } else if (state == AppLifecycleState.paused ||
                state == AppLifecycleState.detached ||
                state == AppLifecycleState.inactive) {
-      _updatePresence(false);
+      updatePresence(false);
     }
   }
 
-  Future<void> _updatePresence(bool isOnline) async {
+  Future<void> updatePresence(bool isOnline) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       try {
@@ -32,11 +32,8 @@ class PresenceService extends GetxService with WidgetsBindingObserver {
           await authService.fetchUserRole(user.uid);
         }
         
-        // Hanya pasien yang perlu mencatat status online di Firebase.
-        // Nakes menggunakan jadwal praktek.
-        if (authService.userRole.value != 'Pasien') {
-          return;
-        }
+        // Mencatat status online di Firebase untuk semua role (Pasien dan Dokter).
+
 
         final data = <String, dynamic>{
           'isOnline': isOnline,
@@ -44,7 +41,7 @@ class PresenceService extends GetxService with WidgetsBindingObserver {
         if (!isOnline) {
           data['lastSeen'] = FieldValue.serverTimestamp();
         }
-        await authService.getUserReference(user.uid).update(data);
+        await authService.getUserReference(user.uid).set(data, SetOptions(merge: true));
       } catch (e) {
         debugPrint('Failed to update presence: $e');
       }

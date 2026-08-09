@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import '../../../routes/app_pages.dart';
 import '../controllers/room_chat_controller.dart';
@@ -49,7 +51,7 @@ class RoomChatView extends GetView<RoomChatController> {
                           "Pasien",
                           Icons.local_hospital_rounded,
                           Icons.favorite_rounded,
-                          "Nakes",
+                          "Dokter",
                           Icons.medication_rounded,
                           Icons.coronavirus_rounded,
                           Icons.monitor_heart_rounded,
@@ -83,8 +85,12 @@ class RoomChatView extends GetView<RoomChatController> {
                 Column(
                   children: [
                     Expanded(
-                      child: Obx(
-                        () => ListView.builder(
+                      child: Obx(() {
+                        // Memaksa Obx untuk melacak semua perubahan pada notesMap
+                        final _ = controller.notesMap.values.toList();
+                        final _2 = controller.messages.length;
+                        
+                        return ListView.builder(
                           reverse: true, // Auto-scroll ke bawah
                           padding: const EdgeInsets.only(
                             left: 16,
@@ -102,10 +108,11 @@ class RoomChatView extends GetView<RoomChatController> {
                               senderName: msg.senderName,
                               senderRole: msg.senderRole,
                               time: msg.time,
+                              note: controller.notesMap[msg.id] ?? msg.note,
                             );
                           },
-                        ),
-                      ),
+                        );
+                      }),
                     ),
                     Obx(() {
                       if (controller.partnerIsTyping.value) {
@@ -113,133 +120,113 @@ class RoomChatView extends GetView<RoomChatController> {
                       }
                       return const SizedBox.shrink();
                     }),
-                    Obx(() {
-                      bool isOnline = controller.isWithinSchedule.value;
-                      if (!isOnline) {
-                          return Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade100,
-                              border: Border(top: BorderSide(color: Colors.grey.shade200)),
-                            ),
-                            child: SafeArea(
-                              top: false,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.access_time_rounded, color: Colors.grey.shade500, size: 20),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    "Di luar jadwal praktik. Chat tidak tersedia.",
-                                    style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.w500),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }
-
-                        return Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 0,
+                    // Form Input (Selalu Tampil)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 0,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border(
+                          top: BorderSide(color: Colors.grey.shade200),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.03),
+                            blurRadius: 10,
+                            offset: const Offset(0, -5),
                           ),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            border: Border(
-                              top: BorderSide(color: Colors.grey.shade200),
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.03),
-                                blurRadius: 10,
-                                offset: const Offset(0, -5),
+                        ],
+                      ),
+                      child: SafeArea(
+                        top: false,
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 8, bottom: 8),
+                          child: Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.history_rounded, color: Color(0xFF2E7D32)),
+                                tooltip: 'Bagikan Riwayat',
+                                onPressed: () {
+                                  controller.showHistoryModal();
+                                },
+                              ),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(
+                                      0xFFF1F5F9,
+                                    ), // Abu-abu terang untuk input
+                                    borderRadius: BorderRadius.circular(24),
+                                    border: Border.all(
+                                      color: Colors.grey.shade200,
+                                    ),
+                                  ),
+                                  child: TextField(
+                                    controller: textController,
+                                    onChanged: controller.onTextChanged,
+                                    maxLines: 4,
+                                    minLines: 1,
+                                    textInputAction: TextInputAction.send,
+                                    decoration: const InputDecoration(
+                                      hintText: "Ketik pesan Anda...",
+                                      border: InputBorder.none,
+                                      isDense: true,
+                                      contentPadding: EdgeInsets.symmetric(
+                                        vertical: 10,
+                                      ),
+                                      hintStyle: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.black45,
+                                      ),
+                                    ),
+                                    onSubmitted: (val) {
+                                      controller.sendMessage(val);
+                                      textController.clear();
+                                    },
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              InkWell(
+                                onTap: () {
+                                  if (textController.text
+                                      .trim()
+                                      .isNotEmpty) {
+                                    final val = textController.text;
+                                    controller.sendMessage(val);
+                                    textController.clear();
+                                  }
+                                },
+                                borderRadius: BorderRadius.circular(24),
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: const BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Color(0xFF2E7D32),
+                                        Color(0xFF1B5E20),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.send_rounded,
+                                    color: Colors.white,
+                                    size: 24,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
-                          child: SafeArea(
-                            top: false,
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 8, bottom: 8),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: const Color(
-                                          0xFFF1F5F9,
-                                        ), // Abu-abu terang untuk input
-                                        borderRadius: BorderRadius.circular(24),
-                                        border: Border.all(
-                                          color: Colors.grey.shade200,
-                                        ),
-                                      ),
-                                      child: TextField(
-                                        controller: textController,
-                                        onChanged: controller.onTextChanged,
-                                        maxLines: 4,
-                                        minLines: 1,
-                                        textInputAction: TextInputAction.send,
-                                        decoration: const InputDecoration(
-                                          hintText: "Ketik pesan Anda...",
-                                          border: InputBorder.none,
-                                          isDense: true,
-                                          contentPadding: EdgeInsets.symmetric(
-                                            vertical: 10,
-                                          ),
-                                          hintStyle: TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.black45,
-                                          ),
-                                        ),
-                                        onSubmitted: (val) {
-                                          controller.sendMessage(val);
-                                          textController.clear();
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  InkWell(
-                                    onTap: () {
-                                      if (textController.text
-                                          .trim()
-                                          .isNotEmpty) {
-                                        final val = textController.text;
-                                        controller.sendMessage(val);
-                                        textController.clear();
-                                      }
-                                    },
-                                    borderRadius: BorderRadius.circular(24),
-                                    child: Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: const BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            Color(0xFF2E7D32),
-                                            Color(0xFF1B5E20),
-                                          ],
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                        ),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(
-                                        Icons.send_rounded,
-                                        color: Colors.white,
-                                        size: 24,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      },
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -315,7 +302,7 @@ class RoomChatView extends GetView<RoomChatController> {
                     return GestureDetector(
                       onTap: () {
                         Get.toNamed(
-                          Routes.DETAIL_TENAGA_KESEHATAN,
+                          Routes.DETAIL_DOKTER,
                           arguments: doc,
                         );
                       },
@@ -323,7 +310,7 @@ class RoomChatView extends GetView<RoomChatController> {
                         children: [
                           Builder(
                             builder: (context) {
-                              final photoBase64 = doc['photoBase64'] ?? '';
+                              final photoBase64 = doc['photo64'] ?? doc['photoBase64'] ?? '';
                               return CircleAvatar(
                                 radius: 20,
                                 backgroundColor: Colors.white24,
@@ -361,13 +348,38 @@ class RoomChatView extends GetView<RoomChatController> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                   Obx(() {
-                                    bool isOnline = controller.isWithinSchedule.value;
+                                    bool isOnline = controller.partnerIsOnline.value;
+                                    if (isOnline) {
+                                      return const Text(
+                                        'Online',
+                                        style: TextStyle(fontWeight: FontWeight.normal, fontSize: 12, color: Colors.white70),
+                                      );
+                                    }
                                     
-                                    String statusText = isOnline ? 'Online' : 'Offline';
+                                    final lastSeen = controller.partnerLastSeen.value;
+                                    String statusText = 'Terakhir online: belum diketahui';
+                                    if (lastSeen != null) {                                      final timeStr = "${lastSeen.hour.toString().padLeft(2, '0')}:${lastSeen.minute.toString().padLeft(2, '0')}";
+
+                                      if (DateTime.now().day == lastSeen.day && DateTime.now().month == lastSeen.month && DateTime.now().year == lastSeen.year) {
+                                        statusText = 'Terakhir dilihat hari ini pukul $timeStr';
+                                      } else {
+                                        String hari = '';
+                                        switch (lastSeen.weekday) {
+                                          case 1: hari = 'Senin'; break;
+                                          case 2: hari = 'Selasa'; break;
+                                          case 3: hari = 'Rabu'; break;
+                                          case 4: hari = 'Kamis'; break;
+                                          case 5: hari = 'Jumat'; break;
+                                          case 6: hari = 'Sabtu'; break;
+                                          case 7: hari = 'Minggu'; break;
+                                        }
+                                        statusText = 'Terakhir dilihat hari $hari, ${lastSeen.day}/${lastSeen.month}/${lastSeen.year} pukul $timeStr';
+                                      }
+                                    }
                                     
                                     return Text(
                                       statusText,
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         fontWeight: FontWeight.normal,
                                         fontSize: 12,
                                         color: Colors.white70,
@@ -385,22 +397,25 @@ class RoomChatView extends GetView<RoomChatController> {
                   }),
               ),
               Obx(() {
-                if (controller.selectedDoctor.value != null) {
-                  return IconButton(
-                    icon: const Icon(
-                      Icons.delete_outline_rounded,
-                      color: Colors.white,
+                if (controller.remainingSeconds.value > 0 && controller.remainingSeconds.value < 300) {
+                  final minutes = (controller.remainingSeconds.value / 60).floor();
+                  final seconds = controller.remainingSeconds.value % 60;
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    onPressed: () {
-                      CustomPopup.showConfirm(
-                        title: 'Hapus Semua Chat?',
-                        message:
-                            'Apakah Anda yakin ingin menghapus seluruh riwayat chat ini? Tindakan ini tidak dapat dibatalkan.',
-                        onConfirm: () {
-                          controller.deleteChat();
-                        },
-                      );
-                    },
+                    child: Row(
+                      children: [
+                        const Icon(Icons.timer_outlined, color: Colors.white, size: 16),
+                        const SizedBox(width: 4),
+                        Text(
+                          '$minutes:${seconds.toString().padLeft(2, '0')}',
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
                   );
                 }
                 return const SizedBox.shrink();
@@ -460,6 +475,7 @@ class _ChatBubble extends StatelessWidget {
   final String? senderName;
   final String? senderRole;
   final DateTime time;
+  final String? note;
 
   const _ChatBubble({
     this.id,
@@ -468,124 +484,10 @@ class _ChatBubble extends StatelessWidget {
     required this.time,
     this.senderName,
     this.senderRole,
+    this.note,
   });
 
-  void _showDeleteDialog(BuildContext context, RoomChatController controller) {
-    if (id == null || id == 'system') return;
 
-    Get.dialog(
-      Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        backgroundColor: Colors.transparent,
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Stack(
-            children: [
-              Positioned(
-                right: -20,
-                bottom: -20,
-                child: Opacity(
-                  opacity: 0.04,
-                  child: Icon(
-                    Icons.delete_sweep_rounded,
-                    size: 120,
-                    color: Colors.red.shade900,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade50,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.delete_outline_rounded,
-                        color: Colors.red.shade600,
-                        size: 32,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      "Hapus Pesan?",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFF1E293B),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      "Apakah Anda yakin ingin menghapus pesan ini?",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 13, color: Colors.black54),
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              side: BorderSide(color: Colors.grey.shade300),
-                            ),
-                            onPressed: () => Get.back(),
-                            child: const Text(
-                              "Batal",
-                              style: TextStyle(
-                                color: Colors.black87,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red.shade600,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              elevation: 0,
-                            ),
-                            onPressed: () {
-                              Get.back();
-                              if (id != null) {
-                                controller.deleteSingleMessage(id!);
-                              }
-                            },
-                            child: const Text(
-                              "Hapus",
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -599,9 +501,6 @@ class _ChatBubble extends StatelessWidget {
           ? Alignment.center
           : (isUser ? Alignment.centerRight : Alignment.centerLeft),
       child: GestureDetector(
-        onLongPress: isUser
-            ? () => _showDeleteDialog(context, controller)
-            : null,
         child: senderRole == 'sistem'
             ? Container(
                 margin: const EdgeInsets.symmetric(vertical: 8),
@@ -660,9 +559,7 @@ class _ChatBubble extends StatelessWidget {
                         borderRadius: BorderRadius.only(
                           topLeft: const Radius.circular(20),
                           topRight: const Radius.circular(20),
-                          bottomLeft: Radius.circular(
-                            isUser ? 20 : 4,
-                          ), // Lebih lancip di bawah
+                          bottomLeft: Radius.circular(isUser ? 20 : 4),
                           bottomRight: Radius.circular(isUser ? 4 : 20),
                         ),
                         boxShadow: [
@@ -677,7 +574,7 @@ class _ChatBubble extends StatelessWidget {
                             : Border.all(color: Colors.grey.shade200),
                       ),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             text,
@@ -690,28 +587,39 @@ class _ChatBubble extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 4),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                formattedTime,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: isUser
-                                      ? Colors.white70
-                                      : Colors.grey.shade500,
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  formattedTime,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: isUser
+                                        ? Colors.white70
+                                        : Colors.grey.shade500,
+                                  ),
                                 ),
-                              ),
-                              if (isUser) ...[
-                                const SizedBox(width: 4),
-                                const Icon(
-                                  Icons.done_all,
-                                  size: 12,
-                                  color: Colors.white70,
-                                ),
+                                if (isUser) ...[
+                                  const SizedBox(width: 4),
+                                  const Icon(
+                                    Icons.done_all,
+                                    size: 12,
+                                    color: Colors.white70,
+                                  ),
+                                ],
                               ],
-                            ],
+                            ),
                           ),
+                          if (text.startsWith('Laporan Riwayat Natrium')) ...[
+                            const SizedBox(height: 8),
+                            _ReportNoteBox(
+                              messageId: id,
+                              initialNote: note,
+                              isUser: isUser,
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -722,3 +630,121 @@ class _ChatBubble extends StatelessWidget {
     );
   }
 }
+
+class _ReportNoteBox extends StatelessWidget {
+  final String? messageId;
+  final String? initialNote;
+  final bool isUser;
+
+  const _ReportNoteBox({
+    this.messageId,
+    this.initialNote,
+    required this.isUser,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (messageId == null) return const SizedBox.shrink();
+
+    final bool isEmpty = initialNote == null || initialNote!.trim().isEmpty;
+    
+    if (isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.grey.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.grey.withOpacity(0.3)),
+        ),
+        alignment: Alignment.center,
+        child: const Text('Belum ada catatan dari dokter', style: TextStyle(color: Colors.grey, fontSize: 12)),
+      );
+    }
+
+    return GestureDetector(
+      onTap: () => _showNoteViewDialog(context, initialNote!),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.blue.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.blue.withOpacity(0.3)),
+        ),
+        alignment: Alignment.center,
+        child: const Text('Lihat Catatan Dokter', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 12)),
+      ),
+    );
+  }
+}
+
+void _showNoteViewDialog(BuildContext context, String note) {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Stack(
+            children: [
+              // Watermark Icon
+              Positioned(
+                right: -20,
+                bottom: -20,
+                child: Icon(
+                  Icons.note_alt,
+                  size: 150,
+                  color: Colors.grey.withOpacity(0.1),
+                ),
+              ),
+              Positioned(
+                right: -10,
+                top: -10,
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.grey),
+                  onPressed: () => Navigator.pop(context),
+                  splashRadius: 20,
+                ),
+              ),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    'Catatan Dokter',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1E293B),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.yellow.shade100.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.yellow.shade400),
+                    ),
+                    child: Text(
+                      note,
+                      style: const TextStyle(fontSize: 14, color: Colors.black87),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+

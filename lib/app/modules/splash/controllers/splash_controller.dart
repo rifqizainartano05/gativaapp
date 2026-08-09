@@ -28,16 +28,30 @@ class SplashController extends GetxController {
       final prefs = await SharedPreferences.getInstance();
       bool hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
       
-      // Permintaan user: HARUS ke login dulu sebelum ke homeview/dashboard.
-      // Jadi kita hapus sesi aktif Firebase saat splash agar user dipaksa login setiap buka aplikasi.
       if (FirebaseAuth.instance.currentUser != null) {
-        await FirebaseAuth.instance.signOut();
-      }
-
-      if (hasSeenOnboarding) {
-        nextRoute = Routes.LOGIN;
+        // User sudah login sebelumnya (sesi tersimpan), langsung arahkan ke Dashboard
+        AuthService authService;
+        if (!Get.isRegistered<AuthService>()) {
+          authService = await Get.putAsync(() => AuthService().init());
+        } else {
+          authService = Get.find<AuthService>();
+        }
+        
+        await authService.fetchUserRole(FirebaseAuth.instance.currentUser!.uid);
+        
+        if (authService.userRole.value == 'Pasien') {
+          nextRoute = Routes.MAIN_NAVIGATION;
+        } else if (authService.userRole.value == 'Tenaga Kesehatan') {
+          nextRoute = Routes.HOME_DOKTER;
+        } else {
+          nextRoute = Routes.LOGIN; // Fallback jika tidak diketahui
+        }
       } else {
-        nextRoute = Routes.ONBOARDING;
+        if (hasSeenOnboarding) {
+          nextRoute = Routes.LOGIN;
+        } else {
+          nextRoute = Routes.ONBOARDING;
+        }
       }
     } catch (e) {
       debugPrint('SharedPreferences error: $e');

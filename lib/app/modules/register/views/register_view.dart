@@ -101,19 +101,27 @@ class RegisterView extends GetView<RegisterController> {
                 ),
                 const SizedBox(height: 16),
 
-                const Text(
-                  'Usia (Tahun)',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                ),
-                const SizedBox(height: 8),
-                _buildTextField(
-                  controller.ageController,
-                  'Contoh: 25',
-                  Icons.cake_outlined,
-                  false,
-                  TextInputType.number,
-                ),
-                const SizedBox(height: 16),
+                Obx(() => controller.selectedRole.value == 'Pasien'
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Usia (Tahun)',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 14),
+                          ),
+                          const SizedBox(height: 8),
+                          _buildTextField(
+                            controller.ageController,
+                            'Contoh: 25',
+                            Icons.cake_outlined,
+                            false,
+                            TextInputType.number,
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                      )
+                    : const SizedBox.shrink()),
 
                 const Text(
                   'Kata Sandi',
@@ -151,7 +159,7 @@ class RegisterView extends GetView<RegisterController> {
                 Obx(
                   () => controller.selectedRole.value == 'Pasien'
                       ? _buildPasienFields()
-                      : _buildNakesFields(),
+                      : _buildDokterFields(),
                 ),
 
                 const SizedBox(height: 40),
@@ -256,7 +264,7 @@ class RegisterView extends GetView<RegisterController> {
             ),
             Expanded(
               child: GestureDetector(
-                onTap: () => controller.selectedRole.value = 'Tenaga Kesehatan',
+                onTap: () => controller.selectedRole.value = 'Dokter',
                 child: Container(
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
@@ -266,7 +274,7 @@ class RegisterView extends GetView<RegisterController> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
-                    'Tenaga Kesehatan',
+                    'Dokter',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: !isPasien ? Colors.white : Colors.grey,
@@ -286,7 +294,7 @@ class RegisterView extends GetView<RegisterController> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Kondisi Kesehatan',
+          'Gejala Yang Dialami',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w900,
@@ -295,54 +303,145 @@ class RegisterView extends GetView<RegisterController> {
         ),
         const SizedBox(height: 8),
         const Text(
-          'Pilih kondisi kesehatan Anda saat ini untuk rekomendasi asupan natrium.',
+          'Pilih gejala kesehatan Anda saat ini (bisa lebih dari satu) untuk rekomendasi asupan natrium.',
           style: TextStyle(fontSize: 14, color: Colors.grey, height: 1.5),
         ),
         const SizedBox(height: 16),
+        Obx(() {
+          bool isTidakTerindikasi = controller.selectedConditions.contains('Tidak terindikasi penyakit di atas');
 
-        Obx(
-          () => Column(
-            children: controller.conditions.map((condition) {
-              bool isSelected = controller.selectedCondition.value == condition;
-              return GestureDetector(
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Label Utama
+              const Text(
+                'Terindikasi penyakit berkaitan Natrium:',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 12),
+              
+              // List Penyakit Spesifik
+              ...controller.conditions.map((condition) {
+                bool isSelected = controller.selectedConditions.contains(condition);
+                
+                return GestureDetector(
+                  onTap: () {
+                    if (isSelected) {
+                      controller.selectedConditions.remove(condition);
+                      // Jika semua penyakit dihapus, otomatis pilih 'Tidak terindikasi'
+                      if (controller.selectedConditions.isEmpty) {
+                        controller.selectedConditions.add('Tidak terindikasi penyakit di atas');
+                      }
+                    } else {
+                      controller.selectedConditions.remove('Tidak terindikasi penyakit di atas');
+                      controller.selectedConditions.add(condition);
+                    }
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 16, left: 16), // Di-indent sedikit ke dalam
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? const Color(0xFF2E7D32).withOpacity(0.1)
+                          : isTidakTerindikasi 
+                              ? Colors.grey.shade50 // Disabled look
+                              : Colors.white,
+                      border: Border.all(
+                        color: isSelected
+                            ? const Color(0xFF2E7D32)
+                            : isTidakTerindikasi 
+                                ? Colors.grey.shade200 // Disabled border
+                                : Colors.grey.shade300,
+                        width: isSelected ? 2 : 1,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          isSelected
+                              ? Icons.check_box_rounded
+                              : Icons.check_box_outline_blank_rounded,
+                          color: isSelected
+                              ? const Color(0xFF2E7D32)
+                              : isTidakTerindikasi 
+                                  ? Colors.grey.shade300 // Disabled icon
+                                  : Colors.grey,
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            condition,
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: isSelected
+                                  ? const Color(0xFF2E7D32)
+                                  : isTidakTerindikasi 
+                                      ? Colors.grey.shade400 // Disabled text
+                                      : Colors.black87,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Divider(),
+              ),
+
+              // Opsi Tidak Terindikasi
+              GestureDetector(
                 onTap: () {
-                  controller.selectedCondition.value = condition;
+                  if (!isTidakTerindikasi) {
+                    controller.selectedConditions.clear();
+                    controller.selectedConditions.add('Tidak terindikasi penyakit di atas');
+                  }
                 },
                 child: Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   decoration: BoxDecoration(
-                    color: isSelected
+                    color: isTidakTerindikasi
                         ? const Color(0xFF2E7D32).withOpacity(0.1)
                         : Colors.white,
                     border: Border.all(
-                      color: isSelected
+                      color: isTidakTerindikasi
                           ? const Color(0xFF2E7D32)
                           : Colors.grey.shade300,
-                      width: isSelected ? 2 : 1,
+                      width: isTidakTerindikasi ? 2 : 1,
                     ),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
                     children: [
                       Icon(
-                        isSelected
-                            ? Icons.radio_button_checked
-                            : Icons.radio_button_off,
-                        color: isSelected
+                        isTidakTerindikasi
+                            ? Icons.check_box_rounded
+                            : Icons.check_box_outline_blank_rounded,
+                        color: isTidakTerindikasi
                             ? const Color(0xFF2E7D32)
                             : Colors.grey,
                       ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: Text(
-                          condition,
+                          'Tidak terindikasi penyakit di atas',
                           style: TextStyle(
                             fontSize: 16,
-                            fontWeight: isSelected
+                            fontWeight: isTidakTerindikasi
                                 ? FontWeight.bold
                                 : FontWeight.normal,
-                            color: isSelected
+                            color: isTidakTerindikasi
                                 ? const Color(0xFF2E7D32)
                                 : Colors.black87,
                           ),
@@ -351,15 +450,15 @@ class RegisterView extends GetView<RegisterController> {
                     ],
                   ),
                 ),
-              );
-            }).toList(),
-          ),
-        ),
+              ),
+            ],
+          );
+        }),
       ],
     );
   }
 
-  Widget _buildNakesFields() {
+  Widget _buildDokterFields() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

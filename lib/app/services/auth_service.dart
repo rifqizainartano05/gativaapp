@@ -27,14 +27,14 @@ class AuthService extends GetxService {
       return;
     }
 
-    // Cek di subcollection nakes
-    var nakesDoc = await FirebaseFirestore.instance
+    // Cek di subcollection dokter
+    var dokterDoc = await FirebaseFirestore.instance
         .collection('mobile')
         .doc('roles')
-        .collection('tenaga_kesehatan')
+        .collection('dokter')
         .doc(uid)
         .get();
-    if (nakesDoc.exists) {
+    if (dokterDoc.exists) {
       userRole.value = 'Tenaga Kesehatan';
       return;
     }
@@ -54,7 +54,7 @@ class AuthService extends GetxService {
       return FirebaseFirestore.instance
           .collection('mobile')
           .doc('roles')
-          .collection('tenaga_kesehatan')
+          .collection('dokter')
           .doc(uid);
     } else {
       // Fallback: Jika tidak terdeteksi (meskipun tidak mungkin jika register berhasil), gunakan pasien sebagai fallback sementara
@@ -76,7 +76,7 @@ class AuthService extends GetxService {
       return FirebaseFirestore.instance
           .collection('mobile')
           .doc('roles')
-          .collection('tenaga_kesehatan');
+          .collection('dokter');
     } else {
       return FirebaseFirestore.instance
           .collection('mobile')

@@ -55,142 +55,170 @@ class LensaNatriumView extends GetView<LensaNatriumController> {
           bottom: true,
           child: Column(
             children: [
-              // Custom Header
+              // Custom Header (Matches Riwayat)
               Container(
                 width: double.infinity,
                 padding: EdgeInsets.only(
                   top: MediaQuery.of(context).padding.top + 20,
-                  bottom: 30,
+                  bottom: 20,
                   left: 24,
                   right: 24,
                 ),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: const Color(0xFF2E7D32),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF2E7D32).withOpacity(0.3),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
                 ),
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
                     Positioned(
                       right: -30,
-                      top: -10,
+                      top: -30,
                       child: Transform.rotate(
                         angle: -0.2,
                         child: Icon(
-                          Icons.science_outlined,
+                          Icons.qr_code_scanner_rounded,
                           size: 150,
                           color: Colors.white.withOpacity(0.1),
                         ),
                       ),
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Row(
-                          children: [
-                            InkWell(
-                              onTap: () {
-                                if (!canGoBack) {
-                                  Get.snackbar(
-                                    'Perhatian',
-                                    'Harap cari atau deteksi 1 makanan untuk menyelesaikan misi.',
-                                    backgroundColor: Colors.orange,
-                                    colorText: Colors.white,
-                                    snackPosition: SnackPosition.BOTTOM,
-                                  );
-                                } else {
-                                  Get.back();
-                                }
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.arrow_back_ios_new_rounded,
-                                  color: Colors.white,
+                        InkWell(
+                          onTap: () {
+                            if (!canGoBack) {
+                              Get.snackbar(
+                                'Perhatian',
+                                'Harap cari atau deteksi 1 makanan untuk menyelesaikan misi.',
+                                backgroundColor: Colors.orange,
+                                colorText: Colors.white,
+                                snackPosition: SnackPosition.BOTTOM,
+                              );
+                            } else {
+                              Get.back();
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.arrow_back_ios_new_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        const Text(
+                          'Lensa Natrium',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 22,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Kalkulator Card Section
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 15,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2E7D32).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.calculate_rounded, color: Color(0xFF2E7D32), size: 24),
+                        ),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Text(
+                            "Kalkulator Label Gizi",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      "Cari taksiran natrium jajanan atau makanan kemasan, atau gunakan AI untuk mendeteksi langsung dari foto label.",
+                      style: TextStyle(
+                        color: Colors.black54,
+                        fontSize: 13,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF4F6F8),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.grey.shade200),
+                            ),
+                            child: TextField(
+                              controller: controller.searchController,
+                              onChanged: controller.searchFood,
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                                hintText: "Cari makanan...",
+                                hintStyle: TextStyle(color: Colors.black38, fontSize: 14),
+                                icon: Icon(
+                                  Icons.search,
+                                  color: Colors.grey,
                                   size: 20,
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 16),
-                            const Text(
-                              'Lensa Natrium',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                fontSize: 22,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        const Text(
-                          "Kalkulator Label Gizi Makanan",
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          "Cari taksiran natrium jajanan jalanan atau makanan kemasan, atau gunakan AI untuk mendeteksi langsung dari foto label.",
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 13,
-                            height: 1.4,
+                        const SizedBox(width: 12),
+                        InkWell(
+                          onTap: () => _showScannerDialog(context),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2E7D32),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.qr_code_scanner_rounded,
+                              color: Colors.white,
+                              size: 24,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 20),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: TextField(
-                                  controller: controller.searchController,
-                                  onChanged: controller.searchFood,
-                                  decoration: const InputDecoration(
-                                    border: InputBorder.none,
-                                    hintText: "Cari makanan...",
-                                    icon: Icon(
-                                      Icons.search,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: IconButton(
-                                icon: const Icon(
-                                  Icons.document_scanner_rounded,
-                                  color: AppColors.primary,
-                                ),
-                                onPressed: () => _showScannerDialog(context),
-                              ),
-                            ),
-                          ],
                         ),
                       ],
                     ),
@@ -243,71 +271,82 @@ class LensaNatriumView extends GetView<LensaNatriumController> {
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFE0E0E0)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.04),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
                           child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    item['name'],
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 4,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.grey.shade200,
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          item['type'],
-                                          style: const TextStyle(
-                                            fontSize: 10,
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Builder(
-                                        builder: (context) {
-                                          final int sodiumMg = (item['natrium'] as num?)?.toInt() ?? (item['sodium'] as num?)?.toInt() ?? 0;
-                                          final double limit = controller.dailyLimit.value;
-                                          Color statusColor;
-                                          if (limit == 0) {
-                                            statusColor = Colors.red;
-                                          } else if (sodiumMg > (limit * 0.5)) {
-                                            statusColor = Colors.red;
-                                          } else if (sodiumMg > (limit * 0.3)) {
-                                            statusColor = Colors.orange;
-                                          } else {
-                                            statusColor = Colors.green;
-                                          }
-                                          return Text(
-                                            '${item['natrium']} mg natrium',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: statusColor,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          );
-                                        }
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF2E7D32).withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  item['type'] == 'Kemasan' ? Icons.fastfood_rounded : Icons.restaurant_menu_rounded,
+                                  color: const Color(0xFF2E7D32),
+                                ),
                               ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item['name'],
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      item['type'],
+                                      style: const TextStyle(fontSize: 11, color: Colors.black54),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Builder(
+                                builder: (context) {
+                                  final int sodiumMg = (item['natrium'] as num?)?.toInt() ?? (item['sodium'] as num?)?.toInt() ?? 0;
+                                  final double limit = controller.dailyLimit.value;
+                                  Color statusColor;
+                                  if (limit == 0) {
+                                    statusColor = Colors.red;
+                                  } else if (sodiumMg > (limit * 0.5)) {
+                                    statusColor = Colors.red;
+                                  } else if (sodiumMg > (limit * 0.3)) {
+                                    statusColor = Colors.orange;
+                                  } else {
+                                    statusColor = Colors.green;
+                                  }
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: statusColor.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      '$sodiumMg mg',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                        color: statusColor,
+                                      ),
+                                    ),
+                                  );
+                                }
+                              ),
+                              const SizedBox(width: 4),
                               const Icon(
                                 Icons.chevron_right_rounded,
                                 color: Colors.grey,
@@ -352,12 +391,15 @@ class LensaNatriumView extends GetView<LensaNatriumController> {
             children: [
               // Watermark Icon
               Positioned(
-                right: -20,
-                bottom: -20,
-                child: Icon(
-                  Icons.document_scanner_rounded,
-                  size: 150,
-                  color: AppColors.primary.withOpacity(0.05),
+                right: -30,
+                bottom: -30,
+                child: Transform.rotate(
+                  angle: -0.2,
+                  child: Icon(
+                    Icons.qr_code_scanner_rounded,
+                    size: 160,
+                    color: AppColors.primary.withOpacity(0.06),
+                  ),
                 ),
               ),
               Padding(
@@ -375,7 +417,7 @@ class LensaNatriumView extends GetView<LensaNatriumController> {
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
-                            Icons.fastfood_rounded,
+                            Icons.qr_code_scanner_rounded,
                             color: AppColors.primary,
                             size: 28,
                           ),
@@ -473,7 +515,7 @@ class LensaNatriumView extends GetView<LensaNatriumController> {
                               }
                               Get.back();
                               Get.toNamed(
-                                Routes.SCANNER,
+                                Routes.SCAN_LABEL,
                                 arguments: nameController.text.trim(),
                               );
                             },

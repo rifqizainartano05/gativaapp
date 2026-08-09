@@ -5,14 +5,14 @@ abstract class Routes {
   Routes._();
   static const HOME = _Paths.HOME;
   static const MAIN_NAVIGATION = _Paths.MAIN_NAVIGATION;
-  static const NAKES_DASHBOARD = _Paths.NAKES_DASHBOARD;
-  static const SCANNER = _Paths.SCANNER;
-  static const SCAN_BARCODE = _Paths.SCAN_BARCODE;
+  static const HOME_DOKTER = _Paths.HOME_DOKTER;
+  static const SCAN_LABEL = _Paths.SCAN_LABEL;
+  static const gabung_grup_anggota = _Paths.gabung_grup_anggota;
   static const ANGGOTA = _Paths.ANGGOTA;
   static const PROFILE = _Paths.PROFILE;
   static const RIWAYAT = _Paths.RIWAYAT;
+  static const RIWAYAT_ANGGOTA = _Paths.RIWAYAT_ANGGOTA;
   static const FAQ = _Paths.FAQ;
-  static const NAKES_CATALOG = _Paths.NAKES_CATALOG;
   static const SPLASH = _Paths.SPLASH;
   static const ONBOARDING = _Paths.ONBOARDING;
   static const LOGIN = _Paths.LOGIN;
@@ -20,49 +20,47 @@ abstract class Routes {
   static const FORGOT_PASSWORD = _Paths.FORGOT_PASSWORD;
   static const LENSA_NATRIUM = _Paths.LENSA_NATRIUM;
   static const LENSA_NATRIUM_DETAIL = _Paths.LENSA_NATRIUM_DETAIL;
-  static const NAKES_CHAT = _Paths.NAKES_CHAT;
-  static const NAKES_EDUKASI = _Paths.NAKES_EDUKASI;
-  static const RIWAYAT_LOGIN = _Paths.RIWAYAT_LOGIN;
-  static const NAKES_EDIT_PROFILE = _Paths.NAKES_EDIT_PROFILE;
+  static const DOKTER_CHAT = _Paths.DOKTER_CHAT;
+
+  static const DOKTER_EDIT_PROFILE = _Paths.DOKTER_EDIT_PROFILE;
   static const VERIFIKASI_EMAIL = _Paths.VERIFIKASI_EMAIL;
-  static const SEMUA_MENU = _Paths.SEMUA_MENU;
-  static const NAKES_INFORMASI_KESEHATAN = _Paths.NAKES_INFORMASI_KESEHATAN;
+
   static const INFORMASI_KESEHATAN_DETAIL = _Paths.INFORMASI_KESEHATAN_DETAIL;
   static const NOTIFIKASI = _Paths.NOTIFIKASI;
-  static const DETAIL_TENAGA_KESEHATAN = _Paths.DETAIL_TENAGA_KESEHATAN;
-  static const NAKES_PROFILE = _Paths.NAKES_PROFILE;
-  static const NAKES_GANTI_KATA_SANDI = _Paths.NAKES_GANTI_KATA_SANDI;
+  static const DETAIL_DOKTER = _Paths.DETAIL_DOKTER;
+  static const DOKTER_PROFILE = _Paths.DOKTER_PROFILE;
+  static const DOKTER_GANTI_KATA_SANDI = _Paths.DOKTER_GANTI_KATA_SANDI;
   static const KATALOG = _Paths.KATALOG;
   static const INFORMASI_KESEHATAN = _Paths.INFORMASI_KESEHATAN;
   static const EDIT_PROFILE = _Paths.EDIT_PROFILE;
-  static const EDUKASI = _Paths.EDUKASI;
   static const CHAT = _Paths.CHAT;
-  static const NAKES_PASIEN_GATIVA = _Paths.NAKES_PASIEN_GATIVA;
-  static const NAKES_DETAIL_PASIEN_GATIVA = _Paths.NAKES_DETAIL_PASIEN_GATIVA;
-  static const CATATAN_NAKES = _Paths.CATATAN_NAKES;
-  static const NAKES_DETAIL_PASIEN_CHAT = _Paths.NAKES_DETAIL_PASIEN_CHAT;
-  static const NAKES_TENTANG_APLIKASI = _Paths.NAKES_TENTANG_APLIKASI;
-  static const NAKES_BANTUAN_FAQ = _Paths.NAKES_BANTUAN_FAQ;
+  static const CATATAN_DOKTER = _Paths.CATATAN_DOKTER;
+  static const DOKTER_DETAIL_PASIEN_CHAT = _Paths.DOKTER_DETAIL_PASIEN_CHAT;
+  static const DOKTER_TENTANG_APLIKASI = _Paths.DOKTER_TENTANG_APLIKASI;
+  static const DOKTER_BANTUAN_FAQ = _Paths.DOKTER_BANTUAN_FAQ;
   static const TENTANG_APLIKASI = _Paths.TENTANG_APLIKASI;
-  static const SCANNER_RESULT = _Paths.SCANNER_RESULT;
+  static const SCAN_LABEL_RESULT = _Paths.SCAN_LABEL_RESULT;
   static const ROOM_CHAT = _Paths.ROOM_CHAT;
-  static const ROOM_NAKES_CHAT = _Paths.ROOM_NAKES_CHAT;
-  static const SCAN_TENAGA_KESEHATAN_AKSES = _Paths.SCAN_TENAGA_KESEHATAN_AKSES;
+  static const ROOM_DOKTER_CHAT = _Paths.ROOM_DOKTER_CHAT;
+
   static const GANTI_KATA_SANDI = _Paths.GANTI_KATA_SANDI;
+  static const HOME_ADMINISTRATOR = _Paths.HOME_ADMINISTRATOR;
+  static const EDUKASI = _Paths.EDUKASI;
+  static const EDUKASI_DOKTER = _Paths.EDUKASI_DOKTER;
 }
 
 abstract class _Paths {
   _Paths._();
   static const HOME = '/home';
   static const MAIN_NAVIGATION = '/main-navigation';
-  static const NAKES_DASHBOARD = '/nakes-dashboard';
-  static const SCANNER = '/scanner';
-  static const SCAN_BARCODE = '/scan-barcode';
+  static const HOME_DOKTER = '/dokter-dashboard';
+  static const SCAN_LABEL = '/scanner';
+  static const gabung_grup_anggota = '/scan-barcode';
   static const ANGGOTA = '/ANGGOTA';
   static const PROFILE = '/profile';
   static const RIWAYAT = '/riwayat';
+  static const RIWAYAT_ANGGOTA = '/riwayat-anggota';
   static const FAQ = '/faq';
-  static const NAKES_CATALOG = '/nakes-catalog';
   static const SPLASH = '/splash';
   static const ONBOARDING = '/onboarding';
   static const LOGIN = '/login';
@@ -70,35 +68,31 @@ abstract class _Paths {
   static const FORGOT_PASSWORD = '/forgot-password';
   static const LENSA_NATRIUM = '/lensa-natrium';
   static const LENSA_NATRIUM_DETAIL = '/lensa-natrium-detail';
-  static const NAKES_CHAT = '/nakes-chat';
-  static const NAKES_EDUKASI = '/nakes-edukasi';
-  static const RIWAYAT_LOGIN = '/riwayat-login';
-  static const NAKES_EDIT_PROFILE = '/nakes-edit-profile';
+  static const DOKTER_CHAT = '/dokter-chat';
+
+  static const DOKTER_EDIT_PROFILE = '/dokter-edit-profile';
   static const VERIFIKASI_EMAIL = '/verifikasi-email';
-  static const SEMUA_MENU = '/semua-menu';
-  static const NAKES_INFORMASI_KESEHATAN = '/nakes-informasi-kesehatan';
+
   static const INFORMASI_KESEHATAN_DETAIL = '/informasi-kesehatan-detail';
   static const NOTIFIKASI = '/notifikasi';
-  static const DETAIL_TENAGA_KESEHATAN = '/detail-dokter';
-  static const NAKES_PROFILE = '/nakes-profile';
-  static const NAKES_GANTI_KATA_SANDI = '/nakes-ganti-kata-sandi';
+  static const DETAIL_DOKTER = '/detail-dokter';
+  static const DOKTER_PROFILE = '/dokter-profile';
+  static const DOKTER_GANTI_KATA_SANDI = '/dokter-ganti-kata-sandi';
   static const KATALOG = '/katalog';
   static const INFORMASI_KESEHATAN = '/informasi-kesehatan';
   static const EDIT_PROFILE = '/edit-profile';
-  static const EDUKASI = '/edukasi';
   static const CHAT = '/chat';
-  static const NAKES_PASIEN_GATIVA = '/nakes-pasien-gativa';
-  static const NAKES_DETAIL_PASIEN_GATIVA = '/nakes-detail-pasien-gativa';
-  static const CATATAN_NAKES = '/catatan-nakes';
-  static const NAKES_DETAIL_PASIEN_CHAT = '/nakes-detail-pasien-chat';
-  static const NAKES_TENTANG_APLIKASI = '/nakes-tentang-aplikasi';
-  static const NAKES_BANTUAN_FAQ = '/nakes-bantuan-faq';
+  static const CATATAN_DOKTER = '/catatan-dokter';
+  static const DOKTER_DETAIL_PASIEN_CHAT = '/dokter-detail-pasien-chat';
+  static const DOKTER_TENTANG_APLIKASI = '/dokter-tentang-aplikasi';
+  static const DOKTER_BANTUAN_FAQ = '/dokter-bantuan-faq';
   static const TENTANG_APLIKASI = '/tentang-aplikasi';
-  static const SCANNER_RESULT = '/scanner-result';
+  static const SCAN_LABEL_RESULT = '/hasil-pindai-label';
   static const ROOM_CHAT = '/room-chat';
-  static const ROOM_NAKES_CHAT = '/room-nakes-chat';
-  static const SCAN_TENAGA_KESEHATAN_AKSES = '/scan-tenaga-kesehatan-akses';
+  static const ROOM_DOKTER_CHAT = '/room-dokter-chat';
+
   static const GANTI_KATA_SANDI = '/ganti-kata-sandi';
+  static const HOME_ADMINISTRATOR = '/home-administrator';
+  static const EDUKASI = '/edukasi';
+  static const EDUKASI_DOKTER = '/edukasi-dokter';
 }
-
-

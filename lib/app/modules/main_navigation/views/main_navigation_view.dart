@@ -3,8 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:gativa/app/modules/anggota/views/anggota_view.dart';
 import 'package:get/get.dart';
 import '../../home/views/home_view.dart';
-import '../../gamifikasi/views/gamifikasi_view.dart';
+
 import '../../profile/views/profile_view.dart';
+import '../../catatan_dokter/views/catatan_dokter_view.dart';
 import '../controllers/main_navigation_controller.dart';
 
 class MainNavigationView extends GetView<MainNavigationController> {
@@ -25,7 +26,7 @@ class MainNavigationView extends GetView<MainNavigationController> {
             index: controller.currentIndex.value,
             children: const [
               HomeView(),
-              GamifikasiView(),
+              CatatanDokterView(),
               AnggotaView(),
               ProfileView(),
             ],
@@ -56,8 +57,8 @@ class MainNavigationView extends GetView<MainNavigationController> {
                   label: 'Home',
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.emoji_events_rounded),
-                  label: 'Gamifikasi',
+                  icon: Icon(Icons.assignment_ind_rounded),
+                  label: 'Catatan Dokter',
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.groups_2_rounded),

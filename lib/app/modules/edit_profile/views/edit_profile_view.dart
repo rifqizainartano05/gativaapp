@@ -194,20 +194,11 @@ class EditProfileView extends GetView<EditProfileController> {
                         child: Column(
                           children: [
                             _buildTextField(
-                              controller: controller.tensiController,
-                              label: 'Tekanan Darah (Tensi)',
-                              hint: 'Contoh: 120/80',
-                              icon: Icons.favorite_border_rounded,
-                              readOnly: true,
-                            ),
-                            const Divider(height: 1, color: Color(0xFFEEEEEE)),
-                            _buildTextField(
                               controller: controller.beratBadanController,
                               label: 'Berat Badan (kg)',
                               hint: 'Contoh: 65',
                               icon: Icons.monitor_weight_outlined,
                               keyboardType: TextInputType.number,
-                              readOnly: true,
                             ),
                             const Divider(height: 1, color: Color(0xFFEEEEEE)),
                             _buildTextField(
@@ -216,14 +207,29 @@ class EditProfileView extends GetView<EditProfileController> {
                               hint: 'Contoh: 170',
                               icon: Icons.height_outlined,
                               keyboardType: TextInputType.number,
-                              readOnly: true,
                             ),
                             const Divider(height: 1, color: Color(0xFFEEEEEE)),
-                            _buildTextField(
-                              controller: TextEditingController(text: controller.selectedCondition.value),
-                              label: 'Kondisi Kesehatan',
-                              icon: Icons.health_and_safety_outlined,
-                              readOnly: true,
+                            DropdownButtonFormField<String>(
+                              value: controller.selectedCondition.value,
+                              onChanged: (String? newValue) {
+                                if (newValue != null) {
+                                  controller.selectedCondition.value = newValue;
+                                }
+                              },
+                              items: ['Sehat', 'Hipertensi', 'Kardiovaskular', 'Jantung', 'Ginjal', 'Stroke', 'Osteoporosis']
+                                  .map<DropdownMenuItem<String>>((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Colors.black87)),
+                                );
+                              }).toList(),
+                              decoration: InputDecoration(
+                                labelText: 'Kondisi Kesehatan',
+                                labelStyle: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                                prefixIcon: const Icon(Icons.health_and_safety_outlined, color: Colors.grey, size: 22),
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                              ),
                             ),
                           ],
                         ),

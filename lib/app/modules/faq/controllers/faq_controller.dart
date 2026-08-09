@@ -166,24 +166,70 @@ class FaqController extends GetxController {
                                       await user.delete();
                                       await FirebaseAuth.instance.signOut();
                                       Get.offAllNamed(Routes.LOGIN);
-                                    Get.snackbar(
-                                      "Berhasil",
-                                      "Akun Anda telah dihapus secara permanen.",
-                                      backgroundColor: Colors.green.withOpacity(
-                                        0.1,
-                                      ),
-                                      colorText: Colors.green,
-                                    );
+                                      Get.dialog(
+                                        Dialog(
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                                          backgroundColor: Colors.white,
+                                          clipBehavior: Clip.antiAlias,
+                                          child: Stack(
+                                            children: [
+                                              Positioned(
+                                                right: -30,
+                                                top: -30,
+                                                child: Opacity(
+                                                  opacity: 0.05,
+                                                  child: Image.asset('assets/logo.png', width: 150, height: 150),
+                                                ),
+                                              ),
+                                              Padding(
+                                                padding: const EdgeInsets.all(24),
+                                                child: Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    Container(
+                                                      padding: const EdgeInsets.all(16),
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.green.withOpacity(0.1),
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                      child: const Icon(Icons.check_circle_rounded, color: Colors.green, size: 64),
+                                                    ),
+                                                    const SizedBox(height: 20),
+                                                    const Text(
+                                                      'Berhasil',
+                                                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                                                      textAlign: TextAlign.center,
+                                                    ),
+                                                    const SizedBox(height: 12),
+                                                    const Text(
+                                                      'akun sudah di hapus tidak bisa di akses',
+                                                      textAlign: TextAlign.center,
+                                                      style: TextStyle(color: Colors.black54),
+                                                    ),
+                                                    const SizedBox(height: 24),
+                                                    SizedBox(
+                                                      width: double.infinity,
+                                                      child: ElevatedButton(
+                                                        onPressed: () => Get.back(),
+                                                        style: ElevatedButton.styleFrom(
+                                                          backgroundColor: const Color(0xFF2E7D32),
+                                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                                          padding: const EdgeInsets.symmetric(vertical: 16),
+                                                        ),
+                                                        child: const Text('Tutup', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
                                   }
                                 } catch (e) {
                                   await FirebaseAuth.instance.signOut();
                                   Get.offAllNamed(Routes.LOGIN);
-                                  Get.snackbar(
-                                    "Info",
-                                    "Sesi login telah diakhiri. Silakan login kembali untuk melanjutkan penghapusan akun.",
-                                    backgroundColor: Colors.blue.withOpacity(0.1),
-                                    colorText: Colors.blue,
-                                  );
                                 }
                             },
                             child: const Text(

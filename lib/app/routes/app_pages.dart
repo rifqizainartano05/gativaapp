@@ -1,30 +1,51 @@
 import 'package:get/get.dart';
 
-import '../modules/scan_tenaga_kesehatan_akses/bindings/scan_tenaga_kesehatan_akses_binding.dart';
-import '../modules/scan_tenaga_kesehatan_akses/views/scan_tenaga_kesehatan_akses_view.dart';
-import '../modules/ganti_kata_sandi/bindings/ganti_kata_sandi_binding.dart';
-import '../modules/ganti_kata_sandi/views/ganti_kata_sandi_view.dart';
-
+import '../modules/CATATAN_DOKTER/bindings/CATATAN_DOKTER_binding.dart';
+import '../modules/CATATAN_DOKTER/bindings/CATATAN_DOKTER_binding.dart';
+import '../modules/CATATAN_DOKTER/views/CATATAN_DOKTER_view.dart';
+import '../modules/CATATAN_DOKTER/views/CATATAN_DOKTER_view.dart';
 import '../modules/anggota/bindings/anggota_binding.dart';
 import '../modules/anggota/views/anggota_view.dart';
-import '../modules/catatan_nakes/bindings/catatan_nakes_binding.dart';
-import '../modules/catatan_nakes/bindings/catatan_nakes_binding.dart';
-import '../modules/catatan_nakes/views/catatan_nakes_view.dart';
-import '../modules/catatan_nakes/views/catatan_nakes_view.dart';
 import '../modules/chat/bindings/chat_binding.dart';
 import '../modules/chat/views/chat_view.dart';
-import '../modules/detail_tenaga_kesehatan/bindings/detail_tenaga_kesehatan_binding.dart';
-import '../modules/detail_tenaga_kesehatan/views/detail_tenaga_kesehatan_view.dart';
+import '../modules/detail_dokter/bindings/detail_dokter_binding.dart';
+import '../modules/detail_dokter/views/detail_dokter_view.dart';
+import '../modules/dokter_bantuan_faq/bindings/dokter_bantuan_faq_binding.dart';
+import '../modules/dokter_bantuan_faq/views/dokter_bantuan_faq_view.dart';
+import '../modules/dokter_chat/bindings/dokter_chat_binding.dart';
+import '../modules/dokter_chat/views/dokter_chat_view.dart';
+import '../modules/dokter_detail_pasien_chat/bindings/dokter_detail_pasien_chat_binding.dart';
+import '../modules/dokter_detail_pasien_chat/views/dokter_detail_pasien_chat_view.dart';
+import '../modules/dokter_edit_profile/bindings/dokter_edit_profile_binding.dart';
+import '../modules/dokter_edit_profile/views/dokter_edit_profile_view.dart';
+import '../modules/dokter_ganti_kata_sandi/bindings/dokter_ganti_kata_sandi_binding.dart';
+import '../modules/dokter_ganti_kata_sandi/views/dokter_ganti_kata_sandi_view.dart';
+import '../modules/dokter_profile/bindings/dokter_profile_binding.dart';
+import '../modules/dokter_profile/views/dokter_profile_view.dart';
+import '../modules/dokter_tentang_aplikasi/bindings/dokter_tentang_aplikasi_binding.dart';
+import '../modules/dokter_tentang_aplikasi/views/dokter_tentang_aplikasi_view.dart';
 import '../modules/edit_profile/bindings/edit_profile_binding.dart';
 import '../modules/edit_profile/views/edit_profile_view.dart';
 import '../modules/edukasi/bindings/edukasi_binding.dart';
 import '../modules/edukasi/views/edukasi_view.dart';
+import '../modules/edukasi_dokter/bindings/edukasi_dokter_binding.dart';
+import '../modules/edukasi_dokter/views/edukasi_dokter_view.dart';
 import '../modules/faq/bindings/faq_binding.dart';
 import '../modules/faq/views/faq_view.dart';
 import '../modules/forgot_password/bindings/forgot_password_binding.dart';
 import '../modules/forgot_password/views/forgot_password_view.dart';
+import '../modules/gabung_grup_anggota/bindings/gabung_grup_anggota_binding.dart';
+import '../modules/gabung_grup_anggota/views/gabung_grup_anggota_view.dart';
+import '../modules/ganti_kata_sandi/bindings/ganti_kata_sandi_binding.dart';
+import '../modules/ganti_kata_sandi/views/ganti_kata_sandi_view.dart';
+import '../modules/hasil_pindai_label/bindings/hasil_pindai_label_binding.dart';
+import '../modules/hasil_pindai_label/views/hasil_pindai_label_view.dart';
 import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
+import '../modules/home_administrator/bindings/home_administrator_binding.dart';
+import '../modules/home_administrator/views/home_administrator_view.dart';
+import '../modules/home_dokter/bindings/home_dokter_binding.dart';
+import '../modules/home_dokter/views/home_dokter_view.dart';
 import '../modules/informasi_kesehatan/bindings/informasi_kesehatan_binding.dart';
 import '../modules/informasi_kesehatan/views/informasi_kesehatan_view.dart';
 import '../modules/informasi_kesehatan_detail/bindings/informasi_kesehatan_detail_binding.dart';
@@ -39,32 +60,6 @@ import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/views/login_view.dart';
 import '../modules/main_navigation/bindings/main_navigation_binding.dart';
 import '../modules/main_navigation/views/main_navigation_view.dart';
-import '../modules/nakes_bantuan_faq/bindings/nakes_bantuan_faq_binding.dart';
-import '../modules/nakes_bantuan_faq/views/nakes_bantuan_faq_view.dart';
-import '../modules/nakes_catalog/bindings/nakes_catalog_binding.dart';
-import '../modules/nakes_catalog/views/nakes_catalog_view.dart';
-import '../modules/nakes_chat/bindings/nakes_chat_binding.dart';
-import '../modules/nakes_chat/views/nakes_chat_view.dart';
-import '../modules/nakes_dashboard/bindings/nakes_dashboard_binding.dart';
-import '../modules/nakes_dashboard/views/nakes_dashboard_view.dart';
-import '../modules/nakes_detail_pasien_chat/bindings/nakes_detail_pasien_chat_binding.dart';
-import '../modules/nakes_detail_pasien_chat/views/nakes_detail_pasien_chat_view.dart';
-import '../modules/nakes_detail_pasien_gativa/bindings/nakes_detail_pasien_gativa_binding.dart';
-import '../modules/nakes_detail_pasien_gativa/views/nakes_detail_pasien_gativa_view.dart';
-import '../modules/nakes_edit_profile/bindings/nakes_edit_profile_binding.dart';
-import '../modules/nakes_edit_profile/views/nakes_edit_profile_view.dart';
-import '../modules/nakes_edukasi/bindings/nakes_edukasi_binding.dart';
-import '../modules/nakes_edukasi/views/nakes_edukasi_view.dart';
-import '../modules/nakes_ganti_kata_sandi/bindings/nakes_ganti_kata_sandi_binding.dart';
-import '../modules/nakes_ganti_kata_sandi/views/nakes_ganti_kata_sandi_view.dart';
-import '../modules/nakes_informasi_kesehatan/bindings/nakes_informasi_kesehatan_binding.dart';
-import '../modules/nakes_informasi_kesehatan/views/nakes_informasi_kesehatan_view.dart';
-import '../modules/nakes_pasien_gativa/bindings/nakes_pasien_gativa_binding.dart';
-import '../modules/nakes_pasien_gativa/views/nakes_pasien_gativa_view.dart';
-import '../modules/nakes_profile/bindings/nakes_profile_binding.dart';
-import '../modules/nakes_profile/views/nakes_profile_view.dart';
-import '../modules/nakes_tentang_aplikasi/bindings/nakes_tentang_aplikasi_binding.dart';
-import '../modules/nakes_tentang_aplikasi/views/nakes_tentang_aplikasi_view.dart';
 import '../modules/notifikasi/bindings/notifikasi_binding.dart';
 import '../modules/notifikasi/views/notifikasi_view.dart';
 import '../modules/onboarding/bindings/onboarding_binding.dart';
@@ -75,20 +70,14 @@ import '../modules/register/bindings/register_binding.dart';
 import '../modules/register/views/register_view.dart';
 import '../modules/riwayat/bindings/riwayat_binding.dart';
 import '../modules/riwayat/views/riwayat_view.dart';
-import '../modules/riwayat_login/bindings/riwayat_login_binding.dart';
-import '../modules/riwayat_login/views/riwayat_login_view.dart';
+import '../modules/riwayat_anggota/bindings/riwayat_anggota_binding.dart';
+import '../modules/riwayat_anggota/views/riwayat_anggota_view.dart';
 import '../modules/room_chat/bindings/room_chat_binding.dart';
 import '../modules/room_chat/views/room_chat_view.dart';
-import '../modules/room_nakes_chat/bindings/room_nakes_chat_binding.dart';
-import '../modules/room_nakes_chat/views/room_nakes_chat_view.dart';
-import '../modules/scan_barcode/bindings/scan_barcode_binding.dart';
-import '../modules/scan_barcode/views/scan_barcode_view.dart';
-import '../modules/scanner/bindings/scanner_binding.dart';
-import '../modules/scanner/views/scanner_view.dart';
-import '../modules/scanner_result/bindings/scanner_result_binding.dart';
-import '../modules/scanner_result/views/scanner_result_view.dart';
-import '../modules/semua_menu/bindings/semua_menu_binding.dart';
-import '../modules/semua_menu/views/semua_menu_view.dart';
+import '../modules/room_dokter_chat/bindings/room_dokter_chat_binding.dart';
+import '../modules/room_dokter_chat/views/room_dokter_chat_view.dart';
+import '../modules/scan_label/bindings/scan_label_binding.dart';
+import '../modules/scan_label/views/scan_label_view.dart';
 import '../modules/splash/bindings/splash_binding.dart';
 import '../modules/splash/views/splash_view.dart';
 import '../modules/tentang_aplikasi/bindings/tentang_aplikasi_binding.dart';
@@ -115,14 +104,14 @@ class AppPages {
       binding: MainNavigationBinding(),
     ),
     GetPage(
-      name: _Paths.SCANNER,
-      page: () => const ScannerView(),
-      binding: ScannerBinding(),
+      name: _Paths.SCAN_LABEL,
+      page: () => const ScanLabelView(),
+      binding: ScanLabelBinding(),
     ),
     GetPage(
-      name: _Paths.SCAN_BARCODE,
-      page: () => const ScanBarcodeView(),
-      binding: ScanBarcodeBinding(),
+      name: _Paths.gabung_grup_anggota,
+      page: () => const GabungGrupAnggotaView(),
+      binding: GabungGrupAnggotaBinding(),
     ),
     GetPage(
       name: _Paths.ANGGOTA,
@@ -138,6 +127,11 @@ class AppPages {
       name: _Paths.RIWAYAT,
       page: () => const RiwayatView(),
       binding: RiwayatBinding(),
+    ),
+    GetPage(
+      name: _Paths.RIWAYAT_ANGGOTA,
+      page: () => const RiwayatAnggotaView(),
+      binding: RiwayatAnggotaBinding(),
     ),
     GetPage(
       name: _Paths.FAQ,
@@ -180,21 +174,12 @@ class AppPages {
       name: _Paths.LENSA_NATRIUM_DETAIL,
       page: () => const LensaNatriumDetailView(),
       binding: LensaNatriumDetailBinding(),
+      transition: Transition.noTransition,
     ),
     GetPage(
       name: _Paths.CHAT,
       page: () => const ChatView(),
       binding: ChatBinding(),
-    ),
-    GetPage(
-      name: _Paths.EDUKASI,
-      page: () => const EdukasiView(),
-      binding: EdukasiBinding(),
-    ),
-    GetPage(
-      name: _Paths.RIWAYAT_LOGIN,
-      page: () => const RiwayatLoginView(),
-      binding: RiwayatLoginBinding(),
     ),
     GetPage(
       name: _Paths.EDIT_PROFILE,
@@ -205,11 +190,6 @@ class AppPages {
       name: _Paths.VERIFIKASI_EMAIL,
       page: () => const VerifikasiEmailView(),
       binding: VerifikasiEmailBinding(),
-    ),
-    GetPage(
-      name: _Paths.SEMUA_MENU,
-      page: () => const SemuaMenuView(),
-      binding: SemuaMenuBinding(),
     ),
     GetPage(
       name: _Paths.INFORMASI_KESEHATAN,
@@ -227,59 +207,39 @@ class AppPages {
       binding: NotifikasiBinding(),
     ),
     GetPage(
-      name: _Paths.DETAIL_TENAGA_KESEHATAN,
-      page: () => const DetailTenagaKesehatanView(),
-      binding: DetailTenagaKesehatanBinding(),
+      name: _Paths.DETAIL_DOKTER,
+      page: () => const DetailDokterView(),
+      binding: DetailDokterBinding(),
     ),
     GetPage(
-      name: _Paths.NAKES_DETAIL_PASIEN_GATIVA,
-      page: () => const NakesDetailPasienGativaView(),
-      binding: NakesDetailPasienGativaBinding(),
+      name: _Paths.CATATAN_DOKTER,
+      page: () => const CatatanDokterView(),
+      binding: CatatanDokterBinding(),
     ),
     GetPage(
-      name: _Paths.CATATAN_NAKES,
-      page: () => const CatatanNakesView(),
-      binding: CatatanNakesBinding(),
+      name: _Paths.HOME_DOKTER,
+      page: () => const HomeDokterView(),
+      binding: HomeDokterBinding(),
     ),
     GetPage(
-      name: _Paths.NAKES_DASHBOARD,
-      page: () => const NakesDashboardView(),
-      binding: NakesDashboardBinding(),
+      name: _Paths.DOKTER_CHAT,
+      page: () => const DokterChatView(),
+      binding: DokterChatBinding(),
     ),
     GetPage(
-      name: _Paths.NAKES_CATALOG,
-      page: () => const NakesCatalogView(),
-      binding: NakesCatalogBinding(),
+      name: _Paths.DOKTER_EDIT_PROFILE,
+      page: () => const DokterEditProfileView(),
+      binding: DokterEditProfileBinding(),
     ),
     GetPage(
-      name: _Paths.NAKES_CHAT,
-      page: () => const NakesChatView(),
-      binding: NakesChatBinding(),
+      name: _Paths.DOKTER_PROFILE,
+      page: () => const DokterProfileView(),
+      binding: DokterProfileBinding(),
     ),
     GetPage(
-      name: _Paths.NAKES_EDUKASI,
-      page: () => const NakesEdukasiView(),
-      binding: NakesEdukasiBinding(),
-    ),
-    GetPage(
-      name: _Paths.NAKES_EDIT_PROFILE,
-      page: () => const NakesEditProfileView(),
-      binding: NakesEditProfileBinding(),
-    ),
-    GetPage(
-      name: _Paths.NAKES_INFORMASI_KESEHATAN,
-      page: () => const NakesInformasiKesehatanView(),
-      binding: NakesInformasiKesehatanBinding(),
-    ),
-    GetPage(
-      name: _Paths.NAKES_PROFILE,
-      page: () => const NakesProfileView(),
-      binding: NakesProfileBinding(),
-    ),
-    GetPage(
-      name: _Paths.NAKES_GANTI_KATA_SANDI,
-      page: () => const NakesGantiKataSandiView(),
-      binding: NakesGantiKataSandiBinding(),
+      name: _Paths.DOKTER_GANTI_KATA_SANDI,
+      page: () => const DokterGantiKataSandiView(),
+      binding: DokterGantiKataSandiBinding(),
     ),
     GetPage(
       name: _Paths.KATALOG,
@@ -287,24 +247,19 @@ class AppPages {
       binding: KatalogBinding(),
     ),
     GetPage(
-      name: _Paths.NAKES_PASIEN_GATIVA,
-      page: () => const NakesPasienGativaView(),
-      binding: NakesPasienGativaBinding(),
+      name: _Paths.DOKTER_DETAIL_PASIEN_CHAT,
+      page: () => const DokterDetailPasienChatView(),
+      binding: DokterDetailPasienChatBinding(),
     ),
     GetPage(
-      name: _Paths.NAKES_DETAIL_PASIEN_CHAT,
-      page: () => const NakesDetailPasienChatView(),
-      binding: NakesDetailPasienChatBinding(),
+      name: _Paths.DOKTER_TENTANG_APLIKASI,
+      page: () => const DokterTentangAplikasiView(),
+      binding: DokterTentangAplikasiBinding(),
     ),
     GetPage(
-      name: _Paths.NAKES_TENTANG_APLIKASI,
-      page: () => const NakesTentangAplikasiView(),
-      binding: NakesTentangAplikasiBinding(),
-    ),
-    GetPage(
-      name: _Paths.NAKES_BANTUAN_FAQ,
-      page: () => const NakesBantuanFaqView(),
-      binding: NakesBantuanFaqBinding(),
+      name: _Paths.DOKTER_BANTUAN_FAQ,
+      page: () => const DokterBantuanFaqView(),
+      binding: DokterBantuanFaqBinding(),
     ),
     GetPage(
       name: _Paths.TENTANG_APLIKASI,
@@ -312,9 +267,10 @@ class AppPages {
       binding: TentangAplikasiBinding(),
     ),
     GetPage(
-      name: _Paths.SCANNER_RESULT,
-      page: () => const ScannerResultView(),
-      binding: ScannerResultBinding(),
+      name: _Paths.SCAN_LABEL_RESULT,
+      page: () => const HasilPindaiLabelView(),
+      binding: HasilPindaiLabelBinding(),
+      transition: Transition.noTransition,
     ),
     GetPage(
       name: _Paths.ROOM_CHAT,
@@ -322,19 +278,29 @@ class AppPages {
       binding: RoomChatBinding(),
     ),
     GetPage(
-      name: _Paths.ROOM_NAKES_CHAT,
-      page: () => const RoomNakesChatView(),
-      binding: RoomNakesChatBinding(),
-    ),
-    GetPage(
-      name: _Paths.SCAN_TENAGA_KESEHATAN_AKSES,
-      page: () => const ScanTenagaKesehatanAksesView(),
-      binding: ScanTenagaKesehatanAksesBinding(),
+      name: _Paths.ROOM_DOKTER_CHAT,
+      page: () => const RoomDokterChatView(),
+      binding: RoomDokterChatBinding(),
     ),
     GetPage(
       name: _Paths.GANTI_KATA_SANDI,
       page: () => const GantiKataSandiView(),
       binding: GantiKataSandiBinding(),
+    ),
+    GetPage(
+      name: _Paths.HOME_ADMINISTRATOR,
+      page: () => const HomeAdministratorView(),
+      binding: HomeAdministratorBinding(),
+    ),
+    GetPage(
+      name: _Paths.EDUKASI,
+      page: () => const EdukasiView(),
+      binding: EdukasiBinding(),
+    ),
+    GetPage(
+      name: _Paths.EDUKASI_DOKTER,
+      page: () => const EdukasiDokterView(),
+      binding: EdukasiDokterBinding(),
     ),
   ];
 }

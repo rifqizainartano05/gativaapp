@@ -40,75 +40,7 @@ class ProfileView extends GetView<ProfileController> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // --- GRAFIK KONDISI JANTUNG (EKG) ---
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'STATUS KESEHATAN SAAT INI',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                  color: AppColors.textSecondary,
-                                  letterSpacing: 1.2,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          GetX<ProfileController>(
-                            builder: (profileCtrl) {
-                              double current = profileCtrl.totalNatrium.value
-                                  .toDouble();
-                              double limit = 2000; // Default limit
-                              if (profileCtrl
-                                  .healthTargetText
-                                  .value
-                                  .isNotEmpty) {
-                                limit =
-                                    double.tryParse(
-                                      profileCtrl.healthTargetText.value,
-                                    ) ??
-                                    2000;
-                              }
 
-                              double ratio = limit > 0 ? (current / limit) : 0;
-                              Color statusColor;
-                              IconData statusIcon;
-                              String statusText;
-
-                              if (ratio >= 0.9) {
-                                statusColor = AppColors.danger;
-                                statusIcon = Icons.dangerous_rounded;
-                                statusText = "BAHAYA (Over Limit)";
-                              } else if (ratio >= 0.6) {
-                                statusColor = AppColors.warning;
-                                statusIcon = Icons.warning_amber_rounded;
-                                statusText = "WASPADA (Mendekati Limit)";
-                              } else {
-                                statusColor = AppColors.safe;
-                                statusIcon = Icons.check_circle_rounded;
-                                statusText = "AMAN (Normal)";
-                              }
-
-                              return AnimatedProfileEkgCard(
-                                ratio: ratio,
-                                statusColor: statusColor,
-                                statusIcon: statusIcon,
-                                statusText: statusText,
-                                currentSodium: current,
-                                limitSodium: limit,
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
 
                     Padding(
                       padding: const EdgeInsets.all(24.0),
@@ -141,27 +73,7 @@ class ProfileView extends GetView<ProfileController> {
                             ),
                             child: Column(
                               children: [
-                                Obx(
-                                  () => _buildSimpleMenuTile(
-                                    icon: Icons.medical_services_rounded,
-                                    customIcon: controller.nakesImageBytes.value != null
-                                        ? CircleAvatar(
-                                            radius: 12,
-                                            backgroundImage: MemoryImage(controller.nakesImageBytes.value!),
-                                          )
-                                        : null,
-                                    title: "Tenaga Kesehatan",
-                                    subtitle: controller.nakesName.value == '-'
-                                        ? "Belum terhubung"
-                                        : controller.nakesName.value,
-                                    onTap: () => controller.showNakesDialog(),
-                                  ),
-                                ),
-                                const Divider(
-                                  height: 1,
-                                  indent: 56,
-                                  color: AppColors.glassBorder,
-                                ),
+
                                 _buildSimpleMenuTile(
                                   icon: Icons.person_outline_rounded,
                                   title: "Edit Profil",
@@ -173,30 +85,8 @@ class ProfileView extends GetView<ProfileController> {
                                   indent: 56,
                                   color: AppColors.glassBorder,
                                 ),
-                                _buildSimpleMenuTile(
-                                  icon: Icons.history_rounded,
-                                  title: "Riwayat Login",
-                                  subtitle: "Log masuk perangkat",
-                                  onTap: () =>
-                                      Get.toNamed(Routes.RIWAYAT_LOGIN),
-                                ),
-                                const Divider(
-                                  height: 1,
-                                  indent: 56,
-                                  color: AppColors.glassBorder,
-                                ),
-                                _buildSimpleMenuTile(
-                                  icon: Icons.assignment_ind_rounded,
-                                  title: "Catatan Nakes",
-                                  subtitle: "Lihat pesan dari tenaga kesehatan",
-                                  onTap: () =>
-                                      Get.toNamed(Routes.CATATAN_NAKES),
-                                ),
-                                const Divider(
-                                  height: 1,
-                                  indent: 56,
-                                  color: AppColors.glassBorder,
-                                ),
+
+
                                 _buildSimpleMenuTile(
                                   icon: Icons.lock_outline_rounded,
                                   title: "Ganti Kata Sandi",
@@ -442,18 +332,7 @@ class ProfileView extends GetView<ProfileController> {
                       ),
                       child: Row(
                         children: [
-                          Expanded(
-                            child: _buildInnerStatItem(
-                              "Tekanan Darah",
-                              controller.bloodPressure.value,
-                              Icons.favorite_rounded,
-                            ),
-                          ),
-                          Container(
-                            width: 1,
-                            height: 40,
-                            color: Colors.white.withOpacity(0.3),
-                          ),
+
                           Expanded(
                             child: _buildInnerStatItem(
                               "Target Natrium",
