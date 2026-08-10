@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
+import 'package:swipe_to/swipe_to.dart';
 import '../../../routes/app_pages.dart';
 import '../controllers/room_chat_controller.dart';
 import '../../chat/controllers/chat_controller.dart';
@@ -14,8 +15,6 @@ class RoomChatView extends GetView<RoomChatController> {
 
   @override
   Widget build(BuildContext context) {
-    final TextEditingController textController = TextEditingController();
-
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -84,11 +83,35 @@ class RoomChatView extends GetView<RoomChatController> {
                 ),
                 Column(
                   children: [
+                    Obx(() {
+                      if (controller.countdownSeconds.value > 0) {
+                        final minutes = (controller.countdownSeconds.value / 60).floor();
+                        final seconds = controller.countdownSeconds.value % 60;
+                        final timeString = '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+                        return Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                          color: Colors.red.shade50,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.timer, color: Colors.red.shade700, size: 18),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Chat akan dihapus dalam $timeString',
+                                style: TextStyle(color: Colors.red.shade700, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    }),
                     Expanded(
                       child: Obx(() {
                         // Memaksa Obx untuk melacak semua perubahan pada notesMap
                         final _ = controller.notesMap.values.toList();
                         final _2 = controller.messages.length;
+                        final _3 = controller.selectedMessageIds.toList();
                         
                         return ListView.builder(
                           reverse: true, // Auto-scroll ke bawah
@@ -101,14 +124,38 @@ class RoomChatView extends GetView<RoomChatController> {
                           itemCount: controller.messages.length,
                           itemBuilder: (context, index) {
                             final msg = controller.messages[index];
-                            return _ChatBubble(
-                              id: msg.id,
-                              text: msg.text,
-                              isUser: msg.isUser,
-                              senderName: msg.senderName,
-                              senderRole: msg.senderRole,
-                              time: msg.time,
-                              note: controller.notesMap[msg.id] ?? msg.note,
+                            final isSelected = controller.selectedMessageIds.contains(msg.id);
+                            
+                            return GestureDetector(
+                              onLongPress: () {
+                                if (msg.id != null) {
+                                  controller.toggleSelection(msg.id!);
+                                }
+                              },
+                              onTap: () {
+                                if (controller.isSelectionMode && msg.id != null) {
+                                  controller.toggleSelection(msg.id!);
+                                }
+                              },
+                              child: SwipeTo(
+                                onRightSwipe: (details) {
+                                  if (!controller.isSelectionMode) {
+                                    controller.setReplyMessage(msg);
+                                  }
+                                },
+                                child: _ChatBubble(
+                                  id: msg.id,
+                                  text: msg.text,
+                                  isUser: msg.isUser,
+                                  senderName: msg.senderName,
+                                  senderRole: msg.senderRole,
+                                  time: msg.time,
+                                  note: controller.notesMap[msg.id] ?? msg.note,
+                                  replyToText: msg.replyToText,
+                                  replyToSender: msg.replyToSender,
+                                  isSelected: isSelected,
+                                ),
+                              ),
                             );
                           },
                         );
@@ -121,6 +168,54 @@ class RoomChatView extends GetView<RoomChatController> {
                       return const SizedBox.shrink();
                     }),
                     // Form Input (Selalu Tampil)
+                    Obx(() {
+                      if (controller.replyingToMessage.value != null) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            border: Border(
+                              top: BorderSide(color: Colors.grey.shade200),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 4,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF2E7D32),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      controller.replyingToMessage.value!.senderName ?? 'Sistem',
+                                      style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF2E7D32), fontSize: 12),
+                                    ),
+                                    Text(
+                                      controller.replyingToMessage.value!.text,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.close, size: 20),
+                                onPressed: () => controller.cancelReply(),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    }),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -167,7 +262,7 @@ class RoomChatView extends GetView<RoomChatController> {
                                     ),
                                   ),
                                   child: TextField(
-                                    controller: textController,
+                                    controller: controller.textController,
                                     onChanged: controller.onTextChanged,
                                     maxLines: 4,
                                     minLines: 1,
@@ -186,20 +281,46 @@ class RoomChatView extends GetView<RoomChatController> {
                                     ),
                                     onSubmitted: (val) {
                                       controller.sendMessage(val);
-                                      textController.clear();
+                                      controller.textController.clear();
                                     },
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 12),
+                              const SizedBox(width: 8),
+                              Obx(() {
+                                final isListening = controller.isListening.value;
+                                return InkWell(
+                                  onTap: () {
+                                    if (isListening) {
+                                      controller.stopListening();
+                                    } else {
+                                      controller.listenToSpeech();
+                                    }
+                                  },
+                                  borderRadius: BorderRadius.circular(24),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: isListening ? Colors.red.shade100 : Colors.blue.shade50,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      isListening ? Icons.mic : Icons.mic_none,
+                                      color: isListening ? Colors.red : Colors.blue,
+                                      size: 24,
+                                    ),
+                                  ),
+                                );
+                              }),
+                              const SizedBox(width: 8),
                               InkWell(
                                 onTap: () {
-                                  if (textController.text
+                                  if (controller.textController.text
                                       .trim()
                                       .isNotEmpty) {
-                                    final val = textController.text;
+                                    final val = controller.textController.text;
                                     controller.sendMessage(val);
-                                    textController.clear();
+                                    controller.textController.clear();
                                   }
                                 },
                                 borderRadius: BorderRadius.circular(24),
@@ -272,12 +393,12 @@ class RoomChatView extends GetView<RoomChatController> {
               ),
             ),
           ),
-          Row(
-            children: [
-              Builder(
-                builder: (context) {
-                  return InkWell(
-                    onTap: () => Get.back(),
+          Obx(() {
+            if (controller.isSelectionMode) {
+              return Row(
+                children: [
+                  InkWell(
+                    onTap: () => controller.clearSelection(),
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
@@ -285,143 +406,191 @@ class RoomChatView extends GetView<RoomChatController> {
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
-                        Icons.arrow_back_ios_new_rounded,
+                        Icons.close,
                         color: Colors.white,
                         size: 20,
                       ),
                     ),
-                  );
-                },
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Obx(() {
-                  if (controller.selectedDoctor.value != null) {
-                    final doc = controller.selectedDoctor.value!;
-                    final docName = doc['name'] ?? 'Dokter';
-                    return GestureDetector(
-                      onTap: () {
-                        Get.toNamed(
-                          Routes.DETAIL_DOKTER,
-                          arguments: doc,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      '${controller.selectedMessageIds.length} dipilih',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.white),
+                    onPressed: () {
+                      CustomPopup.showConfirm(
+                        title: 'Hapus Pesan',
+                        message: 'Apakah Anda yakin ingin menghapus ${controller.selectedMessageIds.length} pesan ini?',
+                        onConfirm: () {
+                          controller.deleteSelectedMessages();
+                        },
+                      );
+                    },
+                  ),
+                ],
+              );
+            }
+            return Row(
+              children: [
+                Builder(
+                  builder: (context) {
+                    return InkWell(
+                      onTap: () => Get.back(),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Obx(() {
+                    if (controller.selectedDoctor.value != null) {
+                      final doc = controller.selectedDoctor.value!;
+                      final docName = doc['name'] ?? 'Dokter';
+                      return GestureDetector(
+                        onTap: () {
+                          Get.toNamed(
+                            Routes.DETAIL_DOKTER,
+                            arguments: doc,
+                          );
+                        },
+                        child: Row(
+                          children: [
+                            Builder(
+                              builder: (context) {
+                                final photoBase64 = doc['photo64'] ?? doc['photoBase64'] ?? '';
+                                return CircleAvatar(
+                                  radius: 20,
+                                  backgroundColor: Colors.white24,
+                                  backgroundImage: photoBase64.isNotEmpty
+                                      ? MemoryImage(
+                                          const Base64Decoder().convert(
+                                            photoBase64,
+                                          ),
+                                        )
+                                      : null,
+                                  child: photoBase64.isEmpty
+                                      ? const Icon(
+                                          Icons.person,
+                                          color: Colors.white,
+                                          size: 24,
+                                        )
+                                      : null,
+                                );
+                              },
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    docName,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                      color: Colors.white,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                    Obx(() {
+                                      bool isOnline = controller.partnerIsOnline.value;
+                                      if (isOnline) {
+                                        return const Text(
+                                          'Online',
+                                          style: TextStyle(fontWeight: FontWeight.normal, fontSize: 12, color: Colors.white70),
+                                        );
+                                      }
+                                      
+                                      final lastSeen = controller.partnerLastSeen.value;
+                                      String statusText = 'Terakhir online: belum diketahui';
+                                      if (lastSeen != null) {                                      final timeStr = "${lastSeen.hour.toString().padLeft(2, '0')}:${lastSeen.minute.toString().padLeft(2, '0')}";
+
+                                        if (DateTime.now().day == lastSeen.day &&
+                                            DateTime.now().month == lastSeen.month &&
+                                            DateTime.now().year == lastSeen.year) {
+                                          statusText = 'Terakhir dilihat pada pukul $timeStr';
+                                        } else {
+                                          String hari = '';
+                                          switch (lastSeen.weekday) {
+                                            case 1: hari = 'Senin'; break;
+                                            case 2: hari = 'Selasa'; break;
+                                            case 3: hari = 'Rabu'; break;
+                                            case 4: hari = 'Kamis'; break;
+                                            case 5: hari = 'Jumat'; break;
+                                            case 6: hari = 'Sabtu'; break;
+                                            case 7: hari = 'Minggu'; break;
+                                          }
+                                          statusText = 'Terakhir dilihat pada hari $hari';
+                                        }
+                                      }
+                                      
+                                      return Text(
+                                        statusText,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.normal,
+                                          fontSize: 12,
+                                          color: Colors.white70,
+                                        ),
+                                      );
+                                    }),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         );
-                      },
+                      }
+                      return const SizedBox.shrink();
+                    }),
+                ),
+                Obx(() {
+                  if (controller.remainingSeconds.value > 0 && controller.remainingSeconds.value < 300) {
+                    final minutes = (controller.remainingSeconds.value / 60).floor();
+                    final seconds = controller.remainingSeconds.value % 60;
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       child: Row(
                         children: [
-                          Builder(
-                            builder: (context) {
-                              final photoBase64 = doc['photo64'] ?? doc['photoBase64'] ?? '';
-                              return CircleAvatar(
-                                radius: 20,
-                                backgroundColor: Colors.white24,
-                                backgroundImage: photoBase64.isNotEmpty
-                                    ? MemoryImage(
-                                        const Base64Decoder().convert(
-                                          photoBase64,
-                                        ),
-                                      )
-                                    : null,
-                                child: photoBase64.isEmpty
-                                    ? const Icon(
-                                        Icons.person,
-                                        color: Colors.white,
-                                        size: 24,
-                                      )
-                                    : null,
-                              );
-                            },
+                          const Icon(Icons.timer_outlined, color: Colors.white, size: 16),
+                          const SizedBox(width: 4),
+                          Text(
+                            '$minutes:${seconds.toString().padLeft(2, '0')}',
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  docName,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    color: Colors.white,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                  Obx(() {
-                                    bool isOnline = controller.partnerIsOnline.value;
-                                    if (isOnline) {
-                                      return const Text(
-                                        'Online',
-                                        style: TextStyle(fontWeight: FontWeight.normal, fontSize: 12, color: Colors.white70),
-                                      );
-                                    }
-                                    
-                                    final lastSeen = controller.partnerLastSeen.value;
-                                    String statusText = 'Terakhir online: belum diketahui';
-                                    if (lastSeen != null) {                                      final timeStr = "${lastSeen.hour.toString().padLeft(2, '0')}:${lastSeen.minute.toString().padLeft(2, '0')}";
-
-                                      if (DateTime.now().day == lastSeen.day && DateTime.now().month == lastSeen.month && DateTime.now().year == lastSeen.year) {
-                                        statusText = 'Terakhir dilihat hari ini pukul $timeStr';
-                                      } else {
-                                        String hari = '';
-                                        switch (lastSeen.weekday) {
-                                          case 1: hari = 'Senin'; break;
-                                          case 2: hari = 'Selasa'; break;
-                                          case 3: hari = 'Rabu'; break;
-                                          case 4: hari = 'Kamis'; break;
-                                          case 5: hari = 'Jumat'; break;
-                                          case 6: hari = 'Sabtu'; break;
-                                          case 7: hari = 'Minggu'; break;
-                                        }
-                                        statusText = 'Terakhir dilihat hari $hari, ${lastSeen.day}/${lastSeen.month}/${lastSeen.year} pukul $timeStr';
-                                      }
-                                    }
-                                    
-                                    return Text(
-                                      statusText,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.normal,
-                                        fontSize: 12,
-                                        color: Colors.white70,
-                                      ),
-                                    );
-                                  }),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  }),
-              ),
-              Obx(() {
-                if (controller.remainingSeconds.value > 0 && controller.remainingSeconds.value < 300) {
-                  final minutes = (controller.remainingSeconds.value / 60).floor();
-                  final seconds = controller.remainingSeconds.value % 60;
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.timer_outlined, color: Colors.white, size: 16),
-                        const SizedBox(width: 4),
-                        Text(
-                          '$minutes:${seconds.toString().padLeft(2, '0')}',
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-                return const SizedBox.shrink();
-              }),
-            ],
-          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                }),
+              ],
+            );
+          }),
         ],
       ),
     );
@@ -476,6 +645,10 @@ class _ChatBubble extends StatelessWidget {
   final String? senderRole;
   final DateTime time;
   final String? note;
+  final String? replyToText;
+  final String? replyToSender;
+
+  final bool isSelected;
 
   const _ChatBubble({
     this.id,
@@ -485,9 +658,10 @@ class _ChatBubble extends StatelessWidget {
     this.senderName,
     this.senderRole,
     this.note,
+    this.replyToText,
+    this.replyToSender,
+    this.isSelected = false,
   });
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -496,255 +670,209 @@ class _ChatBubble extends StatelessWidget {
         "${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}";
     final controller = Get.find<RoomChatController>();
 
-    return Align(
-      alignment: senderRole == 'sistem'
-          ? Alignment.center
-          : (isUser ? Alignment.centerRight : Alignment.centerLeft),
-      child: GestureDetector(
-        child: senderRole == 'sistem'
-            ? Container(
-                margin: const EdgeInsets.symmetric(vertical: 8),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 6,
+    return Container(
+      color: isSelected ? Colors.green.withOpacity(0.1) : Colors.transparent,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            if (controller.isSelectionMode)
+              Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: Icon(
+                  isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+                  color: isSelected ? Colors.green : Colors.grey,
+                  size: 24,
                 ),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  text.replaceAll('---', '').trim(),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              )
-            : Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                constraints: BoxConstraints(
-                  maxWidth:
-                      MediaQuery.of(context).size.width *
-                      0.75, // Maksimal lebar chat 75%
-                ),
-                child: Column(
-                  crossAxisAlignment: isUser
-                      ? CrossAxisAlignment.end
-                      : CrossAxisAlignment.start,
-                  children: [
-                    // Nama pengirim untuk tenaga kesehatan
-                    if (!isUser && senderName != null && senderRole != 'sistem')
-                      Padding(
-                        padding: const EdgeInsets.only(left: 12, bottom: 4),
+              ),
+            Expanded(
+              child: Align(
+                alignment: senderRole == 'sistem'
+                    ? Alignment.center
+                    : (isUser ? Alignment.centerRight : Alignment.centerLeft),
+                child: senderRole == 'sistem'
+                    ? Container(
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                         child: Text(
-                          senderName ?? '',
+                          text.replaceAll('---', '').trim(),
                           style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey.shade700,
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                            fontWeight: FontWeight.w500,
                           ),
+                          textAlign: TextAlign.center,
                         ),
-                      ),
-
-                    // Bubble Chat
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isUser ? const Color(0xFF2E7D32) : Colors.white,
-                        borderRadius: BorderRadius.only(
-                          topLeft: const Radius.circular(20),
-                          topRight: const Radius.circular(20),
-                          bottomLeft: Radius.circular(isUser ? 20 : 4),
-                          bottomRight: Radius.circular(isUser ? 4 : 20),
+                      )
+                    : Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        constraints: BoxConstraints(
+                          maxWidth: MediaQuery.of(context).size.width * 0.75, // Maksimal lebar chat 75%
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.04),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                        border: isUser
-                            ? null
-                            : Border.all(color: Colors.grey.shade200),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            text,
-                            style: TextStyle(
-                              color: isUser
-                                  ? Colors.white
-                                  : const Color(0xFF1E293B),
-                              fontSize: 14.5,
-                              height: 1.4,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  formattedTime,
+                        child: Column(
+                          crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                          children: [
+                            // Nama pengirim untuk tenaga kesehatan
+                            if (!isUser && senderName != null && senderRole != 'sistem')
+                              Padding(
+                                padding: const EdgeInsets.only(left: 12, bottom: 4),
+                                child: Text(
+                                  senderName ?? '',
                                   style: TextStyle(
-                                    fontSize: 10,
-                                    color: isUser
-                                        ? Colors.white70
-                                        : Colors.grey.shade500,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.grey.shade700,
                                   ),
                                 ),
-                                if (isUser) ...[
-                                  const SizedBox(width: 4),
-                                  const Icon(
-                                    Icons.done_all,
-                                    size: 12,
-                                    color: Colors.white70,
+                              ),
+
+                            // Bubble Chat
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected 
+                                    ? (isUser ? const Color(0xFF1B5E20) : Colors.green.shade50)
+                                    : (isUser ? const Color(0xFF2E7D32) : Colors.white),
+                                borderRadius: BorderRadius.only(
+                                  topLeft: const Radius.circular(20),
+                                  topRight: const Radius.circular(20),
+                                  bottomLeft: Radius.circular(isUser ? 20 : 4),
+                                  bottomRight: Radius.circular(isUser ? 4 : 20),
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.04),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
                                   ),
                                 ],
-                              ],
-                            ),
-                          ),
-                          if (text.startsWith('Laporan Riwayat Natrium')) ...[
-                            const SizedBox(height: 8),
-                            _ReportNoteBox(
-                              messageId: id,
-                              initialNote: note,
-                              isUser: isUser,
+                                border: isUser
+                                    ? (isSelected ? Border.all(color: Colors.white, width: 2) : null)
+                                    : Border.all(color: isSelected ? Colors.green.shade300 : Colors.grey.shade200, width: isSelected ? 2 : 1),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (replyToText != null)
+                                    Container(
+                                      margin: const EdgeInsets.only(bottom: 8),
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: isUser ? Colors.white.withValues(alpha: 0.2) : Colors.grey.shade200,
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border(
+                                          left: BorderSide(
+                                            color: isUser ? Colors.white : const Color(0xFF2E7D32),
+                                            width: 4,
+                                          ),
+                                        ),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            replyToSender ?? '',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 12,
+                                              color: isUser ? Colors.white : const Color(0xFF2E7D32),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            replyToText!,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              color: isUser ? Colors.white70 : Colors.black87,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  Text(
+                                    text,
+                                    style: TextStyle(
+                                      color: isUser ? Colors.white : const Color(0xFF1E293B),
+                                      fontSize: 14.5,
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                  if (text.startsWith('Laporan Riwayat Natrium')) ...[
+                                    const SizedBox(height: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: isUser ? Colors.white.withValues(alpha: 0.2) : Colors.green.shade50,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.info_outline, size: 12, color: isUser ? Colors.white : Colors.green.shade800),
+                                          const SizedBox(width: 4),
+                                          Expanded(
+                                            child: Text(
+                                              'Membalas terkait laporan ini akan otomatis masuk ke Catatan Dokter.',
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                fontStyle: FontStyle.italic,
+                                                color: isUser ? Colors.white70 : Colors.green.shade800,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                  const SizedBox(height: 4),
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          formattedTime,
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            color: isUser ? Colors.white70 : Colors.grey.shade500,
+                                          ),
+                                        ),
+                                        if (isUser) ...[
+                                          const SizedBox(width: 4),
+                                          const Icon(
+                                            Icons.done_all,
+                                            size: 12,
+                                            color: Colors.white70,
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
-                        ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
               ),
+            ),
+          ],
+        ),
       ),
     );
   }
-}
-
-class _ReportNoteBox extends StatelessWidget {
-  final String? messageId;
-  final String? initialNote;
-  final bool isUser;
-
-  const _ReportNoteBox({
-    this.messageId,
-    this.initialNote,
-    required this.isUser,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (messageId == null) return const SizedBox.shrink();
-
-    final bool isEmpty = initialNote == null || initialNote!.trim().isEmpty;
-    
-    if (isEmpty) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.grey.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey.withOpacity(0.3)),
-        ),
-        alignment: Alignment.center,
-        child: const Text('Belum ada catatan dari dokter', style: TextStyle(color: Colors.grey, fontSize: 12)),
-      );
-    }
-
-    return GestureDetector(
-      onTap: () => _showNoteViewDialog(context, initialNote!),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.blue.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.blue.withOpacity(0.3)),
-        ),
-        alignment: Alignment.center,
-        child: const Text('Lihat Catatan Dokter', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 12)),
-      ),
-    );
-  }
-}
-
-void _showNoteViewDialog(BuildContext context, String note) {
-  showDialog(
-    context: context,
-    builder: (context) {
-      return Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Stack(
-            children: [
-              // Watermark Icon
-              Positioned(
-                right: -20,
-                bottom: -20,
-                child: Icon(
-                  Icons.note_alt,
-                  size: 150,
-                  color: Colors.grey.withOpacity(0.1),
-                ),
-              ),
-              Positioned(
-                right: -10,
-                top: -10,
-                child: IconButton(
-                  icon: const Icon(Icons.close, color: Colors.grey),
-                  onPressed: () => Navigator.pop(context),
-                  splashRadius: 20,
-                ),
-              ),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text(
-                    'Catatan Dokter',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF1E293B),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.yellow.shade100.withOpacity(0.9),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.yellow.shade400),
-                    ),
-                    child: Text(
-                      note,
-                      style: const TextStyle(fontSize: 14, color: Colors.black87),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                ],
-              ),
-            ],
-          ),
-        ),
-      );
-    },
-  );
 }
 

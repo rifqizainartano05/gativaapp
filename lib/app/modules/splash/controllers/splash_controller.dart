@@ -29,29 +29,14 @@ class SplashController extends GetxController {
       bool hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
       
       if (FirebaseAuth.instance.currentUser != null) {
-        // User sudah login sebelumnya (sesi tersimpan), langsung arahkan ke Dashboard
-        AuthService authService;
-        if (!Get.isRegistered<AuthService>()) {
-          authService = await Get.putAsync(() => AuthService().init());
-        } else {
-          authService = Get.find<AuthService>();
-        }
-        
-        await authService.fetchUserRole(FirebaseAuth.instance.currentUser!.uid);
-        
-        if (authService.userRole.value == 'Pasien') {
-          nextRoute = Routes.MAIN_NAVIGATION;
-        } else if (authService.userRole.value == 'Tenaga Kesehatan') {
-          nextRoute = Routes.HOME_DOKTER;
-        } else {
-          nextRoute = Routes.LOGIN; // Fallback jika tidak diketahui
-        }
+        // Sign out user so they always have to login again when the app starts
+        await FirebaseAuth.instance.signOut();
+      }
+
+      if (hasSeenOnboarding) {
+        nextRoute = Routes.LOGIN;
       } else {
-        if (hasSeenOnboarding) {
-          nextRoute = Routes.LOGIN;
-        } else {
-          nextRoute = Routes.ONBOARDING;
-        }
+        nextRoute = Routes.ONBOARDING;
       }
     } catch (e) {
       debugPrint('SharedPreferences error: $e');

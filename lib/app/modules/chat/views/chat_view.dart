@@ -251,7 +251,7 @@ class ChatView extends GetView<ChatController> {
                                   final timeStr = "${lastSeen.hour.toString().padLeft(2, '0')}:${lastSeen.minute.toString().padLeft(2, '0')}";
                                   
                                   if (DateTime.now().day == lastSeen.day && DateTime.now().month == lastSeen.month && DateTime.now().year == lastSeen.year) {
-                                    statusText = 'Terakhir dilihat hari ini pukul $timeStr';
+                                    statusText = 'Terakhir dilihat pada pukul $timeStr';
                                   } else {
                                     String hari = '';
                                     switch (lastSeen.weekday) {
@@ -263,7 +263,7 @@ class ChatView extends GetView<ChatController> {
                                       case 6: hari = 'Sabtu'; break;
                                       case 7: hari = 'Minggu'; break;
                                     }
-                                    statusText = 'Terakhir dilihat hari $hari, ${lastSeen.day}/${lastSeen.month}/${lastSeen.year} pukul $timeStr';
+                                    statusText = 'Terakhir dilihat pada hari $hari';
                                   }
                                 }
 

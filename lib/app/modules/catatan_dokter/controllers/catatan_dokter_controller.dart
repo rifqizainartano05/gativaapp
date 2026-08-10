@@ -9,42 +9,46 @@ class CatatanDokterController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    fetchCatatan();
+    listenCatatan();
   }
 
-  Future<void> fetchCatatan() async {
+  void listenCatatan() {
     try {
       isLoading.value = true;
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        final docSnapshot = await FirebaseFirestore.instance
+        FirebaseFirestore.instance
             .collection('mobile')
             .doc('roles')
             .collection('pasien')
             .doc(user.uid)
-            .get();
-
-        CatatanDokter.clear();
-        if (docSnapshot.exists) {
-          final data = docSnapshot.data() ?? {};
-          if (data['catatan_dokter'] != null) {
-            final catatanData = data['catatan_dokter'];
-            if (catatanData is List) {
-              for (var item in catatanData) {
-                if (item != null && item.toString().isNotEmpty) {
-                  CatatanDokter.add(item.toString());
+            .snapshots()
+            .listen((docSnapshot) {
+          CatatanDokter.clear();
+          if (docSnapshot.exists) {
+            final data = docSnapshot.data() ?? {};
+            if (data['catatan_dokter'] != null) {
+              final catatanData = data['catatan_dokter'];
+              if (catatanData is List) {
+                for (var item in catatanData) {
+                  if (item != null && item.toString().isNotEmpty) {
+                    CatatanDokter.add(item.toString());
+                  }
                 }
+              } else if (catatanData is String && catatanData.isNotEmpty) {
+                CatatanDokter.add(catatanData);
               }
-            } else if (catatanData is String && catatanData.isNotEmpty) {
-              CatatanDokter.add(catatanData);
             }
           }
-        }
+          isLoading.value = false;
+        }, onError: (error) {
+          isLoading.value = false;
+          Get.snackbar('Error', 'Gagal memuat catatan medis');
+        });
       }
     } catch (e) {
-      Get.snackbar('Error', 'Gagal memuat catatan medis');
-    } finally {
       isLoading.value = false;
+      Get.snackbar('Error', 'Gagal inisialisasi catatan medis');
     }
   }
 }

@@ -87,29 +87,7 @@ class DokterDetailPasienChatController extends GetxController {
       // Ignore error
     });
 
-    // Calculate daily total from subcollection 'label gizi makanan'
-    FirebaseFirestore.instance
-        .collection('mobile')
-        .doc('roles')
-        .collection('pasien')
-        .doc(id)
-        .collection('label gizi makanan')
-        .snapshots()
-        .listen((snapshot) {
-      double dailyTotal = 0.0;
-      final now = DateTime.now();
-      for (var doc in snapshot.docs) {
-        final data = doc.data();
-        DateTime? docDate = (data['created_at'] as Timestamp?)?.toDate() ?? (data['timestamp'] as Timestamp?)?.toDate();
-        if (docDate != null && docDate.year == now.year && docDate.month == now.month && docDate.day == now.day) {
-          dailyTotal += ((data['natrium'] ?? data['sodium'] ?? data['amount'] ?? 0) as num).toDouble();
-        }
-      }
-      pasienData['natrium'] = dailyTotal.toInt();
-      pasienData.refresh();
-    }, onError: (e) {
-      // Ignore error
-    });
+
   }
 
   @override

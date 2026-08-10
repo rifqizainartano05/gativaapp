@@ -199,24 +199,9 @@ class HomeController extends GetxController {
           } else {
             limit.value = storedLimit;
           }
+          
+          totalConsumedToday.value = ((data['natrium'] ?? data['sodium'] ?? data['totalNatrium'] ?? 0) as num).toDouble();
         }
-      });
-
-      Get.find<AuthService>()
-          .getUserReference(user.uid)
-          .collection('label gizi makanan')
-          .snapshots()
-          .listen((snapshot) {
-        double dailyTotal = 0.0;
-        final now = DateTime.now();
-        for (var doc in snapshot.docs) {
-          final data = doc.data();
-          DateTime? docDate = (data['created_at'] as Timestamp?)?.toDate() ?? (data['timestamp'] as Timestamp?)?.toDate();
-          if (docDate != null && docDate.year == now.year && docDate.month == now.month && docDate.day == now.day) {
-            dailyTotal += ((data['natrium'] ?? data['sodium'] ?? data['amount'] ?? 0) as num).toDouble();
-          }
-        }
-        totalConsumedToday.value = dailyTotal;
       });
     }
   }

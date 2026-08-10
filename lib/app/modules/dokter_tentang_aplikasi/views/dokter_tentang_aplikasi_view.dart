@@ -12,7 +12,7 @@ class DokterTentangAplikasiView extends GetView<DokterTentangAplikasiController>
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: Colors.white,
+        systemNavigationBarColor: Color(0xFFF8F9FA),
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
@@ -32,7 +32,7 @@ class DokterTentangAplikasiView extends GetView<DokterTentangAplikasiController>
                     child: Transform.rotate(
                       angle: -0.2,
                       child: Icon(
-                        Icons.local_hospital_rounded,
+                        Icons.info_outline_rounded,
                         size: 130,
                         color: Colors.white.withOpacity(0.1),
                       ),
@@ -72,74 +72,59 @@ class DokterTentangAplikasiView extends GetView<DokterTentangAplikasiController>
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 52),
-                        child: Text(
-                          'Versi 1.0.0',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Colors.white.withOpacity(0.8),
-                          ),
-                        ),
-                      ),
                     ],
                   ),
                 ],
               ),
             ),
             
-            // Bottom White Area
+            // Bottom Content Area
             Expanded(
               child: Container(
                 width: double.infinity,
                 decoration: const BoxDecoration(
-                  color: Colors.white,
+                  color: Color(0xFFF8F9FA),
                 ),
                 child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Center(
-                        child: Image.asset(
-                          'assets/logo.png',
-                          width: 120,
-                          height: 120,
-                        ),
-                      ),
+                      // --- App Info Card ---
+                      _buildAppInfoCard(),
                       const SizedBox(height: 32),
+
+                      // --- Fitur Utama ---
                       const Text(
-                        'Deskripsi',
+                        'Fitur Utama Dokter',
                         style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2E7D32),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Portal khusus tenaga kesehatan ini memfasilitasi Anda untuk berinteraksi langsung dengan pasien. Anda dapat memantau catatan asupan gizi mereka serta melakukan konsultasi langsung via chat untuk memastikan kesehatan mereka terjaga optimal.',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade700,
-                          height: 1.6,
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      const Text(
-                        'Fungsi Utama Dokter',
-                        style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: Colors.black87,
+                          letterSpacing: -0.5,
                         ),
                       ),
                       const SizedBox(height: 16),
-                      _buildFeatureItem(Icons.people_alt_rounded, 'Manajemen & pantauan pasien'),
-                      _buildFeatureItem(Icons.question_answer_rounded, 'Tanggapan konsultasi real-time'),
-                      _buildFeatureItem(Icons.note_alt_rounded, 'Pencatatan rekam dan anjuran kesehatan'),
-                      const SizedBox(height: 40),
+                      _buildFeatureCard(
+                        icon: Icons.people_alt_rounded,
+                        title: 'Manajemen & Pantauan Pasien',
+                        description: 'Memantau catatan asupan gizi serta rekam medis pasien yang ada di bawah pengawasan Anda.',
+                        color: const Color(0xFF2E7D32),
+                      ),
+                      _buildFeatureCard(
+                        icon: Icons.question_answer_rounded,
+                        title: 'Tanggapan Konsultasi Real-time',
+                        description: 'Berinteraksi langsung dengan pasien melalui chat untuk memastikan kesehatan mereka terjaga optimal.',
+                        color: const Color(0xFF1976D2),
+                      ),
+                      _buildFeatureCard(
+                        icon: Icons.note_alt_rounded,
+                        title: 'Pencatatan Rekam Medis',
+                        description: 'Mencatat riwayat konsultasi serta memberikan anjuran medis yang akan tersimpan dengan aman.',
+                        color: const Color(0xFFE65100),
+                      ),
+                      const SizedBox(height: 32),
                     ],
                   ),
                 ),
@@ -151,32 +136,120 @@ class DokterTentangAplikasiView extends GetView<DokterTentangAplikasiController>
     );
   }
 
-  Widget _buildFeatureItem(IconData icon, String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+  Widget _buildAppInfoCard() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.grey.shade200, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.grey.shade100),
+                ),
+                child: Center(
+                  child: Image.asset(
+                    'assets/logo.png',
+                    width: 40,
+                    height: 40,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'GATIVA',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF2E7D32),
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          const Divider(height: 1, color: Color(0xFFEEEEEE)),
+          const SizedBox(height: 20),
+          const Text(
+            'Portal khusus tenaga kesehatan yang dirancang untuk memfasilitasi interaksi langsung dengan pasien. Aplikasi ini mempermudah Anda dalam mengawasi asupan gizi pasien, mengelola rekam medis, serta memberikan konsultasi secara praktis dan terpercaya.',
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.black54,
+              height: 1.6,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeatureCard({required IconData icon, required String title, required String description, required Color color}) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.grey.shade100, width: 1.5),
+      ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFF2E7D32).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
+              color: color.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(
-              icon,
-              color: const Color(0xFF2E7D32),
-              size: 24,
-            ),
+            child: Icon(icon, color: color, size: 24),
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: Text(
-              title,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 2),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  description,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Colors.black54,
+                    height: 1.4,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

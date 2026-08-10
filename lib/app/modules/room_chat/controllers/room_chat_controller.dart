@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +16,8 @@ class ChatMessage {
   final String? senderName;
   final String? senderRole;
   final String? note;
+  final String? replyToText;
+  final String? replyToSender;
 
   ChatMessage({
     this.id,
@@ -24,11 +27,126 @@ class ChatMessage {
     this.senderName,
     this.senderRole,
     this.note,
+    this.replyToText,
+    this.replyToSender,
   });
 }
 
 class RoomChatController extends GetxController {
   final messages = <ChatMessage>[].obs;
+  final Rx<ChatMessage?> replyingToMessage = Rx<ChatMessage?>(null);
+
+  void setReplyMessage(ChatMessage msg) {
+    replyingToMessage.value = msg;
+  }
+
+  void cancelReply() {
+    replyingToMessage.value = null;
+  }
+
+  // Multi-select Delete
+  final selectedMessageIds = <String>{}.obs;
+  bool get isSelectionMode => selectedMessageIds.isNotEmpty;
+
+  void toggleSelection(String id) {
+    if (id == 'system') return; // Jangan izinkan pilih pesan sistem
+    
+    // Cegah pasien menghapus laporan
+    final msg = messages.firstWhereOrNull((m) => m.id == id);
+    if (msg != null && msg.text.startsWith('Laporan Riwayat Natrium')) {
+      CustomPopup.showWarning('Perhatian', 'Laporan tidak dapat dihapus oleh pasien.');
+      return;
+    }
+    
+    // Cegah pasien menghapus balasan laporan dari dokter
+    if (msg != null && msg.replyToText != null && msg.replyToText!.startsWith('Laporan Riwayat Natrium')) {
+      CustomPopup.showWarning('Perhatian', 'Balasan laporan dari dokter tidak dapat dihapus.');
+      return;
+    }
+
+    if (selectedMessageIds.contains(id)) {
+      selectedMessageIds.remove(id);
+    } else {
+      selectedMessageIds.add(id);
+    }
+  }
+
+  void clearSelection() {
+    selectedMessageIds.clear();
+  }
+
+  Future<void> deleteSelectedMessages() async {
+    if (selectedMessageIds.isEmpty) return;
+    final doctorId = selectedDoctor.value?['id'];
+    if (doctorId == null) return;
+    
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final userId = user.uid;
+
+    try {
+      final batch = FirebaseFirestore.instance.batch();
+      final chatRef = Get.find<AuthService>().getUserReference(userId).collection('chats').doc(doctorId).collection('messages');
+      
+      final dokterMessagesRef = FirebaseFirestore.instance
+          .collection('mobile')
+          .doc('roles')
+          .collection('dokter')
+          .doc(doctorId)
+          .collection('chats')
+          .doc(userId)
+          .collection('messages');
+
+      final patientCatatanRef = FirebaseFirestore.instance
+          .collection('mobile')
+          .doc('roles')
+          .collection('pasien')
+          .doc(userId)
+          .collection('chats')
+          .doc(doctorId)
+          .collection('catatan');
+
+      final dokterCatatanRef = FirebaseFirestore.instance
+          .collection('mobile')
+          .doc('roles')
+          .collection('dokter')
+          .doc(doctorId)
+          .collection('chats')
+          .doc(userId)
+          .collection('catatan');
+      
+      for (final id in selectedMessageIds) {
+        final msg = messages.firstWhereOrNull((m) => m.id == id);
+        batch.delete(chatRef.doc(id));
+        batch.delete(dokterMessagesRef.doc(id));
+        batch.delete(patientCatatanRef.doc(id));
+        batch.delete(dokterCatatanRef.doc(id));
+        
+        if (msg != null) {
+          // Cari juga di koleksi dokter berdasarkan teks (untuk pesan lama yang ID-nya mungkin berbeda)
+          try {
+            final querySnapshot = await dokterMessagesRef
+                .where('text', isEqualTo: msg.text)
+                .where('senderId', isEqualTo: userId)
+                .get();
+            for (var doc in querySnapshot.docs) {
+              batch.delete(doc.reference);
+              // Hapus juga catatan yang terkait dengan document ID lama tersebut
+              batch.delete(dokterCatatanRef.doc(doc.id));
+              batch.delete(patientCatatanRef.doc(doc.id));
+            }
+          } catch (e) {
+            print('Error querying old messages: $e');
+          }
+        }
+      }
+      
+      await batch.commit();
+      clearSelection();
+    } catch (e) {
+      print('Error deleting messages: $e');
+    }
+  }
 
   // Live Chat Data
   final selectedDoctor = Rxn<Map<String, dynamic>>();
@@ -43,6 +161,8 @@ class RoomChatController extends GetxController {
   StreamSubscription<DocumentSnapshot>? _typingSubscription;
   Timer? _typingTimer;
   Timer? _scheduleTimer;
+  Timer? _countdownTimer;
+  final RxInt countdownSeconds = 0.obs;
 
   // Data filter
   final fromDate = Rxn<DateTime>();
@@ -57,13 +177,18 @@ class RoomChatController extends GetxController {
   bool _isTemporary = false;
   bool get isHistory => !_isTemporary;
 
+  // Controller Text dan Speech-to-Text
+  final TextEditingController textController = TextEditingController();
+  final stt.SpeechToText speechToText = stt.SpeechToText();
+  final RxBool isListening = false.obs;
+
   @override
   void onInit() {
     super.onInit();
+    _initSpeech();
     final args = Get.arguments;
     if (args != null && args is Map<String, dynamic>) {
       selectedDoctor.value = args;
-      _listenToNotes();
       _listenToFirebaseChat();
       _listenToPartnerTyping();
       _listenToPartnerPresence();
@@ -74,6 +199,58 @@ class RoomChatController extends GetxController {
           _showTemporaryChatPopup();
         });
       }
+    }
+  }
+
+  Future<void> _initSpeech() async {
+    try {
+      bool available = await speechToText.initialize(
+        onStatus: (status) {
+          if (status == 'done' || status == 'notListening') {
+            isListening.value = false;
+          }
+        },
+        onError: (errorNotification) {
+          isListening.value = false;
+          print('Speech recognition error: $errorNotification');
+        },
+      );
+      if (!available) {
+        print("Perekam suara tidak tersedia di perangkat ini.");
+      }
+    } catch (e) {
+      print("Error inisialisasi speech to text: $e");
+    }
+  }
+
+  void listenToSpeech() async {
+    if (!isListening.value) {
+      bool available = await speechToText.initialize();
+      if (available) {
+        isListening.value = true;
+        // Simpan isi text saat ini agar tidak tertimpa
+        final currentText = textController.text;
+        final prefix = currentText.isNotEmpty && !currentText.endsWith(' ') ? '$currentText ' : currentText;
+        
+        speechToText.listen(
+          onResult: (result) {
+            textController.text = prefix + result.recognizedWords;
+            // Pindahkan kursor ke akhir
+            textController.selection = TextSelection.fromPosition(TextPosition(offset: textController.text.length));
+          },
+          localeId: 'id_ID', // Memaksa bahasa Indonesia
+        );
+      } else {
+        isListening.value = false;
+        CustomPopup.showError('Error', 'Izin mikrofon ditolak atau tidak tersedia.');
+      }
+    }
+  }
+
+  void stopListening() {
+    if (isListening.value) {
+      speechToText.stop();
+      isListening.value = false;
     }
   }
 
@@ -172,7 +349,6 @@ class RoomChatController extends GetxController {
     }
   }
 
-  Timer? _countdownTimer;
   Timer? _reminderTimer;
   final RxInt remainingSeconds = 300.obs;
 
@@ -260,16 +436,17 @@ class RoomChatController extends GetxController {
       }
     });
   }
-
+  @override
   void onClose() {
     _chatSubscription?.cancel();
     _notesSubscription?.cancel();
     _presenceSubscription?.cancel();
     _typingSubscription?.cancel();
     _typingTimer?.cancel();
+    _scheduleTimer?.cancel();
     _countdownTimer?.cancel();
-    _reminderTimer?.cancel();
     _updateTypingStatus(false);
+    textController.dispose();
     super.onClose();
   }
 
@@ -322,17 +499,223 @@ class RoomChatController extends GetxController {
       if (snapshot.exists && snapshot.data() != null) {
         final data = snapshot.data() as Map<String, dynamic>;
         partnerIsTyping.value = data['isTyping'] ?? false;
+
+        if (data['deleteAt'] != null) {
+          final deleteAt = (data['deleteAt'] as Timestamp).toDate();
+          _startLocalCountdown(deleteAt);
+        } else {
+          _stopLocalCountdown();
+        }
       }
     });
+  }
+
+  void _startLocalCountdown(DateTime deleteAt) {
+    _countdownTimer?.cancel();
+    _updateCountdown(deleteAt);
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      _updateCountdown(deleteAt);
+    });
+  }
+
+  void _updateCountdown(DateTime deleteAt) {
+    final now = DateTime.now();
+    if (now.isAfter(deleteAt) || now.isAtSameMomentAs(deleteAt)) {
+      _stopLocalCountdown();
+      _deleteAllMessages();
+    } else {
+      countdownSeconds.value = deleteAt.difference(now).inSeconds;
+    }
+  }
+
+  void _stopLocalCountdown() {
+    _countdownTimer?.cancel();
+    countdownSeconds.value = 0;
   }
 
   void sendMessage(String text) async {
     if (text.trim().isEmpty) return;
 
     _cancelAllTimers();
+    if (countdownSeconds.value > 0) {
+      await _cancelGlobalAutoDeleteTimer();
+    }
 
     if (selectedDoctor.value != null) {
-      _sendToFirebase(text);
+      await _sendToFirebase(text);
+      cancelReply();
+      _checkTerimaKasih(text);
+    }
+  }
+
+  void _checkTerimaKasih(String text) {
+    final lowerText = text.toLowerCase();
+    if (lowerText.contains('terima kasih') || lowerText.contains('makasih') || lowerText.contains('terimakasih')) {
+      _showAutoDeletePopup();
+      Future.delayed(const Duration(seconds: 1), () {
+        _sendSystemReply('Sama-sama. Percakapan ini akan dihapus secara otomatis dalam 2 menit.');
+      });
+      _startGlobalAutoDeleteTimer();
+    }
+  }
+
+  Future<void> _startGlobalAutoDeleteTimer() async {
+    final user = FirebaseAuth.instance.currentUser;
+    final userId = user?.uid ?? 'anonymous';
+    final doctorId = selectedDoctor.value?['id'] ?? '';
+    if (doctorId.isEmpty) return;
+    
+    final deleteAtTime = DateTime.now().add(const Duration(minutes: 2));
+    
+    try {
+      final batch = FirebaseFirestore.instance.batch();
+      final userChatRef = Get.find<AuthService>().getUserReference(userId).collection('chats').doc(doctorId);
+      final doctorChatRef = FirebaseFirestore.instance.collection('mobile').doc('roles').collection('dokter').doc(doctorId).collection('chats').doc(userId);
+      
+      batch.set(userChatRef, {'deleteAt': Timestamp.fromDate(deleteAtTime)}, SetOptions(merge: true));
+      batch.set(doctorChatRef, {'deleteAt': Timestamp.fromDate(deleteAtTime)}, SetOptions(merge: true));
+      await batch.commit();
+    } catch (e) {
+      print('Error setting delete timer: $e');
+    }
+  }
+
+  Future<void> _cancelGlobalAutoDeleteTimer() async {
+    final user = FirebaseAuth.instance.currentUser;
+    final userId = user?.uid ?? 'anonymous';
+    final doctorId = selectedDoctor.value?['id'] ?? '';
+    if (doctorId.isEmpty) return;
+    
+    try {
+      final batch = FirebaseFirestore.instance.batch();
+      final userChatRef = Get.find<AuthService>().getUserReference(userId).collection('chats').doc(doctorId);
+      final doctorChatRef = FirebaseFirestore.instance.collection('mobile').doc('roles').collection('dokter').doc(doctorId).collection('chats').doc(userId);
+      
+      batch.set(userChatRef, {'deleteAt': FieldValue.delete()}, SetOptions(merge: true));
+      batch.set(doctorChatRef, {'deleteAt': FieldValue.delete()}, SetOptions(merge: true));
+      await batch.commit();
+      
+      _stopLocalCountdown();
+    } catch (e) {
+      print('Error canceling delete timer: $e');
+    }
+  }
+
+  void _showAutoDeletePopup() {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 10))],
+          ),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned(
+                right: -20,
+                bottom: -20,
+                child: Icon(Icons.timer_outlined, size: 100, color: Colors.orange.withOpacity(0.1)),
+              ),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(color: Colors.orange.shade50, shape: BoxShape.circle),
+                    child: Icon(Icons.auto_delete, color: Colors.orange.shade700, size: 32),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('Peringatan Sistem', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 12),
+                  const Text('Sistem mendeteksi ucapan terima kasih.\nChat hapus otomatis selama 2 menit.', textAlign: TextAlign.center, style: TextStyle(fontSize: 14)),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () => Get.back(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange.shade700,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      minimumSize: const Size(double.infinity, 45),
+                    ),
+                    child: const Text('Mengerti'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _sendSystemReply(String text) async {
+    final user = FirebaseAuth.instance.currentUser;
+    final userId = user?.uid ?? 'anonymous';
+    final doctorId = selectedDoctor.value?['id'] ?? '';
+    if (doctorId.isEmpty) return;
+
+    final messageData = {
+      'text': text,
+      'senderId': 'system',
+      'senderName': 'Sistem',
+      'senderRole': 'system',
+      'timestamp': FieldValue.serverTimestamp(),
+    };
+
+    try {
+      final batch = FirebaseFirestore.instance.batch();
+      final userChatRef = Get.find<AuthService>().getUserReference(userId).collection('chats').doc(doctorId);
+      final doctorChatRef = FirebaseFirestore.instance.collection('mobile').doc('roles').collection('dokter').doc(doctorId).collection('chats').doc(userId);
+
+      batch.set(userChatRef, {'lastMessage': text, 'lastMessageTime': FieldValue.serverTimestamp()}, SetOptions(merge: true));
+      batch.set(doctorChatRef, {'lastMessage': text, 'lastMessageTime': FieldValue.serverTimestamp()}, SetOptions(merge: true));
+
+      final messageId = userChatRef.collection('messages').doc().id;
+      batch.set(userChatRef.collection('messages').doc(messageId), messageData);
+      batch.set(doctorChatRef.collection('messages').doc(messageId), messageData);
+      
+      await batch.commit();
+    } catch (e) {
+      print('Error sending system reply: $e');
+    }
+  }
+
+  Future<void> _deleteAllMessages() async {
+    final user = FirebaseAuth.instance.currentUser;
+    final userId = user?.uid ?? 'anonymous';
+    final doctorId = selectedDoctor.value?['id'] ?? '';
+    if (doctorId.isEmpty) return;
+
+    try {
+      final batch = FirebaseFirestore.instance.batch();
+      
+      final chatRef = Get.find<AuthService>().getUserReference(userId).collection('chats').doc(doctorId).collection('messages');
+      final dokterMessagesRef = FirebaseFirestore.instance.collection('mobile').doc('roles').collection('dokter').doc(doctorId).collection('chats').doc(userId).collection('messages');
+      
+      final patientCatatanRef = FirebaseFirestore.instance.collection('mobile').doc('roles').collection('pasien').doc(userId).collection('chats').doc(doctorId).collection('catatan');
+      final dokterCatatanRef = FirebaseFirestore.instance.collection('mobile').doc('roles').collection('dokter').doc(doctorId).collection('chats').doc(userId).collection('catatan');
+
+      final querySnapshot = await chatRef.get();
+      for (var doc in querySnapshot.docs) {
+        batch.delete(doc.reference);
+        batch.delete(dokterMessagesRef.doc(doc.id));
+        batch.delete(patientCatatanRef.doc(doc.id));
+        batch.delete(dokterCatatanRef.doc(doc.id));
+      }
+      
+      // Hapus dokumen chat utama agar hilang dari daftar chat
+      batch.delete(chatRef.parent!);
+      batch.delete(dokterMessagesRef.parent!);
+      
+      await batch.commit();
+    } catch (e) {
+      print('Error auto-deleting messages: $e');
     }
   }
 
@@ -351,6 +734,11 @@ class RoomChatController extends GetxController {
       'senderRole': 'pasien',
       'timestamp': FieldValue.serverTimestamp(),
     };
+    
+    if (replyingToMessage.value != null) {
+      messageData['replyToText'] = replyingToMessage.value!.text;
+      messageData['replyToSender'] = replyingToMessage.value!.senderName ?? 'Sistem';
+    }
 
     try {
       final batch = FirebaseFirestore.instance.batch();
@@ -510,6 +898,29 @@ class RoomChatController extends GetxController {
                     child: Text(
                       'Pilih periode riwayat konsumsi natrium yang ingin dibagikan ke dokter.',
                       style: TextStyle(color: Colors.grey, fontSize: 14),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.blue.shade200),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.info_outline, size: 16, color: Colors.blue.shade700),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Catatan: Balasan dokter terkait laporan ini akan otomatis masuk ke halaman Catatan Dokter Anda.',
+                            style: TextStyle(color: Colors.blue.shade700, fontSize: 12),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -831,6 +1242,8 @@ class RoomChatController extends GetxController {
             senderName: data['senderName'],
             senderRole: senderRole,
             note: note,
+            replyToText: data['replyToText'],
+            replyToSender: data['replyToSender'],
           ),
         );
       }
@@ -877,6 +1290,30 @@ class RoomChatController extends GetxController {
           .collection('chats')
           .doc(userId)
           .collection('messages')
+          .doc(msgId)
+          .delete();
+
+      // Hapus catatan pasien
+      await FirebaseFirestore.instance
+          .collection('mobile')
+          .doc('roles')
+          .collection('pasien')
+          .doc(userId)
+          .collection('chats')
+          .doc(doctorId)
+          .collection('catatan')
+          .doc(msgId)
+          .delete();
+          
+      // Hapus catatan dokter
+      await FirebaseFirestore.instance
+          .collection('mobile')
+          .doc('roles')
+          .collection('dokter')
+          .doc(doctorId)
+          .collection('chats')
+          .doc(userId)
+          .collection('catatan')
           .doc(msgId)
           .delete();
       

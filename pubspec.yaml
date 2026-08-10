@@ -62,6 +62,8 @@ dependencies:
   syncfusion_flutter_pdf: ^33.2.13
   html: ^0.15.6
   groq_sdk: ^1.0.2
+  speech_to_text: ^7.4.0
+  swipe_to: ^1.0.6
 
 dev_dependencies:
   flutter_test:

@@ -224,6 +224,21 @@ class RiwayatAnggotaController extends GetxController {
   }
 
 
+  Map<String, double> getRadialData() {
+    double total = 0;
+    for (var log in logs) {
+      if (log.type == 'makanan') {
+        total += log.amount;
+      }
+    }
+    // Karena sistem tidak di-reset per hari, maka semua kategori menampilkan akumulasi total
+    return {
+      'harian': total,
+      'bulanan': total,
+      'tahunan': total,
+    };
+  }
+
   List<ChartDataPoint> getChartData() {
     final now = DateTime.now();
     List<ChartDataPoint> data = [];
@@ -244,9 +259,8 @@ class RiwayatAnggotaController extends GetxController {
     }
 
     if (currentUnit == 'Saat Ini') {
-      DateTime targetDate = now;
-      var matched = foodLogs.where((log) => log.timestamp.year == targetDate.year && log.timestamp.month == targetDate.month && log.timestamp.day == targetDate.day);
-      addData("Hari Ini", matched);
+      var matched = foodLogs; // Tidak di-reset per hari, gabungkan semuanya
+      addData("Semua Waktu", matched);
     } else if (currentUnit == 'Atur Tanggal' && customDateRange.value != null) {
       DateTime start = customDateRange.value!.start;
       DateTime end = customDateRange.value!.end;
