@@ -303,102 +303,146 @@ class RegisterView extends GetView<RegisterController> {
         ),
         const SizedBox(height: 8),
         const Text(
-          'Pilih gejala kesehatan Anda saat ini (bisa lebih dari satu) untuk rekomendasi asupan natrium.',
+          'Pilih gejala yang dialami saat ini (bisa lebih dari satu) untuk rekomendasi asupan natrium.',
           style: TextStyle(fontSize: 14, color: Colors.grey, height: 1.5),
         ),
         const SizedBox(height: 16),
         Obx(() {
           bool isTidakTerindikasi = controller.selectedConditions.contains('Tidak terindikasi penyakit di atas');
+          bool isTerindikasi = !isTidakTerindikasi;
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Label Utama
-              const Text(
-                'Terindikasi penyakit berkaitan Natrium:',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 12),
-              
-              // List Penyakit Spesifik
-              ...controller.conditions.map((condition) {
-                bool isSelected = controller.selectedConditions.contains(condition);
-                
-                return GestureDetector(
-                  onTap: () {
-                    if (isSelected) {
-                      controller.selectedConditions.remove(condition);
-                      // Jika semua penyakit dihapus, otomatis pilih 'Tidak terindikasi'
-                      if (controller.selectedConditions.isEmpty) {
-                        controller.selectedConditions.add('Tidak terindikasi penyakit di atas');
-                      }
-                    } else {
-                      controller.selectedConditions.remove('Tidak terindikasi penyakit di atas');
-                      controller.selectedConditions.add(condition);
-                    }
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 16, left: 16), // Di-indent sedikit ke dalam
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? const Color(0xFF2E7D32).withOpacity(0.1)
-                          : isTidakTerindikasi 
-                              ? Colors.grey.shade50 // Disabled look
-                              : Colors.white,
-                      border: Border.all(
-                        color: isSelected
-                            ? const Color(0xFF2E7D32)
-                            : isTidakTerindikasi 
-                                ? Colors.grey.shade200 // Disabled border
-                                : Colors.grey.shade300,
-                        width: isSelected ? 2 : 1,
-                      ),
-                      borderRadius: BorderRadius.circular(16),
+              // Master Opsi Terindikasi dan List Penyakit (Cohesive Group)
+              GestureDetector(
+                onTap: () {
+                  if (isTerindikasi) {
+                    controller.selectedConditions.clear();
+                    controller.selectedConditions.add('Tidak terindikasi penyakit di atas');
+                  } else {
+                    controller.selectedConditions.clear();
+                    controller.selectedConditions.addAll(controller.conditions);
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: isTerindikasi
+                        ? const Color(0xFF2E7D32).withOpacity(0.1)
+                        : Colors.white,
+                    border: Border.all(
+                      color: isTerindikasi
+                          ? const Color(0xFF2E7D32)
+                          : Colors.grey.shade300,
+                      width: isTerindikasi ? 2 : 1,
                     ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          isSelected
-                              ? Icons.check_box_rounded
-                              : Icons.check_box_outline_blank_rounded,
-                          color: isSelected
-                              ? const Color(0xFF2E7D32)
-                              : isTidakTerindikasi 
-                                  ? Colors.grey.shade300 // Disabled icon
-                                  : Colors.grey,
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Text(
-                            condition,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                              color: isSelected
-                                  ? const Color(0xFF2E7D32)
-                                  : isTidakTerindikasi 
-                                      ? Colors.grey.shade400 // Disabled text
-                                      : Colors.black87,
-                            ),
+                    borderRadius: isTerindikasi
+                        ? const BorderRadius.vertical(top: Radius.circular(16))
+                        : BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isTerindikasi
+                            ? Icons.check_circle_rounded
+                            : Icons.radio_button_unchecked,
+                        color: isTerindikasi
+                            ? const Color(0xFF2E7D32)
+                            : Colors.grey,
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          'Terindikasi penyakit berkaitan Natrium',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: isTerindikasi
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                            color: isTerindikasi
+                                ? const Color(0xFF2E7D32)
+                                : Colors.black87,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                );
-              }),
-
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
-                child: Divider(),
+                ),
               ),
+              
+              // List Penyakit Spesifik (Menyatu dengan Master)
+              if (isTerindikasi)
+                Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    border: Border(
+                      left: BorderSide(color: Color(0xFF2E7D32), width: 2),
+                      right: BorderSide(color: Color(0xFF2E7D32), width: 2),
+                      bottom: BorderSide(color: Color(0xFF2E7D32), width: 2),
+                    ),
+                    borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+                  ),
+                  child: Column(
+                    children: controller.conditions.asMap().entries.map((entry) {
+                      int idx = entry.key;
+                      String condition = entry.value;
+                      bool isSelected = controller.selectedConditions.contains(condition);
+                      
+                      return Column(
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              if (isSelected) {
+                                controller.selectedConditions.remove(condition);
+                                if (controller.selectedConditions.isEmpty) {
+                                  controller.selectedConditions.add('Tidak terindikasi penyakit di atas');
+                                }
+                              } else {
+                                controller.selectedConditions.remove('Tidak terindikasi penyakit di atas');
+                                controller.selectedConditions.add(condition);
+                              }
+                            },
+                            child: Container(
+                              color: Colors.transparent, // Memastikan seluruh area baris bisa diklik
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    isSelected
+                                        ? Icons.check_circle_rounded
+                                        : Icons.radio_button_unchecked,
+                                    color: isSelected
+                                        ? const Color(0xFF2E7D32)
+                                        : Colors.grey,
+                                    size: 22,
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Text(
+                                      condition,
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                        color: isSelected
+                                            ? const Color(0xFF2E7D32)
+                                            : Colors.black87,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          if (idx < controller.conditions.length - 1)
+                            const Divider(height: 1, indent: 56, endIndent: 20),
+                        ],
+                      );
+                    }).toList(),
+                  ),
+                ),
+              
+              const SizedBox(height: 16),
 
               // Opsi Tidak Terindikasi
               GestureDetector(
@@ -426,8 +470,8 @@ class RegisterView extends GetView<RegisterController> {
                     children: [
                       Icon(
                         isTidakTerindikasi
-                            ? Icons.check_box_rounded
-                            : Icons.check_box_outline_blank_rounded,
+                            ? Icons.check_circle_rounded
+                            : Icons.radio_button_unchecked,
                         color: isTidakTerindikasi
                             ? const Color(0xFF2E7D32)
                             : Colors.grey,

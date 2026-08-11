@@ -61,7 +61,9 @@ class ChatView extends GetView<ChatController> {
                     child: Row(
                       children: [
                         InkWell(
-                          onTap: () => Get.back(),
+                          onTap: () {
+                            Get.back();
+                          },
                           child: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
@@ -90,7 +92,7 @@ class ChatView extends GetView<ChatController> {
                               ),
                               SizedBox(height: 2),
                               Text(
-                                'Konsultasi kesehatan bersama ahli',
+                                'Chat kesehatan bersama ahli',
                                 style: TextStyle(
                                   color: Colors.white70,
                                   fontSize: 12,
@@ -183,11 +185,13 @@ class ChatView extends GetView<ChatController> {
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                onTap: () => controller.enterChatRoom(doc),
+                onTap: () {
+                  controller.enterChatRoom(doc);
+                },
                 borderRadius: BorderRadius.circular(16),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Row(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
                     children: [
                       Stack(
                         alignment: Alignment.bottomRight,
@@ -358,7 +362,7 @@ class ChatView extends GetView<ChatController> {
                 final doc = list[index];
                 final name = doc['name'] ?? 'Dokter';
                 final int antreanCount = int.tryParse(doc['antrean']?.toString() ?? '0') ?? 0;
-                final double rating = double.tryParse(doc['rating']?.toString() ?? '0') ?? 0.0;
+                final String praktikDimana = doc['praktik_dimana']?.toString() ?? doc['tempat_praktik']?.toString() ?? '-';
                 final photoBase64 = doc['photo64'] ?? doc['photoBase64'] ?? '';
                 bool isOnline = doc['isOnline'] == true;
 
@@ -450,14 +454,18 @@ class ChatView extends GetView<ChatController> {
                                   const SizedBox(height: 6),
                                   Row(
                                     children: [
-                                      const Icon(Icons.star_rounded, color: Colors.amber, size: 14),
+                                      const Icon(Icons.location_on_rounded, color: Colors.grey, size: 14),
                                       const SizedBox(width: 4),
-                                      Text(
-                                        rating.toString(),
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.amber,
+                                      Expanded(
+                                        child: Text(
+                                          praktikDimana,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                            color: Colors.grey,
+                                          ),
                                         ),
                                       ),
                                     ],

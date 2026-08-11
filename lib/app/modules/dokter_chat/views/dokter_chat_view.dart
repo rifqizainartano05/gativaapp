@@ -62,7 +62,9 @@ class DokterChatView extends GetView<DokterChatController> {
                   Row(
                     children: [
                       InkWell(
-                        onTap: () => Get.back(),
+                        onTap: () {
+                          Get.back();
+                        },
                         child: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
@@ -79,7 +81,7 @@ class DokterChatView extends GetView<DokterChatController> {
                       const SizedBox(width: 16),
                       const Expanded(
                         child: Text(
-                          'Konsultasi Live Chat',
+                          'Chat dengan Pasien',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
@@ -171,27 +173,29 @@ class DokterChatView extends GetView<DokterChatController> {
                 final photoBase64 = doc['strImageBase64'] ?? '';
                 final bool isOnline = doc['isOnline'] == true;
 
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () => controller.openChatWithDoctor(doc),
-                      borderRadius: BorderRadius.circular(16),
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.04),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                          border: Border.all(color: Colors.grey.shade100),
-                        ),
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          controller.openChatWithDoctor(doc);
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.04),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                            border: Border.all(color: Colors.grey.shade100, width: 1),
+                          ),
                         child: Row(
                           children: [
                             // Foto
@@ -275,45 +279,45 @@ class DokterChatView extends GetView<DokterChatController> {
                               ),
                             ),
                             // Antrean Indicator
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: Colors.orange.shade50,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: Colors.orange.shade200),
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    "Antrian",
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.orange.shade800,
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.shade50,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.orange.shade200),
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      "Antrian",
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.orange.shade800,
+                                      ),
                                     ),
-                                  ),
-                                  Text(
-                                    "$queueNumber",
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w900,
-                                      color: Colors.orange.shade900,
+                                    Text(
+                                      "$queueNumber",
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w900,
+                                        color: Colors.orange.shade900,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
                           ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                );
-              },
-            );
-          }),
-        ),
+                  );
+                },
+              );
+            }),
+          ),
       ],
     );
   }

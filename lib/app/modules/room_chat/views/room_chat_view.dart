@@ -564,30 +564,6 @@ class RoomChatView extends GetView<RoomChatController> {
                       return const SizedBox.shrink();
                     }),
                 ),
-                Obx(() {
-                  if (controller.remainingSeconds.value > 0 && controller.remainingSeconds.value < 300) {
-                    final minutes = (controller.remainingSeconds.value / 60).floor();
-                    final seconds = controller.remainingSeconds.value % 60;
-                    return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.timer_outlined, color: Colors.white, size: 16),
-                          const SizedBox(width: 4),
-                          Text(
-                            '$minutes:${seconds.toString().padLeft(2, '0')}',
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                }),
               ],
             );
           }),

@@ -19,7 +19,6 @@ class HomeDokterController extends GetxController {
   final RxInt patuhCount = 0.obs;
   final RxInt kurangPatuhCount = 0.obs;
   final RxInt tidakPatuhCount = 0.obs;
-  final RxDouble averageRating = 0.0.obs;
 
   @override
   void onInit() {
@@ -91,31 +90,6 @@ class HomeDokterController extends GetxController {
             dokterName.value = data?['name'] ?? 'Tenaga Kesehatan';
             strNumber.value = data?['str'] ?? data?['strNumber'] ?? '-';
             photoBase64.value = data?['photo64'] ?? '';
-          }
-        });
-
-        // Ambil rating dari subcollection pasien milik dokter ini
-        FirebaseFirestore.instance
-            .collection('mobile')
-            .doc('roles')
-            .collection('dokter')
-            .doc(user.uid)
-            .collection('pasien')
-            .snapshots()
-            .listen((dokterPasienSnapshot) {
-          double totalRating = 0;
-          int ratingCount = 0;
-          for (var doc in dokterPasienSnapshot.docs) {
-            final data = doc.data();
-            if (data.containsKey('rating')) {
-              totalRating += (data['rating'] as num).toDouble();
-              ratingCount++;
-            }
-          }
-          if (ratingCount > 0) {
-            averageRating.value = totalRating / ratingCount;
-          } else {
-            averageRating.value = 0.0;
           }
         });
 

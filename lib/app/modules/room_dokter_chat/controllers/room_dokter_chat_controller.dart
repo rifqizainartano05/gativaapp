@@ -296,6 +296,10 @@ class RoomDokterChatController extends GetxController {
         
         // Cek deleteAt di document chat yang ada di collection dokter (karena patient nulis deleteAt disana juga, tapi kita dengerin chat pasien? 
         // Wait, patient menulis deleteAt di dua document. Kita cek saja di document pasien.
+        if (partnerIsTyping.value == true && data['deleteAt'] != null) {
+          _cancelGlobalAutoDeleteTimer();
+        }
+
         if (data['deleteAt'] != null) {
           final deleteAt = (data['deleteAt'] as Timestamp).toDate();
           _startLocalCountdown(deleteAt);
@@ -318,7 +322,13 @@ class RoomDokterChatController extends GetxController {
     final now = DateTime.now();
     if (now.isAfter(deleteAt) || now.isAtSameMomentAs(deleteAt)) {
       _stopLocalCountdown();
-      _deleteAllMessages();
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
+      _deleteAllMessages().then((_) {
+        Get.back(); // close chat room
+        Get.snackbar('Selesai', 'Waktu habis. Obrolan telah dihapus otomatis.');
+      });
     } else {
       countdownSeconds.value = deleteAt.difference(now).inSeconds;
     }
@@ -416,7 +426,7 @@ class RoomDokterChatController extends GetxController {
   void _checkTerimaKasih(String text) {
     final lowerText = text.toLowerCase();
     if (lowerText.contains('terima kasih') || lowerText.contains('makasih') || lowerText.contains('terimakasih')) {
-      _showAutoDeletePopup();
+      _showAutoDeleteCountdownPopup();
       Future.delayed(const Duration(seconds: 1), () {
         _sendSystemReply('Sama-sama. Percakapan ini akan dihapus secara otomatis dalam 2 menit.');
       });
@@ -461,12 +471,17 @@ class RoomDokterChatController extends GetxController {
       await batch.commit();
       
       _stopLocalCountdown();
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
     } catch (e) {
       print('Error canceling delete timer: $e');
     }
   }
 
-  void _showAutoDeletePopup() {
+  void _showAutoDeleteCountdownPopup() {
+    if (Get.isDialogOpen ?? false) return;
+    
     Get.dialog(
       Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -485,30 +500,40 @@ class RoomDokterChatController extends GetxController {
               Positioned(
                 right: -20,
                 bottom: -20,
-                child: Icon(Icons.timer_outlined, size: 100, color: Colors.orange.withOpacity(0.1)),
+                child: Icon(Icons.timer_outlined, size: 100, color: Colors.green.withOpacity(0.05)),
               ),
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(color: Colors.orange.shade50, shape: BoxShape.circle),
-                    child: Icon(Icons.auto_delete, color: Colors.orange.shade700, size: 32),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(color: Colors.green.shade50, shape: BoxShape.circle),
+                    child: Icon(Icons.check_circle_rounded, color: Colors.green.shade600, size: 40),
                   ),
                   const SizedBox(height: 16),
-                  const Text('Peringatan Sistem', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('Sesi Berakhir', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
                   const SizedBox(height: 12),
-                  const Text('Sistem mendeteksi ucapan terima kasih.\nChat hapus otomatis selama 2 menit.', textAlign: TextAlign.center, style: TextStyle(fontSize: 14)),
+                  const Text('Menunggu penilaian dari pasien.\nObrolan akan dihapus secara otomatis.', textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: Colors.grey)),
+                  const SizedBox(height: 12),
+                  Obx(() => Text(
+                    'Sisa waktu: ${countdownSeconds.value} detik',
+                    style: TextStyle(color: Colors.red.shade400, fontWeight: FontWeight.bold, fontSize: 14),
+                  )),
                   const SizedBox(height: 24),
                   ElevatedButton(
-                    onPressed: () => Get.back(),
+                    onPressed: () async {
+                      Get.back(); // close dialog
+                      await _deleteAllMessages();
+                      Get.back(); // close chat room
+                      Get.snackbar('Selesai', 'Obrolan telah dihapus.');
+                    },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange.shade700,
+                      backgroundColor: const Color(0xFF2E7D32),
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       minimumSize: const Size(double.infinity, 45),
                     ),
-                    child: const Text('Mengerti'),
+                    child: const Text('Hapus Sekarang', style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
@@ -516,6 +541,7 @@ class RoomDokterChatController extends GetxController {
           ),
         ),
       ),
+      barrierDismissible: false,
     );
   }
 

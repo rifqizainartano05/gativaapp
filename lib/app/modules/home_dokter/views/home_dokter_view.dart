@@ -152,7 +152,6 @@ class HomeDokterView extends GetView<HomeDokterController> {
                                 DigitalDoctorCard(
                                   fullName: fullName,
                                   strNumber: controller.strNumber.value,
-                                  rating: controller.averageRating.value,
                                   isLoading: controller.isLoading.value,
                                 ),
                                 const SizedBox(height: 16),
@@ -223,7 +222,7 @@ class HomeDokterView extends GetView<HomeDokterController> {
                       behavior: HitTestBehavior.opaque,
                       child: const Center(
                         child: Text(
-                          'Konsultasi',
+                          'Chat',
                           style: TextStyle(
                             color: Color(0xFF1B5E20),
                             fontSize: 16,
@@ -349,16 +348,14 @@ class SmartHomeShapeClipper extends CustomClipper<Path> {
 class DigitalDoctorCard extends StatefulWidget {
   final String fullName;
   final String strNumber;
-  final double rating;
   final bool isLoading;
 
   const DigitalDoctorCard({
-    super.key,
+    Key? key,
     required this.fullName,
     required this.strNumber,
-    required this.rating,
     required this.isLoading,
-  });
+  }) : super(key: key);
 
   @override
   State<DigitalDoctorCard> createState() => _DigitalDoctorCardState();
@@ -511,37 +508,6 @@ class _DigitalDoctorCardState extends State<DigitalDoctorCard> {
                     letterSpacing: 2,
                   ),
                 ),
-                const Spacer(),
-                if (!widget.isLoading)
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.amber.withValues(alpha: 0.2),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.star_rounded, color: Colors.amber, size: 28),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        widget.rating.toStringAsFixed(1),
-                        style: const TextStyle(
-                          color: Colors.black87, // Dark text
-                          fontWeight: FontWeight.bold,
-                          fontSize: 28,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      const Text(
-                        '/ 5.0',
-                        style: TextStyle(
-                          color: Colors.black54, // Dark text
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  ),
               ],
             ),
           ),

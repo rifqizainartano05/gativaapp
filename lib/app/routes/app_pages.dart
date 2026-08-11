@@ -52,10 +52,10 @@ import '../modules/informasi_kesehatan_detail/bindings/informasi_kesehatan_detai
 import '../modules/informasi_kesehatan_detail/views/informasi_kesehatan_detail_view.dart';
 import '../modules/katalog/bindings/katalog_binding.dart';
 import '../modules/katalog/views/katalog_view.dart';
-import '../modules/lensa_natrium/bindings/lensa_natrium_binding.dart';
-import '../modules/lensa_natrium/views/lensa_natrium_view.dart';
-import '../modules/lensa_natrium_detail/bindings/lensa_natrium_detail_binding.dart';
-import '../modules/lensa_natrium_detail/views/lensa_natrium_detail_view.dart';
+import '../modules/lensa_pintar/bindings/lensa_pintar_binding.dart';
+import '../modules/lensa_pintar/views/lensa_pintar_view.dart';
+import '../modules/lensa_pintar_detail/bindings/lensa_pintar_detail_binding.dart';
+import '../modules/lensa_pintar_detail/views/lensa_pintar_detail_view.dart';
 import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/views/login_view.dart';
 import '../modules/main_navigation/bindings/main_navigation_binding.dart';
@@ -166,14 +166,14 @@ class AppPages {
       binding: ForgotPasswordBinding(),
     ),
     GetPage(
-      name: _Paths.LENSA_NATRIUM,
-      page: () => const LensaNatriumView(),
-      binding: LensaNatriumBinding(),
+      name: _Paths.LENSA_PINTAR,
+      page: () => const LensaPintarView(),
+      binding: LensaPintarBinding(),
     ),
     GetPage(
-      name: _Paths.LENSA_NATRIUM_DETAIL,
-      page: () => const LensaNatriumDetailView(),
-      binding: LensaNatriumDetailBinding(),
+      name: _Paths.LENSA_PINTAR_DETAIL,
+      page: () => const LensaPintarDetailView(),
+      binding: LensaPintarDetailBinding(),
       transition: Transition.noTransition,
     ),
     GetPage(

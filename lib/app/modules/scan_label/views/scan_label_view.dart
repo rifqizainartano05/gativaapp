@@ -120,7 +120,11 @@ class ScanLabelView extends GetView<ScanLabelController> {
                       return Transform.scale(
                         scale: scale,
                         child: Center(
-                          child: CameraPreview(controller.cameraController!),
+                          child: Stack(
+                            children: [
+                              CameraPreview(controller.cameraController!),
+                            ],
+                          ),
                         ),
                       );
                     } else {
@@ -155,9 +159,9 @@ class ScanLabelView extends GetView<ScanLabelController> {
                   alignment: Alignment.bottomCenter,
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.fromLTRB(24, 30, 24, 90),
                     decoration: const BoxDecoration(
                       color: Colors.white,
+                      borderRadius: BorderRadius.zero, // Kotak putih tidak melengkung
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black12,
@@ -166,9 +170,13 @@ class ScanLabelView extends GetView<ScanLabelController> {
                         ),
                       ],
                     ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
+                    child: SafeArea(
+                      top: false,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
                         const Icon(
                           Icons.qr_code_scanner_rounded,
                           size: 40,
@@ -212,13 +220,18 @@ class ScanLabelView extends GetView<ScanLabelController> {
                                     const Icon(Icons.check_circle_rounded, color: Colors.white, size: 30),
                                     const SizedBox(width: 12),
                                     Expanded(
-                                      child: Text(
-                                        'Berhasil mendeteksi: ${controller.scannedSodiumPerServing.value.toInt()} mg',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                      child: Builder(
+                                        builder: (context) {
+                                          return const Text(
+                                            'Berhasil di scan!',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.bold,
+                                              height: 1.4,
+                                            ),
+                                          );
+                                        }
                                       ),
                                     ),
                                   ],
@@ -231,21 +244,20 @@ class ScanLabelView extends GetView<ScanLabelController> {
                               child: Container(
                                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                                 decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.8),
+                                  color: Colors.black87,
                                   borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(color: AppColors.primary, width: 2),
                                 ),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     const SpinKitPulse(
-                                      color: AppColors.primary,
+                                      color: Colors.white,
                                       size: 30.0,
                                     ),
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: const Text(
-                                        'Sedang mendeteksi',
+                                        'Sedang mendeteksi label',
                                         style: TextStyle(
                                           color: Colors.white,
                                           fontWeight: FontWeight.w600,
@@ -264,15 +276,14 @@ class ScanLabelView extends GetView<ScanLabelController> {
                     ),
                   ),
                 ),
-
-
+              ),
+            ),
               ],
             ),
-          ), // closes AnnotatedRegion
-        ), // closes Scaffold
-      ); // closes PopScope
-    }), // closes Obx
-    ); // closes outer AnnotatedRegion
+          ),
+        ),
+      );
+    }),
+    );
   }
 }
-

@@ -8,52 +8,80 @@ import '../../main_navigation/controllers/main_navigation_controller.dart';
 class HasilPindaiLabelController extends GetxController {
   final foodName = "".obs;
   late final TextEditingController foodNameController;
-  final servingSize = "".obs;
-  final sodiumPerServing = 0.0.obs;
-  final servingsPerPack = 1.0.obs;
-  final servingsMultiplier = 1.0.obs;
-  final TextEditingController portionController = TextEditingController(text: '1');
+  late final TextEditingController servingSizeController;
+  late final TextEditingController servingsPerPackController;
+  late final TextEditingController sodiumPerServingController;
+  late final TextEditingController portionController;
+  
   final isFromMission = false.obs;
   final isMissionCompleted = false.obs;
-  final isEditingName = false.obs;
-  final FocusNode foodNameFocusNode = FocusNode();
+  final servingsMultiplier = 1.0.obs;
+  
+  // Total sodium calculation reactivity
+  final totalCalculatedSodiumObs = 0.0.obs;
 
   @override
   void onInit() {
     super.onInit();
     if (Get.arguments != null) {
       final args = Get.arguments as Map<String, dynamic>;
+      
       foodName.value = args['foodName'] ?? "Produk Pindaian";
       foodNameController = TextEditingController(text: foodName.value);
-      servingSize.value = args['servingSize'] ?? "1 Sajian";
-      sodiumPerServing.value = args['sodiumPerServing'] ?? 0.0;
-      servingsPerPack.value = args['servingsPerPack'] ?? 1.0;
+      
+      String servingSizeArg = args['servingSize']?.toString() ?? "";
+      servingSizeController = TextEditingController(text: servingSizeArg.trim());
+      
+      double sodium = args['sodiumPerServing'] ?? 0.0;
+      sodiumPerServingController = TextEditingController(text: sodium.toInt().toString());
+      
+      // Default to 1 if it's 0 to prevent 0 division/multiplication issues if desired, 
+      // but let's use the actual parsed value or 1 as fallback.
+      double packArg = args['servingsPerPack'] ?? 0.0;
+      String packArgStr = packArg > 0 ? (packArg == packArg.toInt() ? packArg.toInt().toString() : packArg.toString()) : "1";
+      servingsPerPackController = TextEditingController(text: packArgStr);
+      
       isFromMission.value = args['isFromMission'] == true;
+      
+      // Kosongkan agar pengguna mengisi manual
+      servingsMultiplier.value = 0.0;
+      portionController = TextEditingController(text: "");
+      
+      _updateTotalSodium();
+
+      portionController.addListener(_updateTotalSodium);
+      servingsPerPackController.addListener(_updateTotalSodium);
+      sodiumPerServingController.addListener(_updateTotalSodium);
     }
-    
-    // Sinkronkan text controller dengan slider (servingsMultiplier) saat berubah
-    portionController.addListener(() {
-      final text = portionController.text;
-      if (text.isNotEmpty) {
-        final val = double.tryParse(text.replaceAll(',', '.'));
-        if (val != null && val >= 0) {
-          servingsMultiplier.value = val;
-        }
-      }
-    });
   }
 
+  void _updateTotalSodium() {
+    final portionText = portionController.text.replaceAll(',', '.');
+    final portionValue = double.tryParse(portionText) ?? 0.0;
+    servingsMultiplier.value = portionValue;
+
+    // Remove any non-numeric characters (like ' sajian') before parsing
+    final sppText = servingsPerPackController.text.replaceAll(',', '.').replaceAll(RegExp(r'[^0-9.]'), '');
+    double spp = double.tryParse(sppText) ?? 1.0;
+    if (spp <= 0) spp = 1.0;
+
+    final sodiumText = sodiumPerServingController.text.replaceAll(',', '.').replaceAll(RegExp(r'[^0-9.]'), '');
+    double sodium = double.tryParse(sodiumText) ?? 0.0;
+
+    totalCalculatedSodiumObs.value = sodium * spp * portionValue;
+  }
+    
   @override
   void onClose() {
-    portionController.dispose();
     foodNameController.dispose();
-    foodNameFocusNode.dispose();
+    servingSizeController.dispose();
+    servingsPerPackController.dispose();
+    sodiumPerServingController.dispose();
+    portionController.dispose();
     super.onClose();
   }
 
-  double get totalCalculatedSodium {
-    return sodiumPerServing.value * servingsMultiplier.value;
-  }
+  double get totalCalculatedSodium => totalCalculatedSodiumObs.value;
 
   void saveAndLog() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -71,6 +99,9 @@ class HasilPindaiLabelController extends GetxController {
         'name': foodNameController.text, // Simpan nama makanan yang mungkin sudah diedit
         'type': 'Kemasan',
         'natrium': totalCalculatedSodium.toInt(),
+        'servingSize': servingSizeController.text,
+        'servingsPerPack': double.tryParse(servingsPerPackController.text.replaceAll(',', '.')) ?? 1.0,
+        'sodiumPerServing': double.tryParse(sodiumPerServingController.text.replaceAll(',', '.')) ?? 0.0,
         'created_at': Timestamp.now(),
       });
       
@@ -80,12 +111,19 @@ class HasilPindaiLabelController extends GetxController {
       
       batch.commit();
       
-      Get.offNamed(Routes.LENSA_NATRIUM_DETAIL, arguments: {
-        'name': foodNameController.text,
-        'natrium': totalCalculatedSodium,
-        'type': 'Kemasan',
-        'showSuccessPopup': true,
-      });
+      Get.offNamedUntil(
+        Routes.LENSA_PINTAR_DETAIL, 
+        (route) => route.settings.name == Routes.LENSA_PINTAR || route.settings.name == Routes.MAIN_NAVIGATION || route.isFirst,
+        arguments: {
+          'name': foodNameController.text,
+          'natrium': totalCalculatedSodium,
+          'type': 'Kemasan',
+          'showSuccessPopup': true,
+          'servingSize': servingSizeController.text,
+          'servingsPerPack': double.tryParse(servingsPerPackController.text.replaceAll(',', '.')) ?? 1.0,
+          'sodiumPerServing': double.tryParse(sodiumPerServingController.text.replaceAll(',', '.')) ?? 0.0,
+        }
+      );
     } else {
       Get.dialog(
         Dialog(

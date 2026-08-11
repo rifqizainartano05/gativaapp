@@ -335,16 +335,23 @@ class RiwayatAnggotaController extends GetxController {
             user.uid,
           );
           DocumentSnapshot userSnap = await transaction.get(userRef);
+          
           if (userSnap.exists) {
-            num currentTotalNum =
-                (userSnap.data() as Map<String, dynamic>)['natrium'] ??
-                (userSnap.data() as Map<String, dynamic>)['sodium'] ??
-                (userSnap.data() as Map<String, dynamic>)['totalNatrium'] ??
-                0;
-            int currentTotal = currentTotalNum.toInt();
-            int newTotal = currentTotal - amount;
-            if (newTotal < 0) newTotal = 0;
-            transaction.update(userRef, {'natrium': newTotal});
+            DateTime? logDate = (logData['created_at'] as Timestamp?)?.toDate() ?? (logData['timestamp'] as Timestamp?)?.toDate();
+            final now = DateTime.now();
+            bool isToday = logDate != null && logDate.year == now.year && logDate.month == now.month && logDate.day == now.day;
+            
+            if (isToday) {
+              num currentTotalNum =
+                  (userSnap.data() as Map<String, dynamic>)['natrium'] ??
+                  (userSnap.data() as Map<String, dynamic>)['sodium'] ??
+                  (userSnap.data() as Map<String, dynamic>)['totalNatrium'] ??
+                  0;
+              int currentTotal = currentTotalNum.toInt();
+              int newTotal = currentTotal - amount;
+              if (newTotal < 0) newTotal = 0;
+              transaction.update(userRef, {'natrium': newTotal});
+            }
           }
           transaction.delete(docRef);
         });

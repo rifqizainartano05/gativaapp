@@ -340,10 +340,10 @@ class HomeView extends StatelessWidget {
                               Expanded(
                                 child: _buildGridItem(
                                   icon: Icons.qr_code_scanner_rounded,
-                                  title: 'Lensa Natrium',
+                                  title: 'Lensa Pintar',
                                   subtitle: 'Pindai Makanan',
                                   isGreen: true,
-                                  onTap: () => Get.toNamed(Routes.LENSA_NATRIUM),
+                                  onTap: () => Get.toNamed(Routes.LENSA_PINTAR),
                                 ),
                               ),
                               const SizedBox(width: 16),
@@ -351,7 +351,7 @@ class HomeView extends StatelessWidget {
                                 child: _buildGridItem(
                                   icon: Icons.chat_bubble_outline_rounded,
                                   title: 'Chat Dokter',
-                                  subtitle: 'Konsultasi',
+                                  subtitle: 'Chat',
                                   isGreen: false,
                                   onTap: () => Get.toNamed(Routes.CHAT),
                                 ),

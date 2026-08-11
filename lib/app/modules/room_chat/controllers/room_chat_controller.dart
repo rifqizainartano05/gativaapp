@@ -195,9 +195,7 @@ class RoomChatController extends GetxController {
       
       if (args['isHistory'] == false) {
         _isTemporary = true;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _showTemporaryChatPopup();
-        });
+        _initChatHistory();
       }
     }
   }
@@ -254,74 +252,6 @@ class RoomChatController extends GetxController {
     }
   }
 
-    void _showTemporaryChatPopup() {
-    Get.dialog(
-      Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  Icon(Icons.info_outline_rounded, size: 80, color: Colors.blue.withOpacity(0.1)),
-                  const Icon(Icons.timer_outlined, size: 40, color: Colors.blue),
-                ],
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Informasi Chat',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Jika tidak ada respon selama 5 menit, maka obrolan otomatis dihapus.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () {
-                        Get.back();
-                        _startPopupReminderTimer();
-                      },
-                      style: OutlinedButton.styleFrom(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        side: const BorderSide(color: Colors.grey),
-                      ),
-                      child: const Text('Batal', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Get.back();
-                        _initChatHistory();
-                        _startAutoDeleteTimer();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2E7D32),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: const Text('Baik', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-      barrierDismissible: false,
-    );
-  }
-
   Future<void> _initChatHistory() async {
     final user = FirebaseAuth.instance.currentUser;
     final userId = user?.uid ?? 'anonymous';
@@ -349,64 +279,10 @@ class RoomChatController extends GetxController {
     }
   }
 
-  Timer? _reminderTimer;
-  final RxInt remainingSeconds = 300.obs;
 
-  void _startAutoDeleteTimer() {
-    _reminderTimer?.cancel();
-    remainingSeconds.value = 300;
-    _countdownTimer?.cancel();
-    _reminderTimer?.cancel();
-    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
-      if (remainingSeconds.value > 0) {
-        remainingSeconds.value--;
-      } else {
-        timer.cancel();
-        await _deleteChatHistory();
-        Get.back();
-        Get.snackbar('Otomatis Dihapus', 'Chat telah dihapus karena tidak ada respon selama 5 menit.', backgroundColor: Colors.white);
-      }
-    });
-  }
-  
-  void _startPopupReminderTimer() {
-    _countdownTimer?.cancel();
-    _reminderTimer?.cancel();
-    _reminderTimer?.cancel();
-    _reminderTimer = Timer(const Duration(minutes: 5), () {
-      if (messages.isEmpty) {
-        _showTemporaryChatPopup();
-      }
-    });
-  }
-
-  Future<void> _deleteChatHistory() async {
-    final user = FirebaseAuth.instance.currentUser;
-    final userId = user?.uid ?? 'anonymous';
-    final doctorId = selectedDoctor.value?['id'] ?? '';
-    if (doctorId.isEmpty) return;
-
-    try {
-      final batch = FirebaseFirestore.instance.batch();
-      
-      // User side
-      final userChatRef = Get.find<AuthService>().getUserReference(userId).collection('chats').doc(doctorId);
-      batch.delete(userChatRef);
-      
-      // Doctor side
-      final doctorChatRef = FirebaseFirestore.instance.collection('mobile').doc('roles').collection('dokter').doc(doctorId).collection('chats').doc(userId);
-      batch.delete(doctorChatRef);
-      
-      await batch.commit();
-    } catch (e) {
-      // ignore
-    }
-  }
 
   void _cancelAllTimers() {
     _countdownTimer?.cancel();
-    _reminderTimer?.cancel();
-    _reminderTimer?.cancel();
   }
 
 
@@ -500,6 +376,10 @@ class RoomChatController extends GetxController {
         final data = snapshot.data() as Map<String, dynamic>;
         partnerIsTyping.value = data['isTyping'] ?? false;
 
+        if (partnerIsTyping.value == true && data['deleteAt'] != null) {
+          _cancelGlobalAutoDeleteTimer();
+        }
+
         if (data['deleteAt'] != null) {
           final deleteAt = (data['deleteAt'] as Timestamp).toDate();
           _startLocalCountdown(deleteAt);
@@ -522,7 +402,13 @@ class RoomChatController extends GetxController {
     final now = DateTime.now();
     if (now.isAfter(deleteAt) || now.isAtSameMomentAs(deleteAt)) {
       _stopLocalCountdown();
-      _deleteAllMessages();
+      if (Get.isDialogOpen ?? false) {
+        Get.back(); // Close the rating popup
+      }
+      _deleteAllMessages().then((_) {
+        Get.back(); // close chat room
+        Get.snackbar('Selesai', 'Waktu habis. Obrolan telah dihapus otomatis.');
+      });
     } else {
       countdownSeconds.value = deleteAt.difference(now).inSeconds;
     }
@@ -551,7 +437,7 @@ class RoomChatController extends GetxController {
   void _checkTerimaKasih(String text) {
     final lowerText = text.toLowerCase();
     if (lowerText.contains('terima kasih') || lowerText.contains('makasih') || lowerText.contains('terimakasih')) {
-      _showAutoDeletePopup();
+      _showAutoDeleteCountdownPopup();
       Future.delayed(const Duration(seconds: 1), () {
         _sendSystemReply('Sama-sama. Percakapan ini akan dihapus secara otomatis dalam 2 menit.');
       });
@@ -596,12 +482,17 @@ class RoomChatController extends GetxController {
       await batch.commit();
       
       _stopLocalCountdown();
+      if (Get.isDialogOpen ?? false) {
+        Get.back();
+      }
     } catch (e) {
       print('Error canceling delete timer: $e');
     }
   }
 
-  void _showAutoDeletePopup() {
+  void _showAutoDeleteCountdownPopup() {
+    if (Get.isDialogOpen ?? false) return;
+
     Get.dialog(
       Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -614,43 +505,48 @@ class RoomChatController extends GetxController {
             borderRadius: BorderRadius.circular(16),
             boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 10))],
           ),
-          child: Stack(
-            clipBehavior: Clip.none,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Positioned(
-                right: -20,
-                bottom: -20,
-                child: Icon(Icons.timer_outlined, size: 100, color: Colors.orange.withOpacity(0.1)),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(color: Colors.red.shade50, shape: BoxShape.circle),
+                child: Icon(Icons.timer_outlined, color: Colors.red.shade600, size: 40),
               ),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(color: Colors.orange.shade50, shape: BoxShape.circle),
-                    child: Icon(Icons.auto_delete, color: Colors.orange.shade700, size: 32),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text('Peringatan Sistem', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 12),
-                  const Text('Sistem mendeteksi ucapan terima kasih.\nChat hapus otomatis selama 2 menit.', textAlign: TextAlign.center, style: TextStyle(fontSize: 14)),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: () => Get.back(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange.shade700,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      minimumSize: const Size(double.infinity, 45),
-                    ),
-                    child: const Text('Mengerti'),
-                  ),
-                ],
+              const SizedBox(height: 16),
+              const Text('Sesi Berakhir', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1E293B))),
+              const SizedBox(height: 12),
+              const Text(
+                'Sesi obrolan akan segera diakhiri dan dihapus dari sistem.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey, fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              Obx(() => Text(
+                'Obrolan dihapus dalam: ${countdownSeconds.value} detik',
+                style: TextStyle(color: Colors.red.shade400, fontWeight: FontWeight.bold, fontSize: 14),
+              )),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () async {
+                  Get.back(); // close dialog
+                  await _deleteAllMessages();
+                  Get.back(); // close chat room
+                  Get.snackbar('Selesai', 'Obrolan telah dihapus.');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2E7D32),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  minimumSize: const Size(double.infinity, 45),
+                ),
+                child: const Text('Hapus Sekarang', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ],
           ),
         ),
       ),
+      barrierDismissible: false,
     );
   }
 

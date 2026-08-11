@@ -8,8 +8,6 @@ class DetailDokterController extends GetxController {
   final isLoading = true.obs;
   final doctorData = <String, dynamic>{}.obs;
   final scheduleText = 'Belum ada jadwal'.obs;
-  final rating = 0.obs;
-  final hasRated = false.obs;
   String? currentDoctorId;
 
   @override
@@ -53,70 +51,11 @@ class DetailDokterController extends GetxController {
         if (data['jadwal_online'] != null && data['jadwal_online'].toString().isNotEmpty) {
           scheduleText.value = data['jadwal_online'].toString();
         }
-        
-        // Cek rating sebelumnya
-        final user = FirebaseAuth.instance.currentUser;
-        if (user != null) {
-          final ratingDoc = await FirebaseFirestore.instance
-              .collection('mobile')
-              .doc('roles')
-              .collection('dokter')
-              .doc(id)
-              .collection('pasien')
-              .doc(user.uid)
-              .get();
-              
-          if (ratingDoc.exists) {
-            final rData = ratingDoc.data();
-            if (rData != null && rData['rating'] != null) {
-              rating.value = rData['rating'];
-              hasRated.value = true;
-            }
-          }
-        }
       }
     } catch (e) {
       // fallback to args
     } finally {
       isLoading.value = false;
-    }
-  }
-
-  void updateDoctorRating(String? doctorId, int ratingValue) async {
-    final targetId = doctorId ?? currentDoctorId;
-    if (targetId == null || targetId.isEmpty) return;
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return;
-      
-      // Simpan di sub-collection dokter
-      await FirebaseFirestore.instance
-          .collection('mobile')
-          .doc('roles')
-          .collection('dokter')
-          .doc(targetId)
-          .collection('pasien')
-          .doc(user.uid)
-          .set({'rating': ratingValue}, SetOptions(merge: true));
-          
-      // Simpan juga di sub-collection pasien
-      await FirebaseFirestore.instance
-          .collection('mobile')
-          .doc('roles')
-          .collection('pasien')
-          .doc(user.uid)
-          .collection('dokter')
-          .doc(targetId)
-          .set({'rating': ratingValue}, SetOptions(merge: true));
-          
-      hasRated.value = true;
-          
-      CustomPopup.showSuccess(
-        "Terima Kasih", 
-        "Rating Anda berhasil dikirim",
-      );
-    } catch (e) {
-      CustomPopup.showError('Error', 'Gagal mengirim rating: $e');
     }
   }
 }

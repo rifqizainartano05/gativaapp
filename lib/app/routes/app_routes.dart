@@ -18,8 +18,8 @@ abstract class Routes {
   static const LOGIN = _Paths.LOGIN;
   static const REGISTER = _Paths.REGISTER;
   static const FORGOT_PASSWORD = _Paths.FORGOT_PASSWORD;
-  static const LENSA_NATRIUM = _Paths.LENSA_NATRIUM;
-  static const LENSA_NATRIUM_DETAIL = _Paths.LENSA_NATRIUM_DETAIL;
+  static const LENSA_PINTAR = _Paths.LENSA_PINTAR;
+  static const LENSA_PINTAR_DETAIL = _Paths.LENSA_PINTAR_DETAIL;
   static const DOKTER_CHAT = _Paths.DOKTER_CHAT;
 
   static const DOKTER_EDIT_PROFILE = _Paths.DOKTER_EDIT_PROFILE;
@@ -66,8 +66,8 @@ abstract class _Paths {
   static const LOGIN = '/login';
   static const REGISTER = '/register';
   static const FORGOT_PASSWORD = '/forgot-password';
-  static const LENSA_NATRIUM = '/lensa-natrium';
-  static const LENSA_NATRIUM_DETAIL = '/lensa-natrium-detail';
+  static const LENSA_PINTAR = '/lensa-pintar';
+  static const LENSA_PINTAR_DETAIL = '/lensa-pintar-detail';
   static const DOKTER_CHAT = '/dokter-chat';
 
   static const DOKTER_EDIT_PROFILE = '/dokter-edit-profile';
