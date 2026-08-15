@@ -25,13 +25,13 @@ abstract class Routes {
   static const DOKTER_EDIT_PROFILE = _Paths.DOKTER_EDIT_PROFILE;
   static const VERIFIKASI_EMAIL = _Paths.VERIFIKASI_EMAIL;
 
-  static const INFORMASI_KESEHATAN_DETAIL = _Paths.INFORMASI_KESEHATAN_DETAIL;
+
   static const NOTIFIKASI = _Paths.NOTIFIKASI;
   static const DETAIL_DOKTER = _Paths.DETAIL_DOKTER;
   static const DOKTER_PROFILE = _Paths.DOKTER_PROFILE;
   static const DOKTER_GANTI_KATA_SANDI = _Paths.DOKTER_GANTI_KATA_SANDI;
   static const KATALOG = _Paths.KATALOG;
-  static const INFORMASI_KESEHATAN = _Paths.INFORMASI_KESEHATAN;
+
   static const EDIT_PROFILE = _Paths.EDIT_PROFILE;
   static const CHAT = _Paths.CHAT;
   static const CATATAN_DOKTER = _Paths.CATATAN_DOKTER;
@@ -44,7 +44,6 @@ abstract class Routes {
   static const ROOM_DOKTER_CHAT = _Paths.ROOM_DOKTER_CHAT;
 
   static const GANTI_KATA_SANDI = _Paths.GANTI_KATA_SANDI;
-  static const HOME_ADMINISTRATOR = _Paths.HOME_ADMINISTRATOR;
   static const EDUKASI = _Paths.EDUKASI;
   static const EDUKASI_DOKTER = _Paths.EDUKASI_DOKTER;
 }
@@ -73,13 +72,13 @@ abstract class _Paths {
   static const DOKTER_EDIT_PROFILE = '/dokter-edit-profile';
   static const VERIFIKASI_EMAIL = '/verifikasi-email';
 
-  static const INFORMASI_KESEHATAN_DETAIL = '/informasi-kesehatan-detail';
+
   static const NOTIFIKASI = '/notifikasi';
   static const DETAIL_DOKTER = '/detail-dokter';
   static const DOKTER_PROFILE = '/dokter-profile';
   static const DOKTER_GANTI_KATA_SANDI = '/dokter-ganti-kata-sandi';
   static const KATALOG = '/katalog';
-  static const INFORMASI_KESEHATAN = '/informasi-kesehatan';
+
   static const EDIT_PROFILE = '/edit-profile';
   static const CHAT = '/chat';
   static const CATATAN_DOKTER = '/catatan-dokter';
@@ -92,7 +91,6 @@ abstract class _Paths {
   static const ROOM_DOKTER_CHAT = '/room-dokter-chat';
 
   static const GANTI_KATA_SANDI = '/ganti-kata-sandi';
-  static const HOME_ADMINISTRATOR = '/home-administrator';
   static const EDUKASI = '/edukasi';
   static const EDUKASI_DOKTER = '/edukasi-dokter';
 }

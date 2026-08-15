@@ -30,23 +30,7 @@ class LoginController extends GetxController {
       return;
     }
 
-    // INTERCEPT ADMIN LOGIN
-    if (email == 'gativa@administrator') {
-      if (password == 'Gativa!Admin26*') {
-        emailController.clear();
-        passwordController.clear();
-        Get.offAllNamed(Routes.HOME_ADMINISTRATOR);
-        return;
-      } else {
-        Get.snackbar(
-          'Akses Ditolak',
-          'Kata sandi administrator salah!',
-          backgroundColor: Colors.red.withOpacity(0.1),
-          colorText: Colors.red,
-        );
-        return;
-      }
-    }
+
 
     isLoading.value = true;
 

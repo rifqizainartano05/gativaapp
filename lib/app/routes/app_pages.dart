@@ -42,14 +42,9 @@ import '../modules/hasil_pindai_label/bindings/hasil_pindai_label_binding.dart';
 import '../modules/hasil_pindai_label/views/hasil_pindai_label_view.dart';
 import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
-import '../modules/home_administrator/bindings/home_administrator_binding.dart';
-import '../modules/home_administrator/views/home_administrator_view.dart';
 import '../modules/home_dokter/bindings/home_dokter_binding.dart';
 import '../modules/home_dokter/views/home_dokter_view.dart';
-import '../modules/informasi_kesehatan/bindings/informasi_kesehatan_binding.dart';
-import '../modules/informasi_kesehatan/views/informasi_kesehatan_view.dart';
-import '../modules/informasi_kesehatan_detail/bindings/informasi_kesehatan_detail_binding.dart';
-import '../modules/informasi_kesehatan_detail/views/informasi_kesehatan_detail_view.dart';
+
 import '../modules/katalog/bindings/katalog_binding.dart';
 import '../modules/katalog/views/katalog_view.dart';
 import '../modules/lensa_pintar/bindings/lensa_pintar_binding.dart';
@@ -191,16 +186,7 @@ class AppPages {
       page: () => const VerifikasiEmailView(),
       binding: VerifikasiEmailBinding(),
     ),
-    GetPage(
-      name: _Paths.INFORMASI_KESEHATAN,
-      page: () => const InformasiKesehatanView(),
-      binding: InformasiKesehatanBinding(),
-    ),
-    GetPage(
-      name: _Paths.INFORMASI_KESEHATAN_DETAIL,
-      page: () => const InformasiKesehatanDetailView(),
-      binding: InformasiKesehatanDetailBinding(),
-    ),
+
     GetPage(
       name: _Paths.NOTIFIKASI,
       page: () => const NotifikasiView(),
@@ -286,11 +272,6 @@ class AppPages {
       name: _Paths.GANTI_KATA_SANDI,
       page: () => const GantiKataSandiView(),
       binding: GantiKataSandiBinding(),
-    ),
-    GetPage(
-      name: _Paths.HOME_ADMINISTRATOR,
-      page: () => const HomeAdministratorView(),
-      binding: HomeAdministratorBinding(),
     ),
     GetPage(
       name: _Paths.EDUKASI,
