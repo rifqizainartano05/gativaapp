@@ -368,7 +368,7 @@ class AnggotaController extends GetxController {
             'joinedAt': FieldValue.serverTimestamp(),
           });
 
-      CustomPopup.showSuccess('Berhasil', '${request.name} telah bergabung ke grup Anda.');
+      CustomPopup.showSuccess('Berhasil', '${request.name} telah bergabung ke anggota Anda.');
     } catch (e) {
       CustomPopup.showError('Error', 'Gagal menyetujui permintaan.');
     }
@@ -446,7 +446,7 @@ class AnggotaController extends GetxController {
           .doc(user.uid)
           .delete();
 
-      CustomPopup.showSuccess('Berhasil', '${member.name} telah dihapus dari grup.');
+      CustomPopup.showSuccess('Berhasil', '${member.name} telah dihapus dari anggota.');
     } catch (e) {
       CustomPopup.showError('Error', 'Gagal menghapus ${member.name}.');
     }

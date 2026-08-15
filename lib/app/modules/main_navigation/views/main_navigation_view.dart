@@ -62,7 +62,7 @@ class MainNavigationView extends GetView<MainNavigationController> {
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.groups_2_rounded),
-                  label: 'Grup',
+                  label: 'Anggota',
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.person_outline_rounded),

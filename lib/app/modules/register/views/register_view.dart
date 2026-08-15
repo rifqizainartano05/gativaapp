@@ -187,7 +187,7 @@ class RegisterView extends GetView<RegisterController> {
                               ),
                             )
                           : const Text(
-                              'Selesai & Daftar',
+                              'Daftar',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,

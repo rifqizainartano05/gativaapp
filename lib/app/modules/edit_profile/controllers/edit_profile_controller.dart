@@ -70,8 +70,7 @@ class EditProfileController extends GetxController {
   final beratBadanController = TextEditingController();
   final tinggiBadanController = TextEditingController();
   
-  final selectedCondition = 'Sehat'.obs;
-
+  final selectedConditionsList = <String>[].obs;
   @override
   void onInit() {
     super.onInit();
@@ -98,7 +97,8 @@ class EditProfileController extends GetxController {
           beratBadanController.text = (data['berat_badan'] ?? data['weight'])?.toString() ?? '';
           tinggiBadanController.text = (data['tinggi_badan'] ?? data['height'])?.toString() ?? '';
           photoBase64.value = data['strImageBase64'] ?? data['photoBase64'] ?? '';
-          selectedCondition.value = data['kondisi_kesehatan'] ?? 'Sehat';
+          String fetched = data['kondisi_kesehatan'] ?? 'Sehat';
+          selectedConditionsList.assignAll(fetched.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty));
         }
       }
     } catch (e) {
@@ -133,13 +133,14 @@ class EditProfileController extends GetxController {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         int age = int.tryParse(ageController.text.trim()) ?? 0;
+        String joinedConditions = selectedConditionsList.isEmpty ? 'Sehat' : selectedConditionsList.join(', ');
         final dataToUpdate = <String, dynamic>{
           'name': nameController.text.trim(),
           'age': age,
           'berat_badan': double.tryParse(beratBadanController.text.trim()) ?? 0,
           'tinggi_badan': double.tryParse(tinggiBadanController.text.trim()) ?? 0,
-          'kondisi_kesehatan': selectedCondition.value,
-          'dailyLimit': calculateDailyLimit(age, selectedCondition.value),
+          'kondisi_kesehatan': joinedConditions,
+          'dailyLimit': calculateDailyLimit(age, joinedConditions),
         };
         
         if (photoBase64.value.isNotEmpty) {

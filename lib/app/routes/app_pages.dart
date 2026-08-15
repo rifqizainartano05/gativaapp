@@ -34,8 +34,8 @@ import '../modules/faq/bindings/faq_binding.dart';
 import '../modules/faq/views/faq_view.dart';
 import '../modules/forgot_password/bindings/forgot_password_binding.dart';
 import '../modules/forgot_password/views/forgot_password_view.dart';
-import '../modules/gabung_grup_anggota/bindings/gabung_grup_anggota_binding.dart';
-import '../modules/gabung_grup_anggota/views/gabung_grup_anggota_view.dart';
+import '../modules/gabung_anggota/bindings/gabung_anggota_binding.dart';
+import '../modules/gabung_anggota/views/gabung_anggota_view.dart';
 import '../modules/ganti_kata_sandi/bindings/ganti_kata_sandi_binding.dart';
 import '../modules/ganti_kata_sandi/views/ganti_kata_sandi_view.dart';
 import '../modules/hasil_pindai_label/bindings/hasil_pindai_label_binding.dart';
@@ -45,8 +45,7 @@ import '../modules/home/views/home_view.dart';
 import '../modules/home_dokter/bindings/home_dokter_binding.dart';
 import '../modules/home_dokter/views/home_dokter_view.dart';
 
-import '../modules/katalog/bindings/katalog_binding.dart';
-import '../modules/katalog/views/katalog_view.dart';
+
 import '../modules/lensa_pintar/bindings/lensa_pintar_binding.dart';
 import '../modules/lensa_pintar/views/lensa_pintar_view.dart';
 import '../modules/lensa_pintar_detail/bindings/lensa_pintar_detail_binding.dart';
@@ -104,9 +103,9 @@ class AppPages {
       binding: ScanLabelBinding(),
     ),
     GetPage(
-      name: _Paths.gabung_grup_anggota,
-      page: () => const GabungGrupAnggotaView(),
-      binding: GabungGrupAnggotaBinding(),
+      name: _Paths.GABUNG_ANGGOTA,
+      page: () => const GabungAnggotaView(),
+      binding: GabungAnggotaBinding(),
     ),
     GetPage(
       name: _Paths.ANGGOTA,
@@ -227,11 +226,7 @@ class AppPages {
       page: () => const DokterGantiKataSandiView(),
       binding: DokterGantiKataSandiBinding(),
     ),
-    GetPage(
-      name: _Paths.KATALOG,
-      page: () => const KatalogView(),
-      binding: KatalogBinding(),
-    ),
+
     GetPage(
       name: _Paths.DOKTER_DETAIL_PASIEN_CHAT,
       page: () => const DokterDetailPasienChatView(),

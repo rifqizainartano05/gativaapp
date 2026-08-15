@@ -7,7 +7,7 @@ abstract class Routes {
   static const MAIN_NAVIGATION = _Paths.MAIN_NAVIGATION;
   static const HOME_DOKTER = _Paths.HOME_DOKTER;
   static const SCAN_LABEL = _Paths.SCAN_LABEL;
-  static const gabung_grup_anggota = _Paths.gabung_grup_anggota;
+  static const GABUNG_ANGGOTA = _Paths.GABUNG_ANGGOTA;
   static const ANGGOTA = _Paths.ANGGOTA;
   static const PROFILE = _Paths.PROFILE;
   static const RIWAYAT = _Paths.RIWAYAT;
@@ -30,7 +30,6 @@ abstract class Routes {
   static const DETAIL_DOKTER = _Paths.DETAIL_DOKTER;
   static const DOKTER_PROFILE = _Paths.DOKTER_PROFILE;
   static const DOKTER_GANTI_KATA_SANDI = _Paths.DOKTER_GANTI_KATA_SANDI;
-  static const KATALOG = _Paths.KATALOG;
 
   static const EDIT_PROFILE = _Paths.EDIT_PROFILE;
   static const CHAT = _Paths.CHAT;
@@ -54,7 +53,7 @@ abstract class _Paths {
   static const MAIN_NAVIGATION = '/main-navigation';
   static const HOME_DOKTER = '/dokter-dashboard';
   static const SCAN_LABEL = '/scanner';
-  static const gabung_grup_anggota = '/scan-barcode';
+  static const GABUNG_ANGGOTA = '/scan-barcode';
   static const ANGGOTA = '/ANGGOTA';
   static const PROFILE = '/profile';
   static const RIWAYAT = '/riwayat';
@@ -77,7 +76,6 @@ abstract class _Paths {
   static const DETAIL_DOKTER = '/detail-dokter';
   static const DOKTER_PROFILE = '/dokter-profile';
   static const DOKTER_GANTI_KATA_SANDI = '/dokter-ganti-kata-sandi';
-  static const KATALOG = '/katalog';
 
   static const EDIT_PROFILE = '/edit-profile';
   static const CHAT = '/chat';

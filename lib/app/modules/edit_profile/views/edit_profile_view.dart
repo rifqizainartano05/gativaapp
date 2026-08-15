@@ -186,50 +186,81 @@ class EditProfileView extends GetView<EditProfileController> {
                       const SizedBox(height: 24),
 
                       _buildSectionTitle(
-                        'Riwayat Medis',
+                        'Gejala yang di alami',
                         subtitle:
                             'Data riwayat medis diambil dari riwayat Anda.',
                       ),
                       _buildCard(
                         child: Column(
                           children: [
-                            _buildTextField(
-                              controller: controller.beratBadanController,
-                              label: 'Berat Badan (kg)',
-                              hint: 'Contoh: 65',
-                              icon: Icons.monitor_weight_outlined,
-                              keyboardType: TextInputType.number,
-                            ),
-                            const Divider(height: 1, color: Color(0xFFEEEEEE)),
-                            _buildTextField(
-                              controller: controller.tinggiBadanController,
-                              label: 'Tinggi Badan (cm)',
-                              hint: 'Contoh: 170',
-                              icon: Icons.height_outlined,
-                              keyboardType: TextInputType.number,
-                            ),
-                            const Divider(height: 1, color: Color(0xFFEEEEEE)),
-                            DropdownButtonFormField<String>(
-                              value: controller.selectedCondition.value,
-                              onChanged: (String? newValue) {
-                                if (newValue != null) {
-                                  controller.selectedCondition.value = newValue;
-                                }
-                              },
-                              items: ['Sehat', 'Hipertensi', 'Kardiovaskular', 'Jantung', 'Ginjal', 'Stroke', 'Osteoporosis']
-                                  .map<DropdownMenuItem<String>>((String value) {
-                                return DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Colors.black87)),
-                                );
-                              }).toList(),
-                              decoration: InputDecoration(
-                                labelText: 'Kondisi Kesehatan',
-                                labelStyle: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-                                prefixIcon: const Icon(Icons.health_and_safety_outlined, color: Colors.grey, size: 22),
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                              ),
+
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 16),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                                  child: Obx(() {
+                                    List<String> options = [
+                                      'Hipertensi',
+                                      'Penyakit kardiovaskular',
+                                      'Penyakit ginjal kronis',
+                                      'Stroke',
+                                      'Tidak terindikasi penyakit di atas',
+                                    ];
+
+                                    return Column(
+                                      children: options.map((option) {
+                                        bool isSelected = controller.selectedConditionsList.contains(option) || 
+                                                          (option == 'Tidak terindikasi penyakit di atas' && (controller.selectedConditionsList.isEmpty || controller.selectedConditionsList.contains('Sehat')));
+                                        return InkWell(
+                                          onTap: () {
+                                            if (option == 'Tidak terindikasi penyakit di atas' || option == 'Sehat') {
+                                              controller.selectedConditionsList.clear();
+                                              controller.selectedConditionsList.add('Tidak terindikasi penyakit di atas');
+                                            } else {
+                                              controller.selectedConditionsList.remove('Tidak terindikasi penyakit di atas');
+                                              controller.selectedConditionsList.remove('Sehat');
+                                              if (isSelected) {
+                                                controller.selectedConditionsList.remove(option);
+                                                if (controller.selectedConditionsList.isEmpty) {
+                                                  controller.selectedConditionsList.add('Tidak terindikasi penyakit di atas');
+                                                }
+                                              } else {
+                                                controller.selectedConditionsList.add(option);
+                                              }
+                                            }
+                                          },
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(vertical: 8),
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  isSelected ? Icons.check_circle : Icons.circle_outlined,
+                                                  color: isSelected ? const Color(0xFF2E7D32) : Colors.grey.shade400,
+                                                  size: 22,
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Expanded(
+                                                  child: Text(
+                                                    option,
+                                                    style: TextStyle(
+                                                      color: isSelected ? const Color(0xFF2E7D32) : Colors.black87,
+                                                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                                                      fontSize: 14,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      }).toList(),
+                                    );
+                                  }),
+                                ),
+                                const SizedBox(height: 16),
+                              ],
                             ),
                           ],
                         ),

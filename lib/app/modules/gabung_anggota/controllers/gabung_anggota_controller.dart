@@ -6,7 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
 import '../../../services/auth_service.dart';
 
-class GabungGrupAnggotaController extends GetxController {
+class GabungAnggotaController extends GetxController {
   final MobileScannerController scannerController = MobileScannerController(
     detectionSpeed: DetectionSpeed.noDuplicates,
     facing: CameraFacing.back,
@@ -15,6 +15,7 @@ class GabungGrupAnggotaController extends GetxController {
 
   final RxBool isFlashOn = false.obs;
   final RxBool isScanning = true.obs;
+  bool hasShownManualDialog = false;
   final TextEditingController accessCodeController = TextEditingController();
 
   @override
@@ -68,12 +69,12 @@ class GabungGrupAnggotaController extends GetxController {
         final existingOwner = await Get.find<AuthService>()
             .getUserReference(currentUser.uid)
             .collection('anggota')
-            .where('role', isEqualTo: 'Pemilik Grup')
+            .where('role', isEqualTo: 'pemilik anggota')
             .get();
 
         if (existingOwner.docs.isNotEmpty) {
           Get.back();
-          _showErrorDialog("Anda sudah bergabung di grup lain. 1 Pengguna hanya bisa bergabung ke 1 Grup.");
+          _showErrorDialog("Anda sudah bergabung di anggota lain. 1 Pengguna hanya bisa bergabung ke 1 Anggota.");
           return;
         }
       }
@@ -126,12 +127,12 @@ class GabungGrupAnggotaController extends GetxController {
             final existingOwner = await Get.find<AuthService>()
                 .getUserReference(currentUser.uid)
                 .collection('anggota')
-                .where('role', isEqualTo: 'Pemilik Grup')
+                .where('role', isEqualTo: 'pemilik anggota')
                 .get();
 
             if (existingOwner.docs.isNotEmpty) {
               Get.back(); // Tutup loading
-              _showErrorDialog("Anda sudah bergabung di grup lain. 1 Pengguna hanya bisa bergabung ke 1 Grup.");
+              _showErrorDialog("Anda sudah bergabung di anggota lain. 1 Pengguna hanya bisa bergabung ke 1 Anggota.");
               return;
             }
           }
@@ -312,7 +313,7 @@ class GabungGrupAnggotaController extends GetxController {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      "Anda diundang oleh $ownerName untuk bergabung ke grup pantauan natriumnya.",
+                      "Anda diundang oleh $ownerName untuk bergabung ke anggota pantauan natriumnya.",
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Colors.grey.shade600, fontSize: 14, height: 1.5),
                     ),
@@ -379,7 +380,7 @@ class GabungGrupAnggotaController extends GetxController {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              "Pemilik grup juga harus menerima permintaan Anda.",
+                              "pemilik anggota juga harus menerima permintaan Anda.",
                               style: TextStyle(fontSize: 12, color: Colors.orange.shade900, height: 1.4),
                             ),
                           ),
@@ -441,7 +442,7 @@ class GabungGrupAnggotaController extends GetxController {
     }
 
     if (currentUser.uid == ownerUid) {
-      _showErrorDialog("Anda tidak bisa bergabung ke grup Anda sendiri.");
+      _showErrorDialog("Anda tidak bisa bergabung ke anggota Anda sendiri.");
       return;
     }
 
@@ -550,7 +551,7 @@ class GabungGrupAnggotaController extends GetxController {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        "Permintaan bergabung telah dikirim. Menunggu persetujuan pemilik grup.",
+                        "Permintaan bergabung telah dikirim. Menunggu persetujuan pemilik anggota.",
                         textAlign: TextAlign.center,
                         style: TextStyle(color: Colors.grey.shade600, fontSize: 14, height: 1.5),
                       ),

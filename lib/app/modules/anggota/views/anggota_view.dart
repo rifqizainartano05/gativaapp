@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:intl/intl.dart';
 import '../controllers/anggota_controller.dart';
+import '../../gabung_anggota/controllers/gabung_anggota_controller.dart';
 
 class AppColors {
   static const primary = Color(0xFF2E7D32);
@@ -32,6 +33,249 @@ class AppTheme {
     );
   }
 }
+
+void _showJoinOptions(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (context) {
+      return Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: Colors.white,
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          children: [
+            Positioned(
+                right: -30,
+                bottom: -30,
+                child: Transform.rotate(
+                  angle: -0.2,
+                  child: Icon(
+                    Icons.groups_2_rounded,
+                    size: 160,
+                    color: Colors.green.withValues(alpha: 0.05),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      "Pilih Metode",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      "Bagaimana Anda ingin bergabung ke anggota?",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.black54,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    InkWell(
+                      onTap: () {
+                        Get.back();
+                        Get.toNamed('/scan-barcode', arguments: 'scan');
+                      },
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.green.shade200),
+                          borderRadius: BorderRadius.circular(16),
+                          color: Colors.green.shade50,
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.qr_code_scanner_rounded, color: Colors.green, size: 32),
+                            SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text("Scan QR Code", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.green)),
+                                  Text("Gunakan kamera hp Anda", style: TextStyle(fontSize: 12, color: Colors.black54)),
+                                ],
+                              ),
+                            ),
+                            Icon(Icons.arrow_forward_ios_rounded, color: Colors.green, size: 16),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    InkWell(
+                      onTap: () {
+                        Get.back();
+                        _showManualInputDialog(context);
+                      },
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(16),
+                          color: Colors.white,
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.keyboard_alt_rounded, color: Colors.grey, size: 32),
+                            SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text("Kode Akses", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87)),
+                                  Text("Masukkan 8 digit kode", style: TextStyle(fontSize: 12, color: Colors.black54)),
+                                ],
+                              ),
+                            ),
+                            Icon(Icons.arrow_forward_ios_rounded, color: Colors.grey, size: 16),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Positioned(
+                top: 8,
+                right: 8,
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.grey),
+                  onPressed: () => Get.back(),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    );
+  }
+
+  void _showManualInputDialog(BuildContext context) {
+    final gabungController = Get.put(GabungAnggotaController());
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          backgroundColor: Colors.white,
+          clipBehavior: Clip.antiAlias,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          child: Stack(
+            children: [
+              Positioned(
+                right: -30,
+                bottom: -30,
+                child: Transform.rotate(
+                  angle: -0.2,
+                  child: Icon(
+                    Icons.vpn_key_rounded,
+                    size: 160,
+                    color: Colors.green.withValues(alpha: 0.05),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      "Kode Akses",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      "Masukkan 8 digit kode akses untuk bergabung ke anggota.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.black54,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    TextField(
+                      controller: gabungController.accessCodeController,
+                      textCapitalization: TextCapitalization.characters,
+                      maxLength: 8,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 4.0,
+                      ),
+                      textAlign: TextAlign.center,
+                      decoration: InputDecoration(
+                        counterText: "",
+                        hintText: "XXXXXXXX",
+                        hintStyle: TextStyle(color: Colors.grey.shade300, letterSpacing: 4.0),
+                        filled: true,
+                        fillColor: Colors.grey.shade100,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(color: Colors.green, width: 2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Get.back(); // close dialog first
+                          gabungController.validateAccessCode();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text(
+                          "Gabung",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Positioned(
+                top: 8,
+                right: 8,
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.grey),
+                  onPressed: () => Get.back(),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    );
+  }
 
 class AnggotaView extends StatelessWidget {
   const AnggotaView({super.key});
@@ -103,10 +347,10 @@ class AnggotaView extends StatelessWidget {
                   _InviteOptionTile(
                     icon: Icons.qr_code_scanner_rounded,
                     title: "Gabung Anggota",
-                    subtitle: "Pindai barcode untuk bergabung ke grup",
+                    subtitle: "Pindai barcode untuk bergabung ke anggota",
                     onTap: () {
-                      Get.back();
-                      Get.toNamed('/scan-barcode');
+                      Get.back(); // close bottom sheet if it was open
+                      _showJoinOptions(context);
                     },
                   ),
                 ],
@@ -307,7 +551,7 @@ class AnggotaView extends StatelessWidget {
                     children: [
                       const Center(
                         child: Text(
-                          'Grup Pantauan',
+                          'Grup Anggota',
                           style: TextStyle(
                             fontWeight: FontWeight.w900,
                             fontSize: 20,
@@ -480,7 +724,7 @@ class AnggotaView extends StatelessWidget {
                                                 ),
                                                 const SizedBox(height: 4),
                                                 Text(
-                                                  "Ingin bergabung ke grup",
+                                                  "Ingin bergabung ke anggota",
                                                   style: TextStyle(
                                                     color: Colors
                                                         .blueGrey

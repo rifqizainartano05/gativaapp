@@ -125,7 +125,103 @@ class RiwayatAnggotaView extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // 2. COMBINED SUMMARY & CHART CARD
+                        // 1. SUMMARY CARD
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.grey.shade200),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.02),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Sisa Batas',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.textSecondary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Obx(() {
+                                    if (controller.filteredLogs.isEmpty) {
+                                      return const Text(
+                                        '-',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: AppColors.primary,
+                                        ),
+                                      );
+                                    }
+                                    double total = controller.getTotalIntake();
+                                    double limit = controller.chartLimit;
+                                    double sisa = limit - total;
+                                    if (sisa < 0) sisa = 0;
+                                    return Text(
+                                      '${NumberFormat.decimalPattern('id').format(sisa)} mg',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: AppColors.primary,
+                                      ),
+                                    );
+                                  }),
+                                ],
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  const Text(
+                                    'Total Asupan',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.textSecondary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Obx(() {
+                                    if (controller.filteredLogs.isEmpty) {
+                                      return const Text(
+                                        '-',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: AppColors.primary,
+                                        ),
+                                      );
+                                    }
+                                    double total = controller.getTotalIntake();
+                                    return Text(
+                                      '${NumberFormat.decimalPattern('id').format(total)} mg',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: AppColors.primary,
+                                      ),
+                                    );
+                                  }),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        
+                        // 2. CHART CARD
                         Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
@@ -142,83 +238,11 @@ class RiwayatAnggotaView extends StatelessWidget {
                           ),
                           child: Column(
                             children: [
-                              // SUMMARY ROW
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const Text(
-                                        'Sisa Batas',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: AppColors.textSecondary,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Obx(() {
-                                        double total = controller.getTotalIntake();
-                                        double limit = controller.chartLimit;
-                                        double sisa = limit - total;
-                                        if (sisa < 0) {
-                                          sisa = 0;
-                                        }
-                                        return Text(
-                                          '${NumberFormat.decimalPattern('id').format(sisa)} mg',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                            color: AppColors.primary,
-                                          ),
-                                        );
-                                      }),
-                                    ],
-                                  ),
-                                  Container(
-                                    width: 1,
-                                    height: 40,
-                                    color: Colors.grey.shade200,
-                                  ),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      const Text(
-                                        'Total Asupan',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: AppColors.textSecondary,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Obx(() {
-                                        double total = controller.getTotalIntake();
-                                        return Text(
-                                          '${NumberFormat.decimalPattern('id').format(total)} mg',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                            color: AppColors.primary,
-                                          ),
-                                        );
-                                      }),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 16),
-                              Divider(height: 1, color: Colors.grey.shade200),
-                              const SizedBox(height: 20),
-                              
-                              // CHART
                               SizedBox(
                                 height: 220,
                                 width: double.infinity,
                                 child: Obx(() {
-                                  final chartData = controller.getChartData();
-                                  if (chartData.isEmpty) {
+                                  if (controller.filteredLogs.isEmpty) {
                                     return const Center(
                                       child: Text(
                                         "Belum ada data",
@@ -226,6 +250,8 @@ class RiwayatAnggotaView extends StatelessWidget {
                                       ),
                                     );
                                   }
+
+                                  final chartData = controller.getChartData();
 
                                   double maxY = chartData.fold(0.0, (max, point) {
                                     double total = point.amanValue + point.warningValue + point.bahayaValue;
@@ -262,7 +288,7 @@ class RiwayatAnggotaView extends StatelessWidget {
                                         if (chartData.any((p) => p.bahayaValue > 0))
                                           _buildLineChartBar(chartData, (p) => p.bahayaValue, AppColors.danger),
                                       ],
-                                      lineTouchData: const LineTouchData(enabled: false),
+                                      lineTouchData: const LineTouchData(enabled: true),
                                     ),
                                   );
                                 }),
@@ -273,6 +299,9 @@ class RiwayatAnggotaView extends StatelessWidget {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Obx(() {
+                                    if (controller.filteredLogs.isEmpty) {
+                                      return const SizedBox.shrink();
+                                    }
                                     final chartData = controller.getChartData();
                                     return Row(
                                       mainAxisAlignment: MainAxisAlignment.center,
@@ -509,7 +538,17 @@ class RiwayatAnggotaView extends StatelessWidget {
       barWidth: 3,
       isStrokeCapRound: true,
       dotData: const FlDotData(show: false),
-      belowBarData: BarAreaData(show: false),
+      belowBarData: BarAreaData(
+        show: true,
+        gradient: LinearGradient(
+          colors: [
+            color.withOpacity(0.3),
+            color.withOpacity(0.0),
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
     );
   }
 

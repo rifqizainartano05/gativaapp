@@ -62,6 +62,12 @@ class RiwayatAnggotaController extends GetxController {
   int get currentCount {
     if (filterOption.value.isEmpty) return 7; // Default
     if (filterOption.value == "Saat Ini") return 1;
+    if (filterOption.value == "Atur Tanggal") {
+      if (customDateRange.value != null) {
+        return customDateRange.value!.end.difference(customDateRange.value!.start).inDays + 1;
+      }
+      return 7;
+    }
     final parts = filterOption.value.split(" ");
     if (parts.isNotEmpty) {
       return int.tryParse(parts[0]) ?? 1;
@@ -166,13 +172,19 @@ class RiwayatAnggotaController extends GetxController {
     if (currentUnit == 'Saat Ini') {
       threshold = DateTime(now.year, now.month, now.day);
     } else if (currentUnit == 'Hari') {
-      threshold = now.subtract(Duration(days: count));
+      threshold = DateTime(now.year, now.month, now.day).subtract(Duration(days: count - 1));
     } else if (currentUnit == 'Minggu') {
-      threshold = now.subtract(Duration(days: count * 7));
+      threshold = DateTime(now.year, now.month, now.day).subtract(Duration(days: (count * 7) - 1));
     } else if (currentUnit == 'Bulan') {
-      threshold = DateTime(now.year, now.month - count, 1);
+      int targetMonth = now.month - count + 1;
+      int targetYear = now.year;
+      while (targetMonth <= 0) {
+        targetMonth += 12;
+        targetYear -= 1;
+      }
+      threshold = DateTime(targetYear, targetMonth, 1);
     } else if (currentUnit == 'Tahun') {
-      threshold = DateTime(now.year - count, 1, 1);
+      threshold = DateTime(now.year - count + 1, 1, 1);
     } else if (currentUnit == 'Atur Tanggal') {
       if (customDateRange.value != null) {
         return foodLogs.where((l) => 
@@ -184,20 +196,53 @@ class RiwayatAnggotaController extends GetxController {
     } else {
       threshold = DateTime(now.year - 4, 1, 1);
     }
-    
     if (currentUnit == 'Saat Ini') {
        return foodLogs.where((l) => l.timestamp.year == now.year && l.timestamp.month == now.month && l.timestamp.day == now.day).toList();
     }
+    
+    // STRICT ACCUMULATED DATA COUNT CHECK
+    if (filterOption.value.isNotEmpty) {
+       int uniqueCount = 0;
+       int requiredCount = 0;
+       
+       if (currentUnit == 'Bulan') {
+          uniqueCount = foodLogs.map((l) => "${l.timestamp.year}-${l.timestamp.month}").toSet().length;
+          requiredCount = count;
+       } else if (currentUnit == 'Tahun') {
+          uniqueCount = foodLogs.map((l) => "${l.timestamp.year}").toSet().length;
+          requiredCount = count;
+       } else {
+          uniqueCount = foodLogs.map((l) => "${l.timestamp.year}-${l.timestamp.month}-${l.timestamp.day}").toSet().length;
+          if (currentUnit == 'Hari') {
+             requiredCount = count;
+          } else if (currentUnit == 'Minggu') {
+             requiredCount = count * 7;
+          } else if (currentUnit == 'Atur Tanggal') {
+             if (customDateRange.value != null) {
+                requiredCount = customDateRange.value!.end.difference(customDateRange.value!.start).inDays + 1;
+             } else {
+                requiredCount = 7;
+             }
+          }
+       }
+       
+       if (uniqueCount < requiredCount) {
+          return []; // Belum memenuhi syarat jumlah data akumulasi
+       }
+    }
+    
     return foodLogs.where((l) => l.timestamp.isAfter(threshold) || l.timestamp.isAtSameMomentAs(threshold)).toList();
   }
 
   double get chartLimit {
-    if (currentUnit == 'Saat Ini') return dailyLimit.value;
-    if (currentUnit == 'Minggu') return dailyLimit.value * 7;
-    if (currentUnit == 'Bulan') return dailyLimit.value * 30;
-    if (currentUnit == 'Tahun') return dailyLimit.value * 365;
-    if (currentUnit == 'Atur Tanggal') return dailyLimit.value; // Displayed daily
-    return dailyLimit.value;
+    final distinctDays = <String>{};
+    for (var log in filteredLogs) {
+      distinctDays.add("${log.timestamp.year}-${log.timestamp.month}-${log.timestamp.day}");
+    }
+    int activeDaysCount = distinctDays.length;
+    if (activeDaysCount == 0) return dailyLimit.value;
+    
+    return dailyLimit.value * activeDaysCount;
   }
 
   double getTotalIntake() {
@@ -283,7 +328,7 @@ class RiwayatAnggotaController extends GetxController {
     } else if (currentUnit == 'Minggu') {
       // Last N weeks
       for (int i = count - 1; i >= 0; i--) {
-        DateTime targetEnd = now.subtract(Duration(days: i * 7));
+        DateTime targetEnd = DateTime(now.year, now.month, now.day).subtract(Duration(days: i * 7));
         DateTime targetStart = targetEnd.subtract(const Duration(days: 6));
         var matched = foodLogs.where((log) => log.timestamp.isAfter(targetStart.subtract(const Duration(seconds: 1))) && log.timestamp.isBefore(targetEnd.add(const Duration(days: 1))));
         String label = "Mgg ${count - i}";

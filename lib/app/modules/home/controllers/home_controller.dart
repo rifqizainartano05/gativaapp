@@ -181,26 +181,36 @@ class HomeController extends GetxController {
           double calculatedLimit = calculateDailyLimit(age, condition);
           double storedLimit = (data['dailyLimit'] ?? 0).toDouble();
 
+          Map<String, dynamic> updates = {};
+
           if (storedLimit != calculatedLimit || data.containsKey('kondisi')) {
             limit.value = calculatedLimit;
-            
-            Map<String, dynamic> updates = {
-              'dailyLimit': calculatedLimit,
-              'kondisi_kesehatan': condition,
-            };
+            updates['dailyLimit'] = calculatedLimit;
+            updates['kondisi_kesehatan'] = condition;
             
             // Hapus field kondisi yang lama
             if (data.containsKey('kondisi')) {
               updates['kondisi'] = FieldValue.delete();
             }
-
-            await Get.find<AuthService>().getUserReference(user.uid).update(updates);
-
           } else {
             limit.value = storedLimit;
           }
           
-          totalConsumedToday.value = ((data['natrium'] ?? data['sodium'] ?? data['totalNatrium'] ?? 0) as num).toDouble();
+          DateTime now = DateTime.now();
+          String todayStr = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+          String lastDate = data['lastDate'] ?? '';
+
+          if (lastDate != todayStr) {
+            totalConsumedToday.value = 0.0;
+            updates['natrium'] = 0.0;
+            updates['lastDate'] = todayStr;
+          } else {
+            totalConsumedToday.value = ((data['natrium'] ?? data['sodium'] ?? data['totalNatrium'] ?? 0) as num).toDouble();
+          }
+
+          if (updates.isNotEmpty) {
+            await Get.find<AuthService>().getUserReference(user.uid).update(updates);
+          }
         }
       });
     }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'dart:math' as math;
 import '../controllers/home_controller.dart';
 import '../../../routes/app_pages.dart';
 import '../../notifikasi/controllers/notifikasi_controller.dart';
@@ -142,7 +143,7 @@ class HomeView extends StatelessWidget {
                       child: Column(
                         children: [
                           const Text(
-                            'RING KONSUMSI NATRIUM',
+                            'KONSUMSI ASUPAN',
                             style: TextStyle(
                               letterSpacing: 1.2,
                               fontWeight: FontWeight.bold,
@@ -164,47 +165,41 @@ class HomeView extends StatelessWidget {
 
                             return Stack(
                               alignment: Alignment.center,
+                              clipBehavior: Clip.none,
                               children: [
-                                // Background Ring
+                                // Background Ring Arc
                                 SizedBox(
-                                  width: 180,
-                                  height: 180,
-                                  child: CircularProgressIndicator(
-                                    value: ratio,
-                                    strokeWidth: 16,
-                                    backgroundColor: Colors.grey.shade100,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      statusColor,
+                                  width: 220,
+                                  height: 220,
+                                  child: CustomPaint(
+                                    painter: RingPainter(
+                                      ratio: ratio,
+                                      activeColor: statusColor,
+                                      backgroundColor: Colors.grey.shade100,
+                                      strokeWidth: 20,
                                     ),
-                                  ),
-                                ),
-                                // Drop Shadow / Glow effect
-                                Container(
-                                  width: 178,
-                                  height: 178,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: statusColor.withOpacity(0.15),
-                                        blurRadius: 20,
-                                        spreadRadius: 2,
-                                      ),
-                                    ],
                                   ),
                                 ),
                                 // Content in center
                                 Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Text(
-                                      NumberFormat.decimalPattern(
-                                        'id',
-                                      ).format(consumed.toInt()),
+                                    const Text(
+                                      'Asupan',
                                       style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppColors.textSecondary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      NumberFormat.decimalPattern('id')
+                                          .format(consumed.toInt()),
+                                      style: const TextStyle(
                                         fontSize: 38,
                                         fontWeight: FontWeight.w900,
-                                        color: statusColor,
+                                        color: AppColors.textPrimary,
                                       ),
                                     ),
                                     Text(
@@ -214,29 +209,31 @@ class HomeView extends StatelessWidget {
                                         color: AppColors.textSecondary,
                                       ),
                                     ),
-                                    const SizedBox(height: 4),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: statusColor.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(
-                                          color: statusColor.withOpacity(0.3),
-                                        ),
-                                      ),
-                                      child: Text(
-                                        controller.intakeStatus,
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          color: statusColor,
-                                        ),
+                                    const SizedBox(height: 12),
+                                  ],
+                                ),
+                                // Indicator overlay at bottom gap
+                                Positioned(
+                                  bottom: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(24),
+                                      border: Border.all(
+                                        color: statusColor.withOpacity(0.5),
+                                        width: 1,
                                       ),
                                     ),
-                                  ],
+                                    child: Text(
+                                      controller.intakeStatus,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                        color: statusColor,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ],
                             );
@@ -254,9 +251,10 @@ class HomeView extends StatelessWidget {
                               children: [
                                 Expanded(
                                   child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       const Text(
-                                        'Sisa Kuota',
+                                        'Sisa Asupan',
                                         style: TextStyle(
                                           color: AppColors.textSecondary,
                                           fontSize: 13,
@@ -269,34 +267,6 @@ class HomeView extends StatelessWidget {
                                           fontWeight: FontWeight.bold,
                                           fontSize: 16,
                                           color: AppColors.textPrimary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Container(
-                                  width: 1,
-                                  height: 30,
-                                  color: Colors.grey.shade200,
-                                ),
-                                Expanded(
-                                  child: Column(
-                                    children: [
-                                      const Text(
-                                        'Status',
-                                        style: TextStyle(
-                                          color: AppColors.textSecondary,
-                                          fontSize: 13,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        controller.statusMessage,
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                          color: statusColor,
                                         ),
                                       ),
                                     ],
@@ -461,5 +431,80 @@ class HomeView extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class RingPainter extends CustomPainter {
+  final double ratio;
+  final Color activeColor;
+  final Color backgroundColor;
+  final double strokeWidth;
+
+  RingPainter({
+    required this.ratio,
+    required this.activeColor,
+    required this.backgroundColor,
+    required this.strokeWidth,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    Paint backgroundPaint = Paint()
+      ..color = backgroundColor
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    Paint activePaint = Paint()
+      ..color = activeColor
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    // Start at 135 degrees, sweep 270 degrees for the gap at bottom
+    double startAngle = 135 * (math.pi / 180);
+    double sweepAngle = 270 * (math.pi / 180);
+    
+    Rect rect = Rect.fromCircle(
+      center: Offset(size.width / 2, size.height / 2),
+      radius: size.width / 2 - strokeWidth / 2,
+    );
+
+    // Draw background arc
+    canvas.drawArc(rect, startAngle, sweepAngle, false, backgroundPaint);
+    
+    // Draw active arc
+    double safeRatio = ratio > 1.0 ? 1.0 : ratio;
+    double activeSweep = sweepAngle * safeRatio;
+    canvas.drawArc(rect, startAngle, activeSweep, false, activePaint);
+
+    // Draw dashed tick marks
+    Paint tickPaint = Paint()
+      ..color = Colors.grey.withOpacity(0.4)
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round;
+      
+    int totalTicks = 24;
+    double tickLength = 6;
+    double innerRadius = (size.width / 2) - strokeWidth - 10;
+    
+    for (int i = 0; i <= totalTicks; i++) {
+      double angle = startAngle + (sweepAngle * (i / totalTicks));
+      Offset startPoint = Offset(
+        size.width / 2 + innerRadius * math.cos(angle),
+        size.height / 2 + innerRadius * math.sin(angle),
+      );
+      Offset endPoint = Offset(
+        size.width / 2 + (innerRadius - tickLength) * math.cos(angle),
+        size.height / 2 + (innerRadius - tickLength) * math.sin(angle),
+      );
+      canvas.drawLine(startPoint, endPoint, tickPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant RingPainter oldDelegate) {
+    return oldDelegate.ratio != ratio || 
+           oldDelegate.activeColor != activeColor;
   }
 }
