@@ -283,7 +283,26 @@ class ChatView extends GetView<ChatController> {
                           ],
                         ),
                       ),
-                      const Icon(Icons.chevron_right_rounded, color: Colors.white54),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          if ((doc['unreadCount'] ?? 0) > 0)
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: const BoxDecoration(
+                                color: Colors.orange,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Text(
+                                '${doc['unreadCount']}',
+                                style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                              ),
+                            )
+                          else
+                            const Icon(Icons.chevron_right_rounded, color: Colors.white54),
+                        ],
+                      ),
                     ],
                   ),
                 ),

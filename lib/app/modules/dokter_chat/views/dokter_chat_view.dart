@@ -169,7 +169,6 @@ class DokterChatView extends GetView<DokterChatController> {
               itemBuilder: (context, index) {
                 final doc = list[index];
                 final name = doc['name'] ?? 'Pasien';
-                final int queueNumber = index + 1; // Real-time queue number based on index
                 final photoBase64 = doc['strImageBase64'] ?? '';
                 final bool isOnline = doc['isOnline'] == true;
 
@@ -278,36 +277,55 @@ class DokterChatView extends GetView<DokterChatController> {
                                 ],
                               ),
                             ),
-                            // Antrean Indicator
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: Colors.orange.shade50,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.orange.shade200),
-                                ),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      "Antrian",
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.orange.shade800,
-                                      ),
+                            // Tails
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if ((doc['unreadCount'] ?? 0) > 0)
+                                  Container(
+                                    margin: const EdgeInsets.only(right: 8),
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.orange,
+                                      shape: BoxShape.circle,
                                     ),
-                                    Text(
-                                      "$queueNumber",
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w900,
-                                        color: Colors.orange.shade900,
-                                      ),
+                                    child: Text(
+                                      '${doc['unreadCount']}',
+                                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                                     ),
-                                  ],
-                                ),
-                              ),
+                                  ),
+                                if (doc['isWaitingReply'] == true && doc['queueNumber'] != null)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange.shade50,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: Colors.orange.shade200),
+                                    ),
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          "Antrian",
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.orange.shade800,
+                                          ),
+                                        ),
+                                        Text(
+                                          "${doc['queueNumber']}",
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.orange.shade900,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                              ],
+                            ),
                           ],
                           ),
                         ),

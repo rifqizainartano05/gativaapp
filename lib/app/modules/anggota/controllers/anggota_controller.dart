@@ -100,7 +100,7 @@ class AnggotaController extends GetxController {
     members.add(
       AnggotaMember(
         id: uid,
-        name: _myName + " (Saya)",
+        name: "$_myName (Saya)",
         role: "Pemilik Grup",
         consumedSodium: _myTodaySodium,
         dailyLimit: _myDailyLimit,
@@ -207,7 +207,7 @@ class AnggotaController extends GetxController {
         return AnggotaMember(
           id: doc.id,
           name: data['name'] ?? "Unknown",
-          role: data['role'] ?? "Member",
+          role: "Anggota Keluarga",
           consumedSodium: (data['sodiumConsumed'] ?? 0).toDouble(), // Nilai sementara sebelum listener makanan terpanggil
           dailyLimit: (data['limit'] ?? calculatedLimit).toDouble(),
           avatarUrl: (data['name'] ?? "U")[0].toString().toUpperCase(),
@@ -257,18 +257,26 @@ class AnggotaController extends GetxController {
       final token = _generateInviteToken();
 
       // Simpan ke sub-collection anggota (sebelumnya mobile) dengan dataType Invite
+      final inviteDocData = {
+        'dataType': 'Invite',
+        'token': token,
+        'ownerUid': user.uid,
+        'ownerName': currentUserName,
+        'status': 'active',
+        'createdAt': FieldValue.serverTimestamp(),
+      };
+
       await Get.find<AuthService>()
           .getUserReference(user.uid)
           .collection('anggota')
           .doc(token)
-          .set({
-            'dataType': 'Invite',
-            'token': token,
-            'ownerUid': user.uid,
-            'ownerName': currentUserName,
-            'status': 'active',
-            'createdAt': FieldValue.serverTimestamp(),
-          });
+          .set(inviteDocData);
+
+      // Simpan juga ke root collection 'invites' untuk lookup tanpa CollectionGroup Index
+      await FirebaseFirestore.instance
+          .collection('invites')
+          .doc(token)
+          .set(inviteDocData);
 
       // Hapus otomatis setelah 20 detik
       Future.delayed(const Duration(seconds: 20), () async {
@@ -278,14 +286,15 @@ class AnggotaController extends GetxController {
               .collection('anggota')
               .doc(token)
               .delete();
+          await FirebaseFirestore.instance.collection('invites').doc(token).delete();
         } catch (e) {
           debugPrint("Gagal menghapus token invite otomatis: $e");
         }
       });
 
       // Embed owner ID and token in the QR code
-      final inviteData = "GATIVA_INVITE:${user.uid}:$token";
-      return inviteData;
+      final qrData = "GATIVA_INVITE:${user.uid}:$token";
+      return qrData;
     } catch (e) {
       CustomPopup.showError("Undangan Gagal", "Gagal membuat barcode undangan.");
       return null;
@@ -336,9 +345,8 @@ class AnggotaController extends GetxController {
         }
       }
 
-      // Role determination
-      String memberRole = request.role; // e.g. "Pemilik" or "Anggota Keluarga"
-      String ownerRole = memberRole == 'Pemilik' ? 'Anggota Keluarga' : 'Pemilik Grup';
+      String memberRole = request.role; // e.g. "Anggota Keluarga"
+      String ownerRole = 'Anggota Keluarga';
 
       // 2. Tambahkan member ke sub-collection anggota owner
       await Get.find<AuthService>()
@@ -503,5 +511,471 @@ class AnggotaController extends GetxController {
     }
     
     return minLimit;
+  }
+  
+  final TextEditingController accessCodeController = TextEditingController();
+  
+  void showManualInputDialog() {
+    accessCodeController.clear();
+
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: Colors.white,
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          children: [
+            Positioned(
+              right: -30,
+              top: -30,
+              child: Transform.rotate(
+                angle: 0.2,
+                child: Icon(
+                  Icons.password_rounded,
+                  size: 140,
+                  color: Colors.green.withValues(alpha: 0.05),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Kode Akses",
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    "Ketikkan 8 digit kode akses yang diberikan oleh pemilik anggota untuk bergabung.",
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.black54,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  TextField(
+                    controller: accessCodeController,
+                    maxLength: 8,
+                    textCapitalization: TextCapitalization.characters,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 2.0,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Contoh: H2G9J8XQ',
+                      hintStyle: TextStyle(
+                        color: Colors.grey.shade400,
+                        fontWeight: FontWeight.normal,
+                        letterSpacing: 0,
+                      ),
+                      filled: true,
+                      fillColor: Colors.grey.shade100,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: const BorderSide(color: Colors.green, width: 2),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                      counterText: "",
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Get.back(),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: Text("Batal", style: TextStyle(color: Colors.grey.shade700, fontWeight: FontWeight.bold, fontSize: 16)),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Get.back();
+                            validateAccessCode();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            elevation: 0,
+                          ),
+                          child: const Text("Gabung", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      barrierDismissible: true,
+    );
+  }
+
+  void validateAccessCode() async {
+    final accessCode = accessCodeController.text.trim();
+    if (accessCode.isEmpty) {
+      CustomPopup.showError("Gagal", "Kode akses tidak boleh kosong.");
+      return;
+    }
+
+    Get.dialog(
+      const Center(child: CircularProgressIndicator()),
+      barrierDismissible: false,
+    );
+
+    try {
+      final User? currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        final existingGroup = await Get.find<AuthService>()
+            .getUserReference(currentUser.uid)
+            .collection('anggota')
+            .where('dataType', isEqualTo: 'Anggota')
+            .get();
+
+        if (existingGroup.docs.isNotEmpty) {
+          Get.back();
+          CustomPopup.showError("Gagal", "Anda sudah bergabung dengan anggota lain. Tidak bisa bergabung lagi.");
+          return;
+        }
+      }
+
+      final doc = await FirebaseFirestore.instance
+          .collection('invites')
+          .doc(accessCode)
+          .get();
+
+      if (!doc.exists) {
+        Get.back();
+        CustomPopup.showError("Gagal", "Kode Akses tidak ditemukan atau sudah tidak berlaku.");
+        return;
+      }
+
+      final inviteData = doc.data()!;
+      final String ownerUid = inviteData['ownerUid'];
+      final String token = inviteData['token'];
+
+      Get.back(); // close loading dialog
+      
+      _processInviteData(ownerUid, token);
+    } catch (e) {
+      Get.back();
+      CustomPopup.showError("Gagal", "Terjadi kesalahan. Silakan hubungi admin.");
+    }
+  }
+
+  void _processInviteData(String ownerUid, String token) async {
+    Get.dialog(
+      const Center(child: CircularProgressIndicator()),
+      barrierDismissible: false,
+    );
+
+    try {
+      final User? currentUser = FirebaseAuth.instance.currentUser;
+      final doc = await Get.find<AuthService>()
+          .getUserReference(ownerUid)
+          .collection('anggota')
+          .doc(token)
+          .get();
+
+      Get.back(); // Tutup loading
+
+      if (!doc.exists) {
+        CustomPopup.showError("Gagal", "Undangan tidak ditemukan atau sudah digunakan.");
+        return;
+      }
+
+      final inviteData = doc.data() as Map<String, dynamic>? ?? {};
+      final String ownerName = inviteData['ownerName'] ?? "Pengguna";
+
+      // Fetch owner's limit
+      double ownerSodium = 0;
+      double ownerLimit = 2000;
+      final ownerDoc = await Get.find<AuthService>().getUserReference(ownerUid).get();
+      if (ownerDoc.exists) ownerLimit = ((ownerDoc.data() as Map<String, dynamic>?)?['dailyLimit'] ?? 2000).toDouble();
+
+      // Fetch scanner's limit
+      double scannerSodium = 0;
+      double scannerLimit = 2000;
+      if (currentUser != null) {
+        final scannerDoc = await Get.find<AuthService>().getUserReference(currentUser.uid).get();
+        if (scannerDoc.exists) scannerLimit = ((scannerDoc.data() as Map<String, dynamic>?)?['dailyLimit'] ?? 2000).toDouble();
+      }
+
+      _showConfirmationDialog(ownerName, ownerUid, token, ownerSodium, ownerLimit, scannerSodium, scannerLimit);
+    } catch (e) {
+      Get.back();
+      CustomPopup.showError("Gagal", "Terjadi kesalahan saat memeriksa undangan.");
+    }
+  }
+
+  void _showConfirmationDialog(
+    String ownerName,
+    String ownerUid,
+    String token,
+    double ownerSodium,
+    double ownerLimit,
+    double scannerSodium,
+    double scannerLimit,
+  ) {
+    Get.dialog(
+      Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(32),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.green.withOpacity(0.15),
+                blurRadius: 40,
+                offset: const Offset(0, 12),
+              )
+            ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            children: [
+              Positioned(
+                top: -60,
+                right: -40,
+                child: Container(
+                  width: 200,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [Colors.green.withOpacity(0.15), Colors.transparent],
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: -30,
+                bottom: -40,
+                child: Transform.rotate(
+                  angle: -0.2,
+                  child: Icon(
+                    Icons.group_add_rounded,
+                    size: 200,
+                    color: Colors.green.withOpacity(0.04),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.teal.shade300, Colors.teal.shade500],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.teal.withOpacity(0.2),
+                            blurRadius: 16,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.group_add_rounded,
+                        color: Colors.white,
+                        size: 44,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      "Undangan Ditemukan",
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, letterSpacing: -0.5, color: Colors.black87),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      "Anda diundang oleh $ownerName untuk bergabung ke anggota pantauan natriumnya.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.grey.shade600, fontSize: 14, height: 1.5),
+                    ),
+                    const SizedBox(height: 24),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.03),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                        border: Border.all(color: Colors.grey.shade100),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(10)),
+                                child: Icon(Icons.person_outline_rounded, size: 18, color: Colors.blue.shade700),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(child: Text(ownerName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600))),
+                              Text("${ownerLimit.toInt()} mg", style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.blue)),
+                            ],
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            child: Divider(height: 1, color: Color(0xFFF0F0F0)),
+                          ),
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(10)),
+                                child: Icon(Icons.person_rounded, size: 18, color: Colors.green.shade700),
+                              ),
+                              const SizedBox(width: 12),
+                              const Expanded(child: Text("Batas Anda", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600))),
+                              Text("${scannerLimit.toInt()} mg", style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.green)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade50.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.orange.shade100),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.info_outline_rounded, color: Colors.orange.shade700, size: 20),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              "pemilik anggota juga harus menerima permintaan Anda.",
+                              style: TextStyle(fontSize: 12, color: Colors.orange.shade900, height: 1.4),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () => Get.back(),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            ),
+                            child: Text("Batal", style: TextStyle(color: Colors.grey.shade700, fontWeight: FontWeight.bold, fontSize: 16)),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Get.back();
+                              _joinGroup(ownerUid, token);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF00796B),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              elevation: 2,
+                              shadowColor: Colors.teal.withOpacity(0.3),
+                            ),
+                            child: const Text("Setujui", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+  Future<void> _joinGroup(String ownerUid, String token) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      CustomPopup.showError("Gagal", "Anda harus masuk untuk bergabung.");
+      return;
+    }
+
+    if (currentUser.uid == ownerUid) {
+      CustomPopup.showError("Gagal", "Anda tidak bisa bergabung ke anggota Anda sendiri.");
+      return;
+    }
+
+    try {
+      await Get.find<AuthService>()
+          .getUserReference(ownerUid)
+          .collection('group_requests')
+          .doc(currentUser.uid)
+          .set({
+            'uid': currentUser.uid,
+            'name': currentUser.displayName ?? 'Pengguna',
+            'email': currentUser.email,
+            'status': 'pending',
+            'role': 'Anggota Keluarga',
+            'timestamp': FieldValue.serverTimestamp(),
+          });
+
+      // Hapus token undangan
+      await Get.find<AuthService>()
+          .getUserReference(ownerUid)
+          .collection('anggota')
+          .doc(token)
+          .delete();
+      await FirebaseFirestore.instance.collection('invites').doc(token).delete();
+
+      CustomPopup.showSuccess("Permintaan Terkirim", "Permintaan bergabung telah dikirim ke pemilik anggota. Silakan tunggu persetujuannya.");
+      accessCodeController.clear();
+    } catch (e) {
+      CustomPopup.showError("Gagal", "Gagal mengirim permintaan bergabung.");
+    }
   }
 }

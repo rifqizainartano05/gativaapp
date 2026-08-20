@@ -18,6 +18,9 @@ class GabungAnggotaController extends GetxController {
   bool hasShownManualDialog = false;
   final TextEditingController accessCodeController = TextEditingController();
 
+  
+
+
   @override
   void onClose() {
     scannerController.dispose();
@@ -79,20 +82,18 @@ class GabungAnggotaController extends GetxController {
         }
       }
 
-      final querySnapshot = await FirebaseFirestore.instance
-          .collectionGroup('anggota')
-          .where('token', isEqualTo: accessCode)
-          .limit(1)
+      final doc = await FirebaseFirestore.instance
+          .collection('invites')
+          .doc(accessCode)
           .get();
 
-      if (querySnapshot.docs.isEmpty) {
+      if (!doc.exists) {
         Get.back();
         _showErrorDialog("Kode Akses tidak ditemukan atau sudah tidak berlaku.");
         return;
       }
 
-      final doc = querySnapshot.docs.first;
-      final inviteData = doc.data();
+      final inviteData = doc.data()!;
       final String ownerUid = inviteData['ownerUid'];
       final String token = inviteData['token'];
 
@@ -124,15 +125,15 @@ class GabungAnggotaController extends GetxController {
         try {
           final User? currentUser = FirebaseAuth.instance.currentUser;
           if (currentUser != null) {
-            final existingOwner = await Get.find<AuthService>()
+            final existingGroup = await Get.find<AuthService>()
                 .getUserReference(currentUser.uid)
                 .collection('anggota')
-                .where('role', isEqualTo: 'pemilik anggota')
+                .where('dataType', isEqualTo: 'Anggota')
                 .get();
 
-            if (existingOwner.docs.isNotEmpty) {
+            if (existingGroup.docs.isNotEmpty) {
               Get.back(); // Tutup loading
-              _showErrorDialog("Anda sudah bergabung di anggota lain. 1 Pengguna hanya bisa bergabung ke 1 Anggota.");
+              _showErrorDialog("Anda sudah bergabung dengan anggota lain. Tidak bisa bergabung lagi.");
               return;
             }
           }
@@ -466,6 +467,7 @@ class GabungAnggotaController extends GetxController {
           .collection('anggota')
           .doc(token)
           .delete();
+      await FirebaseFirestore.instance.collection('invites').doc(token).delete();
 
       Get.dialog(
         Dialog(

@@ -14,7 +14,7 @@ import 'dart:async';
 import '../../../services/notification_service.dart';
 
 class DokterProfileController extends GetxController with WidgetsBindingObserver {
-  final RxString dokterName = 'Tenaga Kesehatan'.obs;
+  final RxString dokterName = 'Dokter'.obs;
   final RxString dokterEmail = ''.obs;
   final RxString photoBase64 = ''.obs;
   final RxString dokterUid = ''.obs;
@@ -94,7 +94,7 @@ class DokterProfileController extends GetxController with WidgetsBindingObserver
             .listen((doc) {
           if (doc.exists) {
             final data = doc.data() as Map<String, dynamic>?;
-            dokterName.value = data?['name'] ?? 'Tenaga Kesehatan';
+            dokterName.value = data?['name'] ?? 'Dokter';
             photoBase64.value = data?['photo64'] ?? '';
           }
         });

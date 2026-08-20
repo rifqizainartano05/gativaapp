@@ -141,48 +141,10 @@ class RiwayatAnggotaView extends StatelessWidget {
                             ],
                           ),
                           child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Sisa Batas',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: AppColors.textSecondary,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Obx(() {
-                                    if (controller.filteredLogs.isEmpty) {
-                                      return const Text(
-                                        '-',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                          color: AppColors.primary,
-                                        ),
-                                      );
-                                    }
-                                    double total = controller.getTotalIntake();
-                                    double limit = controller.chartLimit;
-                                    double sisa = limit - total;
-                                    if (sisa < 0) sisa = 0;
-                                    return Text(
-                                      '${NumberFormat.decimalPattern('id').format(sisa)} mg',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                        color: AppColors.primary,
-                                      ),
-                                    );
-                                  }),
-                                ],
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   const Text(
                                     'Total Asupan',
@@ -253,74 +215,139 @@ class RiwayatAnggotaView extends StatelessWidget {
 
                                   final chartData = controller.getChartData();
 
-                                  double maxY = chartData.fold(0.0, (max, point) {
-                                    double total = point.amanValue + point.warningValue + point.bahayaValue;
-                                    return total > max ? total : max;
-                                  });
-                                  if (maxY == 0) {
-                                    maxY = controller.dailyLimit.value > 0 ? controller.dailyLimit.value : 2000;
-                                  } else {
-                                    maxY = maxY * 1.2;
+                                  double maxHigh = controller.getAbsoluteMaxChartValue();
+                                  // Pastikan maxHigh minimal mencakup semua data saat ini (untuk safety jika ada rounding error)
+                                  for (int i = 0; i < chartData.length; i++) {
+                                    double totalValue = chartData[i].amanValue + chartData[i].warningValue + chartData[i].bahayaValue;
+                                    if (totalValue > maxHigh) maxHigh = totalValue;
                                   }
 
-                                  return LineChart(
-                                    LineChartData(
-                                      minY: 0,
-                                      maxY: maxY,
-                                      gridData: FlGridData(
-                                        show: true,
-                                        drawVerticalLine: false,
-                                        horizontalInterval: maxY / 4 == 0 ? 1 : maxY / 4,
-                                        getDrawingHorizontalLine: (value) => FlLine(
-                                          color: Colors.grey.withValues(alpha: 0.2),
-                                          strokeWidth: 1,
+                                  double finalMaxY = maxHigh * 1.3;
+                                  double finalMinY = -maxHigh * 0.15; 
+
+                                  double screenWidth = MediaQuery.of(context).size.width - 64; // Asumsi margin kiri-kanan
+                                  double minSpacing = 55.0; // Jarak antar titik dikunci persis 55px
+                                  int n = chartData.length;
+                                  
+                                  double requiredWidth = n > 1 ? (n - 1) * minSpacing : minSpacing;
+                                  double finalWidth;
+                                  double finalMinX;
+                                  double finalMaxX;
+
+                                  if (requiredWidth < screenWidth) {
+                                    finalWidth = screenWidth;
+                                    finalMaxX = n > 1 ? (n - 1).toDouble() : 1.0;
+                                    double visibleUnits = screenWidth / minSpacing;
+                                    finalMinX = finalMaxX - visibleUnits; 
+                                  } else {
+                                    finalWidth = requiredWidth;
+                                    finalMinX = 0;
+                                    finalMaxX = n > 1 ? (n - 1).toDouble() : 1.0;
+                                  }
+
+                                  List<FlSpot> spots = [];
+                                  
+                                  // 1. Tambahkan titik palsu di kiri (X < 0) agar grafik membentuk lereng gunung, bukan tebing terpotong vertikal.
+                                  if (finalMinX < 0) {
+                                    spots.add(FlSpot(finalMinX, 0));
+                                  }
+                                  spots.add(FlSpot(-1, 0));
+
+                                  // 2. Data asli
+                                  for (int i = 0; i < chartData.length; i++) {
+                                    double totalValue = chartData[i].amanValue + chartData[i].warningValue + chartData[i].bahayaValue;
+                                    spots.add(FlSpot(i.toDouble(), totalValue));
+                                  }
+
+                                  // 3. Tambahkan titik palsu di kanan (X >= n) agar lereng kanan juga melandai
+                                  spots.add(FlSpot(n.toDouble(), 0));
+                                  if (finalMaxX > n) {
+                                    spots.add(FlSpot(finalMaxX, 0));
+                                  }
+
+                                  return Container(
+                                    alignment: Alignment.centerRight,
+                                    child: SingleChildScrollView(
+                                      scrollDirection: Axis.horizontal,
+                                      reverse: true, // Mulai dari kanan (terbaru)
+                                      physics: const BouncingScrollPhysics(),
+                                      child: Container(
+                                        width: finalWidth + 40, // +40 untuk ruang padding (kiri-kanan)
+                                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                                        child: LineChart(
+                                          LineChartData(
+                                            minX: finalMinX,
+                                            maxX: finalMaxX,
+                                            minY: finalMinY,
+                                            maxY: finalMaxY,
+                                            gridData: FlGridData(
+                                              show: true,
+                                              drawVerticalLine: false,
+                                              horizontalInterval: maxHigh / 4 == 0 ? 1 : maxHigh / 4,
+                                              getDrawingHorizontalLine: (value) => FlLine(
+                                                color: Colors.grey.withValues(alpha: 0.2),
+                                                strokeWidth: 1,
+                                              ),
+                                            ),
+                                            titlesData: const FlTitlesData(
+                                              show: false,
+                                            ),
+                                            borderData: FlBorderData(show: false),
+                                            lineBarsData: [
+                                              LineChartBarData(
+                                                spots: spots,
+                                                isCurved: true,
+                                                curveSmoothness: 0.35,
+                                                color: AppColors.primary, // Warna garis hijau agak gelap
+                                                barWidth: 4,
+                                                isStrokeCapRound: true,
+                                                dotData: FlDotData(
+                                                  show: true,
+                                                  checkToShowDot: (spot, barData) {
+                                                    return spot.x >= 0 && spot.x < n; // Jangan tampilkan dot di titik palsu
+                                                  },
+                                                  getDotPainter: (spot, percent, barData, index) {
+                                                    return FlDotCirclePainter(
+                                                      radius: 4,
+                                                      color: Colors.white,
+                                                      strokeWidth: 2,
+                                                      strokeColor: AppColors.primary,
+                                                    );
+                                                  },
+                                                ),
+                                                belowBarData: BarAreaData(
+                                                  show: true,
+                                                  gradient: LinearGradient(
+                                                    colors: [
+                                                      AppColors.primary.withValues(alpha: 0.4),
+                                                      AppColors.primary.withValues(alpha: 0.0),
+                                                    ],
+                                                    begin: Alignment.topCenter,
+                                                    end: Alignment.bottomCenter,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                            lineTouchData: LineTouchData(
+                                              enabled: true,
+                                              touchTooltipData: LineTouchTooltipData(
+                                                getTooltipColor: (spot) => Colors.blueGrey.shade800,
+                                                getTooltipItems: (touchedSpots) {
+                                                  return touchedSpots.map((spot) {
+                                                    return LineTooltipItem(
+                                                      '${spot.y.toInt()} mg',
+                                                      const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                                    );
+                                                  }).toList();
+                                                },
+                                              ),
+                                            ),
+                                          ),
                                         ),
                                       ),
-                                      titlesData: const FlTitlesData(
-                                        show: false,
-                                      ),
-                                      borderData: FlBorderData(show: false),
-                                      lineBarsData: [
-                                        if (chartData.any((p) => p.amanValue > 0))
-                                          _buildLineChartBar(chartData, (p) => p.amanValue, AppColors.safe),
-                                        if (chartData.any((p) => p.warningValue > 0))
-                                          _buildLineChartBar(chartData, (p) => p.warningValue, AppColors.warning),
-                                        if (chartData.any((p) => p.bahayaValue > 0))
-                                          _buildLineChartBar(chartData, (p) => p.bahayaValue, AppColors.danger),
-                                      ],
-                                      lineTouchData: const LineTouchData(enabled: true),
                                     ),
                                   );
                                 }),
-                              ),
-                              const SizedBox(height: 24),
-                              // Legend
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Obx(() {
-                                    if (controller.filteredLogs.isEmpty) {
-                                      return const SizedBox.shrink();
-                                    }
-                                    final chartData = controller.getChartData();
-                                    return Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        if (chartData.any((p) => p.amanValue > 0)) ...[
-                                          _buildLegendItem(AppColors.safe, 'Aman'),
-                                          const SizedBox(width: 16),
-                                        ],
-                                        if (chartData.any((p) => p.warningValue > 0)) ...[
-                                          _buildLegendItem(AppColors.warning, 'Waspada'),
-                                          const SizedBox(width: 16),
-                                        ],
-                                        if (chartData.any((p) => p.bahayaValue > 0)) ...[
-                                          _buildLegendItem(AppColors.danger, 'Bahaya'),
-                                        ],
-                                      ],
-                                    );
-                                  }),
-                                ],
                               ),
                             ],
                           ),
@@ -417,97 +444,82 @@ class RiwayatAnggotaView extends StatelessWidget {
                                       densityColor = Colors.blue;
                                     }
 
-                                    return Dismissible(
-                                      key: Key(log.id),
-                                      direction: DismissDirection.startToEnd,
-                                      onDismissed: (direction) {
-                                        controller.deleteHistoryLog(log.id);
-                                      },
-                                      background: Container(
-                                        decoration: BoxDecoration(
-                                          color: Colors.red,
-                                          borderRadius: BorderRadius.circular(16),
-                                        ),
-                                        alignment: Alignment.centerLeft,
-                                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                                        child: const Icon(Icons.delete_sweep_rounded, color: Colors.white, size: 28),
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(color: Colors.grey.shade100),
                                       ),
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius: BorderRadius.circular(16),
-                                          border: Border.all(color: Colors.grey.shade100),
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            // Circular Icon
-                                            Container(
-                                              padding: const EdgeInsets.all(12),
-                                              decoration: BoxDecoration(
-                                                color: densityColor.withValues(alpha: 0.1),
-                                                shape: BoxShape.circle,
-                                              ),
-                                              child: Icon(
-                                                Icons.restaurant_rounded, // fork and spoon
-                                                color: densityColor,
-                                                size: 20,
-                                              ),
+                                      child: Row(
+                                        children: [
+                                          // Circular Icon
+                                          Container(
+                                            padding: const EdgeInsets.all(12),
+                                            decoration: BoxDecoration(
+                                              color: densityColor.withValues(alpha: 0.1),
+                                              shape: BoxShape.circle,
                                             ),
-                                            const SizedBox(width: 14),
-
-                                            // Details
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    log.title,
-                                                    style: const TextStyle(
-                                                      fontWeight: FontWeight.bold,
-                                                      fontSize: 15,
-                                                      color: Colors.black87,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Text(
-                                                    log.type == 'makanan' ? 'Asupan Makanan' : 'Aktivitas Sehat',
-                                                    style: const TextStyle(
-                                                      fontSize: 12,
-                                                      color: AppColors.textSecondary,
-                                                    ),
-                                                    overflow: TextOverflow.ellipsis,
-                                                  ),
-                                                  const SizedBox(height: 2),
-                                                  Text(
-                                                    formatSimpleDate(log.timestamp),
-                                                    style: const TextStyle(
-                                                      fontSize: 11,
-                                                      color: AppColors.textMuted,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
+                                            child: Icon(
+                                              Icons.restaurant_rounded, // fork and spoon
+                                              color: densityColor,
+                                              size: 20,
                                             ),
+                                          ),
+                                          const SizedBox(width: 14),
 
-                                            // Total sodium badge
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                              decoration: BoxDecoration(
-                                                color: densityColor.withValues(alpha: 0.1),
-                                                borderRadius: BorderRadius.circular(20),
-                                              ),
-                                              child: Text(
-                                                '${log.amount > 0 ? '+' : ''}${NumberFormat.decimalPattern('id').format(log.amount)} mg',
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 14,
-                                                  color: densityColor,
+                                          // Details
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  log.title,
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 15,
+                                                    color: Colors.black87,
+                                                  ),
                                                 ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  log.type == 'makanan' ? 'Asupan Makanan' : 'Aktivitas Sehat',
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    color: AppColors.textSecondary,
+                                                  ),
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                                const SizedBox(height: 2),
+                                                Text(
+                                                  formatSimpleDate(log.timestamp),
+                                                  style: const TextStyle(
+                                                    fontSize: 11,
+                                                    color: AppColors.textMuted,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+
+                                          // Total sodium badge
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                            decoration: BoxDecoration(
+                                              color: densityColor.withValues(alpha: 0.1),
+                                              borderRadius: BorderRadius.circular(20),
+                                            ),
+                                            child: Text(
+                                              '${log.amount > 0 ? '+' : ''}${NumberFormat.decimalPattern('id').format(log.amount)} mg',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 14,
+                                                color: densityColor,
                                               ),
                                             ),
-                                          ],
-                                        ),
+                                          ),
+
+                                        ],
                                       ),
                                     );
                                   },
@@ -528,53 +540,7 @@ class RiwayatAnggotaView extends StatelessWidget {
     );
   }
 
-  LineChartBarData _buildLineChartBar(List<ChartDataPoint> data, double Function(ChartDataPoint) valueSelector, Color color) {
-    return LineChartBarData(
-      spots: data.asMap().entries.map((e) {
-        return FlSpot(e.key.toDouble(), valueSelector(e.value));
-      }).toList(),
-      isCurved: true,
-      color: color,
-      barWidth: 3,
-      isStrokeCapRound: true,
-      dotData: const FlDotData(show: false),
-      belowBarData: BarAreaData(
-        show: true,
-        gradient: LinearGradient(
-          colors: [
-            color.withOpacity(0.3),
-            color.withOpacity(0.0),
-          ],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-        ),
-      ),
-    );
-  }
 
-  Widget _buildLegendItem(Color color, String label) {
-    return Row(
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(4),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 13,
-            color: Colors.black87,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
-  }
 
   void _showFilterBottomSheet(BuildContext context, RiwayatAnggotaController controller) {
     RxString tempOption = controller.filterOption.value.obs;

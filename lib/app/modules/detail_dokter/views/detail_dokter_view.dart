@@ -171,7 +171,7 @@ class DetailDokterView extends GetView<DetailDokterController> {
                                   ),
                                 ),
                                 const SizedBox(height: 20),
-                                // Nama Tenaga Kesehatan
+                                // Nama Dokter
                                 Text(
                                   data['name'] ?? data['nama'] ?? data['username'] ?? 'Nama Dokter',
                                   style: const TextStyle(

@@ -180,7 +180,7 @@ class DokterEditProfileView extends GetView<DokterEditProfileController> {
                 ),
               ),
 
-              const SizedBox(height: 40),
+              const SizedBox(height: 5),
 
               SafeArea(
                 child: SizedBox(

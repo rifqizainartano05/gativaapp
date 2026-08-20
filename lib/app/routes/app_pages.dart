@@ -45,7 +45,6 @@ import '../modules/home/views/home_view.dart';
 import '../modules/home_dokter/bindings/home_dokter_binding.dart';
 import '../modules/home_dokter/views/home_dokter_view.dart';
 
-
 import '../modules/lensa_pintar/bindings/lensa_pintar_binding.dart';
 import '../modules/lensa_pintar/views/lensa_pintar_view.dart';
 import '../modules/lensa_pintar_detail/bindings/lensa_pintar_detail_binding.dart';

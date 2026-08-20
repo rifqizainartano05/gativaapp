@@ -440,7 +440,7 @@ class ProfileController extends GetxController with WidgetsBindingObserver {
               )),
               const SizedBox(height: 16),
               const Text(
-                'Tenaga Kesehatan Anda',
+                'Dokter Anda',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
@@ -518,7 +518,7 @@ class ProfileController extends GetxController with WidgetsBindingObserver {
               ),
               const SizedBox(height: 8),
               const Text(
-                "Pilih rentang tanggal untuk laporan tenaga kesehatan Anda.",
+                "Pilih rentang tanggal untuk laporan dokter Anda.",
                 style: TextStyle(color: Colors.grey, fontSize: 13),
               ),
               const SizedBox(height: 24),

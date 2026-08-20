@@ -241,118 +241,98 @@ class LensaPintarView extends GetView<LensaPintarController> {
                     separatorBuilder: (context, index) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final item = controller.searchResults[index];
-                      return Dismissible(
-                        key: Key(item['id'] ?? item['name'] ?? index.toString()),
-                        direction: DismissDirection.startToEnd,
-                        onDismissed: (direction) {
-                          controller.deleteJajanan(item['id'] ?? '', item['isGlobal'] ?? false);
-                        },
-                        background: Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          alignment: Alignment.centerLeft,
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: const Icon(
-                            Icons.delete_sweep_rounded,
-                            color: Colors.white,
-                            size: 28,
-                          ),
+                      return InkWell(
+                        onTap: () => Get.toNamed(
+                          Routes.LENSA_PINTAR_DETAIL,
+                          arguments: item,
                         ),
-                        child: InkWell(
-                          onTap: () => Get.toNamed(
-                            Routes.LENSA_PINTAR_DETAIL,
-                            arguments: item,
+                        borderRadius: BorderRadius.circular(16),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.grey.shade100),
                           ),
-                          borderRadius: BorderRadius.circular(16),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: Colors.grey.shade100),
-                            ),
-                            child: Row(
-                              children: [
-                                Builder(
-                                  builder: (context) {
-                                    final int sodiumMg = (item['natrium'] as num?)?.toInt() ?? (item['sodium'] as num?)?.toInt() ?? 0;
-                                    Color densityColor = AppColors.safe;
-                                    if (sodiumMg >= 1000) {
-                                      densityColor = AppColors.danger;
-                                    } else if (sodiumMg >= 600) {
-                                      densityColor = AppColors.warning;
-                                    }
-
-                                    return Expanded(
-                                      child: Row(
-                                        children: [
-                                          // Circular Icon
-                                          Container(
-                                            padding: const EdgeInsets.all(12),
-                                            decoration: BoxDecoration(
-                                              color: densityColor.withValues(alpha: 0.1),
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: Icon(
-                                              item['type'] == 'Kemasan' ? Icons.fastfood_rounded : Icons.restaurant_menu_rounded,
-                                              color: densityColor,
-                                              size: 20,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 14),
-
-                                          // Details
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  item['name'],
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 15,
-                                                    color: Colors.black87,
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 4),
-                                                Text(
-                                                  item['type'] ?? 'Makanan',
-                                                  style: const TextStyle(
-                                                    fontSize: 12,
-                                                    color: AppColors.textSecondary,
-                                                  ),
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-
-                                          // Total sodium badge
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                            decoration: BoxDecoration(
-                                              color: densityColor.withValues(alpha: 0.1),
-                                              borderRadius: BorderRadius.circular(20),
-                                            ),
-                                            child: Text(
-                                              '${NumberFormat.decimalPattern('id').format(sodiumMg)} mg',
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 14,
-                                                color: densityColor,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
+                          child: Row(
+                            children: [
+                              Builder(
+                                builder: (context) {
+                                  final int sodiumMg = (item['natrium'] as num?)?.toInt() ?? (item['sodium'] as num?)?.toInt() ?? 0;
+                                  Color densityColor = AppColors.safe;
+                                  if (sodiumMg >= 1000) {
+                                    densityColor = AppColors.danger;
+                                  } else if (sodiumMg >= 600) {
+                                    densityColor = AppColors.warning;
                                   }
-                                ),
-                              ],
-                            ),
+
+                                  return Expanded(
+                                    child: Row(
+                                      children: [
+                                        // Circular Icon
+                                        Container(
+                                          padding: const EdgeInsets.all(12),
+                                          decoration: BoxDecoration(
+                                            color: densityColor.withValues(alpha: 0.1),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Icon(
+                                            Icons.restaurant_rounded, // fork and spoon
+                                            color: densityColor,
+                                            size: 20,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 14),
+
+                                        // Details
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                item['name'],
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 15,
+                                                  color: Colors.black87,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                item['type'] ?? 'Makanan',
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  color: AppColors.textSecondary,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+
+                                        // Total sodium badge
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                          decoration: BoxDecoration(
+                                            color: densityColor.withValues(alpha: 0.1),
+                                            borderRadius: BorderRadius.circular(20),
+                                          ),
+                                          child: Text(
+                                            '${NumberFormat.decimalPattern('id').format(sodiumMg)} mg',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14,
+                                              color: densityColor,
+                                            ),
+                                          ),
+                                        ),
+
+                                      ],
+                                    ),
+                                  );
+                                }
+                              ),
+                            ],
                           ),
                         ),
                       );

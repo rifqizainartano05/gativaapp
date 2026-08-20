@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'package:flutter/services.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import '../../notifikasi/controllers/notifikasi_controller.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +9,7 @@ import 'package:get/get.dart';
 import '../../../services/auth_service.dart';
 import '../../../widgets/custom_popup.dart';
 import 'package:intl/intl.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class ChatMessage {
   final String? id;
@@ -185,10 +188,15 @@ class RoomChatController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    if (!Get.isRegistered<NotifikasiController>()) {
+      Get.put(NotifikasiController(), permanent: true);
+    }
+    
     _initSpeech();
     final args = Get.arguments;
     if (args != null && args is Map<String, dynamic>) {
       selectedDoctor.value = args;
+      _resetUnreadCount();
       _listenToFirebaseChat();
       _listenToPartnerTyping();
       _listenToPartnerPresence();
@@ -198,6 +206,22 @@ class RoomChatController extends GetxController {
         _initChatHistory();
       }
     }
+  }
+
+  void _resetUnreadCount() {
+    final user = FirebaseAuth.instance.currentUser;
+    final userId = user?.uid ?? 'anonymous';
+    final doctorId = selectedDoctor.value?['id'] ?? '';
+    if (doctorId.isEmpty) return;
+    
+    FirebaseFirestore.instance
+        .collection('mobile')
+        .doc('roles')
+        .collection('pasien')
+        .doc(userId)
+        .collection('chats')
+        .doc(doctorId)
+        .update({'unreadCount': 0}).catchError((_) {});
   }
 
   Future<void> _initSpeech() async {
@@ -658,12 +682,15 @@ class RoomChatController extends GetxController {
         'createdAt': FieldValue.serverTimestamp(),
         'lastMessage': text,
         'lastMessageTime': FieldValue.serverTimestamp(),
+        'isWaitingReply': true,
       }, SetOptions(merge: true));
 
       batch.set(doctorChatRef, {
         'createdAt': FieldValue.serverTimestamp(),
         'lastMessage': text,
         'lastMessageTime': FieldValue.serverTimestamp(),
+        'isWaitingReply': true,
+        'unreadCount': FieldValue.increment(1),
       }, SetOptions(merge: true));
 
       // Generate a single ID for the message so it's identical on both sides
@@ -675,6 +702,22 @@ class RoomChatController extends GetxController {
 
       final doctorMsgRef = doctorChatRef.collection('messages').doc(messageId);
       batch.set(doctorMsgRef, messageData);
+
+      final notifRef = FirebaseFirestore.instance
+          .collection('mobile')
+          .doc('roles')
+          .collection('dokter')
+          .doc(doctorId)
+          .collection('notifikasi')
+          .doc();
+          
+      batch.set(notifRef, {
+        'title': 'Pesan dari $userName',
+        'message': text,
+        'timestamp': FieldValue.serverTimestamp(),
+        'isRead': false,
+        'type': 'chat',
+      });
 
       await batch.commit();
     } catch (e) {
@@ -1101,6 +1144,8 @@ class RoomChatController extends GetxController {
     });
   }
 
+  bool _isInitialChatLoad = true;
+
   void _listenToFirebaseChat() {
     final user = FirebaseAuth.instance.currentUser;
     final userId = user?.uid ?? 'anonymous';
@@ -1109,6 +1154,7 @@ class RoomChatController extends GetxController {
     if (doctorId.isEmpty) return;
 
     _chatSubscription?.cancel();
+    _isInitialChatLoad = true;
 
     final query = Get.find<AuthService>()
         .getUserReference(userId)
@@ -1118,6 +1164,24 @@ class RoomChatController extends GetxController {
         .orderBy('timestamp', descending: true);
 
     _chatSubscription = query.snapshots().listen((snapshot) {
+      if (!_isInitialChatLoad) {
+        bool hasNewMessageFromDoctor = false;
+        for (var change in snapshot.docChanges) {
+          if (change.type == DocumentChangeType.added) {
+            final data = change.doc.data();
+            if (data != null && data['senderId'] != userId) {
+              hasNewMessageFromDoctor = true;
+            }
+          }
+        }
+        if (hasNewMessageFromDoctor) {
+          final player = AudioPlayer();
+          player.play(AssetSource('suara_chat.mp3'));
+        }
+      } else {
+        _isInitialChatLoad = false;
+      }
+
       final List<ChatMessage> newMessages = [];
 
       for (var doc in snapshot.docs) {

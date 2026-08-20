@@ -268,6 +268,53 @@ class RiwayatController extends GetxController {
     return filteredLogs.where((l) => l.amount > dailyLimit.value * 0.2).fold(0.0, (sum, item) => sum + item.amount);
   }
 
+  double getAbsoluteMaxChartValue() {
+    final foodLogs = logs.where((l) => l.type == 'makanan').toList();
+    if (foodLogs.isEmpty) return dailyLimit.value > 0 ? dailyLimit.value : 2000;
+
+    double maxVal = 0;
+    
+    if (currentUnit == 'Hari' || currentUnit == 'Atur Tanggal') {
+      Map<String, double> dailyTotals = {};
+      for (var log in foodLogs) {
+        String key = "${log.timestamp.year}-${log.timestamp.month}-${log.timestamp.day}";
+        dailyTotals[key] = (dailyTotals[key] ?? 0) + log.amount;
+      }
+      maxVal = dailyTotals.values.isEmpty ? 0 : dailyTotals.values.reduce((a, b) => a > b ? a : b);
+    } 
+    else if (currentUnit == 'Minggu') {
+      // Approximate max weekly
+      Map<String, double> weeklyTotals = {};
+      for (var log in foodLogs) {
+        // week of year approximation or just 7-day windows
+        int weekNum = (log.timestamp.difference(DateTime(log.timestamp.year, 1, 1)).inDays / 7).floor();
+        String key = "${log.timestamp.year}-W$weekNum";
+        weeklyTotals[key] = (weeklyTotals[key] ?? 0) + log.amount;
+      }
+      maxVal = weeklyTotals.values.isEmpty ? 0 : weeklyTotals.values.reduce((a, b) => a > b ? a : b);
+    }
+    else if (currentUnit == 'Bulan') {
+      Map<String, double> monthlyTotals = {};
+      for (var log in foodLogs) {
+        String key = "${log.timestamp.year}-${log.timestamp.month}";
+        monthlyTotals[key] = (monthlyTotals[key] ?? 0) + log.amount;
+      }
+      maxVal = monthlyTotals.values.isEmpty ? 0 : monthlyTotals.values.reduce((a, b) => a > b ? a : b);
+    }
+    else if (currentUnit == 'Tahun') {
+      Map<String, double> yearlyTotals = {};
+      for (var log in foodLogs) {
+        String key = "${log.timestamp.year}";
+        yearlyTotals[key] = (yearlyTotals[key] ?? 0) + log.amount;
+      }
+      maxVal = yearlyTotals.values.isEmpty ? 0 : yearlyTotals.values.reduce((a, b) => a > b ? a : b);
+    } else {
+      // 'Saat Ini'
+      maxVal = foodLogs.fold(0.0, (sum, log) => sum + log.amount);
+    }
+
+    return maxVal == 0 ? (dailyLimit.value > 0 ? dailyLimit.value : 2000) : maxVal;
+  }
 
   List<ChartDataPoint> getChartData() {
     final now = DateTime.now();

@@ -115,7 +115,7 @@ class TentangAplikasiView extends GetView<TentangAplikasiController> {
                       _buildFeatureCard(
                         icon: Icons.chat_bubble_outline_rounded,
                         title: 'Chat Dokter',
-                        description: 'Berkonsultasi langsung dengan tenaga kesehatan terpercaya kapan saja.',
+                        description: 'Berkonsultasi langsung dengan dokter terpercaya kapan saja.',
                         color: const Color(0xFF1976D2),
                       ),
                       _buildFeatureCard(
@@ -201,7 +201,7 @@ class TentangAplikasiView extends GetView<TentangAplikasiController> {
           const Divider(height: 1, color: Color(0xFFEEEEEE)),
           const SizedBox(height: 20),
           const Text(
-            'Aplikasi inovatif yang dirancang untuk membantu Anda memantau kesehatan dan menjaga pola makan harian. Dengan antarmuka yang ramah pengguna, Anda dapat berkonsultasi dengan tenaga kesehatan terpercaya dan mencatat konsumsi harian Anda secara mudah dan praktis.',
+            'Aplikasi inovatif yang dirancang untuk membantu Anda memantau kesehatan dan menjaga pola makan harian. Dengan antarmuka yang ramah pengguna, Anda dapat berkonsultasi dengan dokter terpercaya dan mencatat konsumsi harian Anda secara mudah dan praktis.',
             style: TextStyle(
               fontSize: 13,
               color: Colors.black54,

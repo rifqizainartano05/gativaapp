@@ -157,6 +157,7 @@ class LensaPintarController extends GetxController {
                   'servingSize': d['servingSize'],
                   'servingsPerPack': d['servingsPerPack'],
                   'sodiumPerServing': d['sodiumPerServing'],
+                  'portionEaten': d['portionEaten'],
                 };
               }).toList();
 
@@ -227,6 +228,15 @@ class LensaPintarController extends GetxController {
       batch.set(docRef, {
         'natrium': FieldValue.increment(item['natrium']),
       }, SetOptions(merge: true));
+      
+      final notifRef = docRef.collection('notifikasi').doc();
+      batch.set(notifRef, {
+        'title': 'Konsumsi Natrium Tercatat',
+        'message': 'Anda baru saja merekam konsumsi ${item['name']} sejumlah ${item['natrium']} mg natrium.',
+        'timestamp': Timestamp.now(),
+        'isRead': false,
+        'type': 'sistem',
+      });
       
       await batch.commit();
 

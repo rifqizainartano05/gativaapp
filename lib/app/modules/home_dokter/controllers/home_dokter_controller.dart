@@ -4,12 +4,13 @@ import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../services/auth_service.dart';
+import '../../notifikasi/controllers/notifikasi_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class HomeDokterController extends GetxController {
 
-  final RxString dokterName = 'Tenaga Kesehatan'.obs;
+  final RxString dokterName = 'Dokter'.obs;
   final RxString strNumber = 'Menunggu Data...'.obs;
   final RxString photoBase64 = ''.obs;
   final Rx<Uint8List?> imageBytes = Rx<Uint8List?>(null);
@@ -23,6 +24,11 @@ class HomeDokterController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    
+    // Initialize NotifikasiController globally for doctors
+    if (!Get.isRegistered<NotifikasiController>()) {
+      Get.put(NotifikasiController(), permanent: true);
+    }
     
     ever(photoBase64, (String b64) {
       if (b64.isEmpty) {
@@ -87,7 +93,7 @@ class HomeDokterController extends GetxController {
             .listen((dokterDoc) {
           if (dokterDoc.exists) {
             final data = dokterDoc.data() as Map<String, dynamic>?;
-            dokterName.value = data?['name'] ?? 'Tenaga Kesehatan';
+            dokterName.value = data?['name'] ?? 'Dokter';
             strNumber.value = data?['str'] ?? data?['strNumber'] ?? '-';
             photoBase64.value = data?['photo64'] ?? '';
           }

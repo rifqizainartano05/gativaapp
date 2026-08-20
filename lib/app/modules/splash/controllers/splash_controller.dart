@@ -5,18 +5,34 @@ import 'package:flutter/material.dart';
 import '../../../routes/app_pages.dart';
 import '../../../services/auth_service.dart';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashController extends GetxController {
   final isTransitioning = false.obs;
   final isRippleStarted = false.obs;
-
   final isNavWhite = false.obs;
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   void onInit() {
     super.onInit();
+    _playOpeningSound();
     _startSplash();
+  }
+
+  void _playOpeningSound() async {
+    try {
+      await _audioPlayer.play(AssetSource('suara_opening.mp3'));
+    } catch (e) {
+      debugPrint('Error playing opening sound: $e');
+    }
+  }
+
+  @override
+  void onClose() {
+    _audioPlayer.dispose();
+    super.onClose();
   }
 
   void _startSplash() async {

@@ -58,13 +58,22 @@ class NotifikasiController extends GetxController {
             final data = change.doc.data();
             if (data != null) {
               final timestamp = (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
-              // Only notify if it was created in the last 15 seconds to avoid spam on initial load
-              if (DateTime.now().difference(timestamp).inSeconds < 15 && (data['isRead'] != true)) {
-                NotificationService.showNotification(
-                  id: change.doc.id.hashCode,
-                  title: data['title'] ?? 'Notifikasi',
-                  body: data['message'] ?? '',
-                );
+              // Only notify if it was created in the last 120 seconds (handling clock drift)
+              final diff = DateTime.now().difference(timestamp).inSeconds;
+              if (diff < 120 && diff > -120 && (data['isRead'] != true)) {
+                if (data['type'] == 'chat') {
+                  NotificationService.showChatNotification(
+                    id: change.doc.id.hashCode,
+                    title: data['title'] ?? 'Notifikasi',
+                    body: data['message'] ?? '',
+                  );
+                } else {
+                  NotificationService.showNotification(
+                    id: change.doc.id.hashCode,
+                    title: data['title'] ?? 'Notifikasi',
+                    body: data['message'] ?? '',
+                  );
+                }
               }
             }
           }

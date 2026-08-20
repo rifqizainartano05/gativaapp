@@ -17,10 +17,7 @@ class VerifikasiEmailView extends GetView<VerifikasiEmailController> {
           systemNavigationBarColor: Colors.white,
           systemNavigationBarIconBrightness: Brightness.dark,
         ),
-        title: const Text(
-          'Verifikasi Email',
-          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
-        ),
+
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,

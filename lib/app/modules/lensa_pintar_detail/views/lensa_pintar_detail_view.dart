@@ -334,7 +334,7 @@ class LensaPintarDetailView extends GetView<LensaPintarDetailController> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              "Tahukah Kamu",
+                              "Informasi Nutrisi Klinis",
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
@@ -360,25 +360,25 @@ class LensaPintarDetailView extends GetView<LensaPintarDetailController> {
                                 if (unitText.isEmpty) unitText = "Porsi";
 
                                 double totalBerat = ssVal * sppVal;
-                                double totalNatrium = spsVal * sppVal;
-                                double totalAkgPercent = limit > 0 ? (totalNatrium / limit) * 100 : 0;
-                                
-                                Color totalStatusColor;
-                                if (limit == 0) {
-                                  totalStatusColor = AppColors.danger;
-                                } else if (totalAkgPercent > 50) {
-                                  totalStatusColor = AppColors.danger;
-                                } else if (totalAkgPercent > 30) {
-                                  totalStatusColor = AppColors.warning;
+                                double natriumSatuBungkus = spsVal * sppVal;
+                                // Retrieve explicitly passed portionEaten, or fallback to math
+                                double portionEaten = 1.0;
+                                if (food['portionEaten'] != null) {
+                                  portionEaten = (food['portionEaten'] is num) ? food['portionEaten'].toDouble() : 1.0;
                                 } else {
-                                  totalStatusColor = AppColors.safe;
+                                  double natriumSatuBungkus = spsVal * sppVal;
+                                  portionEaten = natriumSatuBungkus > 0 ? (sodiumMg / natriumSatuBungkus) : 1.0;
                                 }
+                                
+                                String portionEatenStr = portionEaten == portionEaten.toInt() 
+                                    ? portionEaten.toInt().toString() 
+                                    : portionEaten.toStringAsFixed(1);
                                 
                                 return Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     const Text(
-                                      "Di label kemasan ini, tertulis \"Takaran Saji\" dan \"Sajian Per Kemasan\". Apa sih artinya?",
+                                      "Berdasarkan standar regulasi pelabelan gizi, penting untuk memahami terminologi \"Takaran Saji\" (Serving Size) dan \"Sajian Per Kemasan\" (Servings Per Container).",
                                       style: TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.5),
                                     ),
                                     const SizedBox(height: 12),
@@ -388,7 +388,7 @@ class LensaPintarDetailView extends GetView<LensaPintarDetailController> {
                                         children: [
                                           const TextSpan(text: "• "),
                                           const TextSpan(text: "Takaran Saji", style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                                          const TextSpan(text: " adalah porsi wajar yang biasanya dimakan dalam 1x duduk. Di produk ini, 1 porsi = "),
+                                          const TextSpan(text: " merepresentasikan jumlah asupan standar dalam satu kali konsumsi. Pada produk ini, 1 porsi setara dengan "),
                                           TextSpan(text: ssText, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
                                           const TextSpan(text: "."),
                                         ],
@@ -401,7 +401,7 @@ class LensaPintarDetailView extends GetView<LensaPintarDetailController> {
                                         children: [
                                           const TextSpan(text: "• "),
                                           const TextSpan(text: "Sajian Per Kemasan", style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                                          const TextSpan(text: " adalah total porsi di dalam 1 bungkus utuh. Di produk ini, isinya = "),
+                                          const TextSpan(text: " mengindikasikan total porsi yang tersedia dalam satu unit kemasan utuh. Produk ini memiliki "),
                                           TextSpan(text: sppText, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
                                           const TextSpan(text: "."),
                                         ],
@@ -409,7 +409,7 @@ class LensaPintarDetailView extends GetView<LensaPintarDetailController> {
                                     ),
                                     const SizedBox(height: 16),
                                     const Text(
-                                      "Maka, kalau dihitung, Total Berat Isi 1 bungkus ini adalah:",
+                                      "Estimasi akumulasi massa atau volume bersih dalam satu kemasan utuh dapat dihitung sebagai berikut:",
                                       style: TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.5),
                                     ),
                                     const SizedBox(height: 4),
@@ -422,34 +422,23 @@ class LensaPintarDetailView extends GetView<LensaPintarDetailController> {
                                       text: TextSpan(
                                         style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.5),
                                         children: [
-                                          const TextSpan(text: "Ingat, angka Natrium di atas ("),
-                                          TextSpan(text: "${spsVal.toInt()} mg", style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                                          const TextSpan(text: ") hanya untuk 1x makan (1 porsi), bukan sebungkus utuh."),
+                                          const TextSpan(text: "Perlu diperhatikan bahwa kandungan Natrium sebesar "),
+                                          TextSpan(text: "${spsVal.toInt() == spsVal ? spsVal.toInt() : spsVal} mg", style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                                          const TextSpan(text: " yang tercantum adalah takaran untuk 1 porsi konsumsi, bukan merepresentasikan total kandungan dalam satu kemasan."),
                                         ],
                                       ),
                                     ),
                                     const SizedBox(height: 12),
-                                    const Text(
-                                      "Jadi, kalau kamu menghabiskan 1 bungkus ini sendirian, kamu mengonsumsi Natrium sebesar:",
-                                      style: TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.5),
+                                    Text(
+                                      "Berdasarkan data asupan yang direkam, Anda telah mengonsumsi sebanyak $portionEatenStr kemasan. Total kandungan Natrium untuk 1 kemasan utuh adalah:",
+                                      style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.5),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      "${spsVal.toInt()} mg × $sppText = ${totalNatrium.toInt()} mg Natrium!",
+                                      "${spsVal.toInt() == spsVal ? spsVal.toInt() : spsVal} mg × $sppText = ${natriumSatuBungkus.toInt() == natriumSatuBungkus ? natriumSatuBungkus.toInt() : natriumSatuBungkus.toStringAsFixed(1)} mg Natrium",
                                       style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                                     ),
-                                    const SizedBox(height: 12),
-                                    RichText(
-                                      text: TextSpan(
-                                        style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.5),
-                                        children: [
-                                          const TextSpan(text: "(Itu setara dengan "),
-                                          TextSpan(text: "(${totalNatrium.toInt()} mg ÷ ${limit.toInt()} mg) × 100% = ", style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold)),
-                                          TextSpan(text: "${totalAkgPercent.toStringAsFixed(1)}%", style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                                          const TextSpan(text: " dari AKG Natrium harian kamu)."),
-                                        ],
-                                      ),
-                                    ),
+
                                   ],
                                 );
                               },

@@ -213,9 +213,13 @@ class LoginController extends GetxController {
       isLoading.value = false;
       String message = 'Terjadi kesalahan saat masuk.';
       if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
-        message = 'Data tidak tersedia atau hapus.';
+        message = 'Email atau kata sandi yang Anda masukkan salah.';
       } else if (e.code == 'invalid-email') {
         message = 'Format email tidak valid.';
+      } else if (e.code == 'too-many-requests') {
+        message = 'Terlalu banyak percobaan gagal. Silakan coba lagi nanti.';
+      } else if (e.code == 'network-request-failed') {
+        message = 'Koneksi internet bermasalah. Harap periksa jaringan Anda.';
       }
       
       Get.dialog(

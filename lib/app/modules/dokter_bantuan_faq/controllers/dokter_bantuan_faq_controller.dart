@@ -8,20 +8,20 @@ import '../../../services/auth_service.dart';
 class DokterBantuanFaqController extends GetxController {
   final List<Map<String, String>> faqs = [
     {
-      'question': 'Bagaimana cara membalas chat pasien?',
-      'answer': 'Anda dapat masuk ke tab Konsultasi dan memilih nama pasien yang ingin dibalas. Pesan baru akan berada di bagian paling atas daftar.',
+      'question': 'Bagaimana cara mengubah data profil saya?',
+      'answer': 'Buka tab Profil di navigasi bawah, lalu ketuk opsi Edit Profil. Anda bisa memperbarui data pribadi seperti nama, spesialisasi, dan foto profil Anda di sana.',
     },
     {
-      'question': 'Bisakah saya menghapus pasien dari daftar pantauan?',
-      'answer': 'Saat ini, riwayat pasien akan tetap tersimpan selama mereka terdaftar di platform untuk memastikan kelengkapan rekam medis elektronik.',
+      'question': 'Bagaimana cara melihat detail riwayat pasien?',
+      'answer': 'Anda dapat melihat detail riwayat pemantauan pasien dengan mengetuk ikon informasi atau profil pasien di bagian atas ruang obrolan (chat).',
     },
     {
-      'question': 'Bagaimana jika aplikasi mengalami error?',
-      'answer': 'Pastikan koneksi internet stabil. Jika masalah berlanjut, hubungi tim IT Support GATIVA di menu Bantuan Lanjutan atau restart aplikasi Anda.',
+      'question': 'Apakah data privasi dan riwayat konsultasi aman?',
+      'answer': 'Ya, kami menjamin kerahasiaan data. Aplikasi Gativa menggunakan sistem keamanan untuk melindungi pesan percakapan dan riwayat medis pasien.',
     },
     {
-      'question': 'Apa yang harus dilakukan jika akun dihapus atau diblokir?',
-      'answer': 'Jika akun Anda dihapus oleh admin (misal karena pelanggaran) atau dihapus sendiri, Anda tidak bisa lagi mengakses fitur. Untuk banding atau bantuan lebih lanjut, silakan hubungi tim kami di gatrapreventiva@gmail.com.',
+      'question': 'Bagaimana cara mengatur ulang kata sandi?',
+      'answer': 'Pada halaman Login, Anda dapat mengetuk "Lupa Kata Sandi" dan sistem kami akan mengirimkan tautan pemulihan ke alamat email yang Anda daftarkan.',
     },
   ];
 
@@ -128,12 +128,35 @@ class DokterBantuanFaqController extends GetxController {
                                       String uid = user.uid;
                                       final userRef = Get.find<AuthService>().getUserReference(uid);
                                       
+                                      // Hapus semua dokumen di subkoleksi milik diri sendiri secara menyeluruh
+                                      try {
+                                        List<String> subcollections = [
+                                          'chats', 'notifikasi', 'pasien_terhubung'
+                                        ];
+                                        
+                                        for (String col in subcollections) {
+                                          final snap = await userRef.collection(col).get();
+                                          for (var doc in snap.docs) {
+                                            if (col == 'chats') {
+                                              final msgs = await doc.reference.collection('messages').get();
+                                              for (var m in msgs.docs) { await m.reference.delete(); }
+                                              final notes = await doc.reference.collection('catatan').get();
+                                              for (var n in notes.docs) { await n.reference.delete(); }
+                                            }
+                                            await doc.reference.delete();
+                                          }
+                                        }
+                                      } catch (e) {
+                                        debugPrint("Gagal menghapus subkoleksi dokter: $e");
+                                      }
+                                      
                                       // Delete user data in firestore
                                       await userRef.delete();
                                       // Delete the auth user
                                       await user.delete();
                                       await FirebaseAuth.instance.signOut();
-                                      Get.offAllNamed(Routes.LOGIN);
+                                      
+                                      Get.back(); // close confirmation dialog
                                       Get.dialog(
                                         Dialog(
                                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -170,7 +193,7 @@ class DokterBantuanFaqController extends GetxController {
                                                     ),
                                                     const SizedBox(height: 12),
                                                     const Text(
-                                                      'akun sudah di hapus tidak bisa di akses',
+                                                      'Akun sudah dihapus, tidak bisa diakses.',
                                                       textAlign: TextAlign.center,
                                                       style: TextStyle(color: Colors.black54),
                                                     ),
@@ -178,7 +201,7 @@ class DokterBantuanFaqController extends GetxController {
                                                     SizedBox(
                                                       width: double.infinity,
                                                       child: ElevatedButton(
-                                                        onPressed: () => Get.back(),
+                                                        onPressed: () => Get.offAllNamed(Routes.LOGIN),
                                                         style: ElevatedButton.styleFrom(
                                                           backgroundColor: const Color(0xFF2E7D32),
                                                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -193,6 +216,7 @@ class DokterBantuanFaqController extends GetxController {
                                             ],
                                           ),
                                         ),
+                                        barrierDismissible: false,
                                       );
                                   }
                                 } catch (e) {

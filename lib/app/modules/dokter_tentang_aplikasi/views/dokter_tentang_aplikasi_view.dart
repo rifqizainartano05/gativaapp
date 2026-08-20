@@ -194,7 +194,7 @@ class DokterTentangAplikasiView extends GetView<DokterTentangAplikasiController>
           const Divider(height: 1, color: Color(0xFFEEEEEE)),
           const SizedBox(height: 20),
           const Text(
-            'Portal khusus tenaga kesehatan yang dirancang untuk memfasilitasi interaksi langsung dengan pasien. Aplikasi ini mempermudah Anda dalam mengawasi asupan gizi pasien, mengelola rekam medis, serta memberikan konsultasi secara praktis dan terpercaya.',
+            'Portal khusus dokter yang dirancang untuk memfasilitasi interaksi langsung dengan pasien. Aplikasi ini mempermudah Anda dalam mengawasi asupan gizi pasien, mengelola rekam medis, serta memberikan konsultasi secara praktis dan terpercaya.',
             style: TextStyle(
               fontSize: 13,
               color: Colors.black54,

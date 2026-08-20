@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../notifikasi/controllers/notifikasi_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../services/auth_service.dart';
@@ -46,10 +47,13 @@ class ChatController extends GetxController with GetSingleTickerProviderStateMix
   StreamSubscription<QuerySnapshot>? _dokterSubscription;
   StreamSubscription<QuerySnapshot>? _activeChatsSubscription;
   Timer? _scheduleTimer;
-  final chatDoctorIds = <String>{}.obs;
+  final chatDoctorUnreads = <String, int>{}.obs;
 
   void onInit() {
     super.onInit();
+    if (!Get.isRegistered<NotifikasiController>()) {
+      Get.put(NotifikasiController(), permanent: true);
+    }
     tabController = TabController(length: 2, vsync: this);
     fetchDokter();
     fetchActiveChats();
@@ -68,22 +72,70 @@ class ChatController extends GetxController with GetSingleTickerProviderStateMix
         .collection('chats')
         .snapshots()
         .listen((snapshot) {
-      chatDoctorIds.value = snapshot.docs.map((doc) => doc.id).toSet();
+      
+      Map<String, int> validIdsAndUnreads = {};
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        if (data['deleteAt'] != null) {
+          final deleteAt = (data['deleteAt'] as Timestamp).toDate();
+          if (DateTime.now().isAfter(deleteAt) || DateTime.now().isAtSameMomentAs(deleteAt)) {
+            _deleteExpiredChat(doc.id);
+            continue;
+          }
+        }
+        validIdsAndUnreads[doc.id] = data['unreadCount'] ?? 0;
+      }
+      
+      chatDoctorUnreads.clear();
+      chatDoctorUnreads.addAll(validIdsAndUnreads);
       _syncActiveChats();
     });
   }
 
+  Future<void> _deleteExpiredChat(String doctorId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final patientId = user.uid;
+
+    try {
+      final batch = FirebaseFirestore.instance.batch();
+      
+      final chatRef = Get.find<AuthService>().getUserReference(patientId).collection('chats').doc(doctorId).collection('messages');
+      final doctorMessagesRef = FirebaseFirestore.instance.collection('mobile').doc('roles').collection('dokter').doc(doctorId).collection('chats').doc(patientId).collection('messages');
+      
+      final doctorCatatanRef = FirebaseFirestore.instance.collection('mobile').doc('roles').collection('dokter').doc(doctorId).collection('chats').doc(patientId).collection('catatan');
+      final patientCatatanRef = FirebaseFirestore.instance.collection('mobile').doc('roles').collection('pasien').doc(patientId).collection('chats').doc(doctorId).collection('catatan');
+
+      final querySnapshot = await chatRef.get();
+      for (var doc in querySnapshot.docs) {
+        batch.delete(doc.reference);
+        batch.delete(doctorMessagesRef.doc(doc.id));
+        batch.delete(doctorCatatanRef.doc(doc.id));
+        batch.delete(patientCatatanRef.doc(doc.id));
+      }
+
+      batch.delete(Get.find<AuthService>().getUserReference(patientId).collection('chats').doc(doctorId));
+      batch.delete(FirebaseFirestore.instance.collection('mobile').doc('roles').collection('dokter').doc(doctorId).collection('chats').doc(patientId));
+
+      await batch.commit();
+    } catch (e) {
+      print('Error lazy deleting chat: $e');
+    }
+  }
+
   void _syncActiveChats() {
-    if (chatDoctorIds.isEmpty || dokterList.isEmpty) {
+    if (chatDoctorUnreads.isEmpty || dokterList.isEmpty) {
       activeChats.clear();
       return;
     }
     
     final List<Map<String, dynamic>> temp = [];
-    for (var id in chatDoctorIds) {
+    for (var id in chatDoctorUnreads.keys) {
       final doctor = dokterList.firstWhereOrNull((d) => d['id'] == id);
       if (doctor != null) {
-        temp.add(doctor);
+        final clonedDoc = Map<String, dynamic>.from(doctor);
+        clonedDoc['unreadCount'] = chatDoctorUnreads[id];
+        temp.add(clonedDoc);
       }
     }
     activeChats.value = temp;
@@ -113,7 +165,7 @@ class ChatController extends GetxController with GetSingleTickerProviderStateMix
       // Fetch ratings in background
       _fetchRatingsBackground(snapshot.docs);
     }, onError: (e) {
-      Get.snackbar('Error', 'Gagal memuat daftar tenaga kesehatan: $e');
+      Get.snackbar('Error', 'Gagal memuat daftar dokter: $e');
       isLoading.value = false;
     });
   }

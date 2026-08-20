@@ -95,144 +95,7 @@ class DokterDetailPasienChatView
                 ),
                 child: Column(
                   children: [
-                    // Natrium Box (Moved to top & Beautified)
-                    Obx(() {
-                      final natrium = controller.pasienData['natrium'] ?? controller.pasienData['totalNatrium'] ?? controller.pasienData['sodium'] ?? 0;
-                      int age = controller.pasienData['age'] ?? 28;
-                      String condition = controller.pasienData['kondisi_kesehatan'] ?? controller.pasienData['kondisi'] ?? 'Sehat';
-                      final dailyLimit = controller.pasienData['dailyLimit'] ?? controller.pasienData['limitNatrium'] ?? controller.calculateDailyLimit(age, condition);
-                      // Calculate percentage for progress
-                      final double percentage = (dailyLimit > 0) ? (natrium / dailyLimit).clamp(0.0, 1.0) : 0.0;
-                      final bool isWarning = natrium >= dailyLimit;
-
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 24, top: 8),
-                        clipBehavior: Clip.antiAlias,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: isWarning 
-                                ? [Colors.red.shade400, Colors.red.shade600]
-                                : [const Color(0xFF4CAF50), const Color(0xFF2E7D32)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: (isWarning ? Colors.red : const Color(0xFF2E7D32)).withOpacity(0.3),
-                              blurRadius: 12,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
-                        ),
-                        child: Stack(
-                          children: [
-                            // Watermark Icon
-                            Positioned(
-                              right: -20,
-                              bottom: -20,
-                              child: Icon(
-                                Icons.water_drop_rounded,
-                                size: 120,
-                                color: Colors.white.withOpacity(0.15),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(20),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.2),
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: const Icon(
-                                          Icons.science_outlined,
-                                          color: Colors.white,
-                                          size: 24,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      const Expanded(
-                                        child: Text(
-                                          'Asupan Natrium Harian',
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 20),
-                                  Row(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      Text(
-                                        '${(natrium as num).toInt()}',
-                                        style: const TextStyle(
-                                          fontSize: 32,
-                                          fontWeight: FontWeight.w900,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                      const Padding(
-                                        padding: EdgeInsets.only(bottom: 6, left: 4),
-                                        child: Text(
-                                          'mg',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                            color: Colors.white70,
-                                          ),
-                                        ),
-                                      ),
-                                      const Spacer(),
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.end,
-                                        children: [
-                                          const Text(
-                                            'Batas Maksimal',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w500,
-                                              color: Colors.white70,
-                                            ),
-                                          ),
-                                          Text(
-                                            '${(dailyLimit as num).toInt()} mg',
-                                            style: const TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 12),
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(10),
-                                    child: LinearProgressIndicator(
-                                      value: percentage,
-                                      backgroundColor: Colors.white.withOpacity(0.2),
-                                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                                      minHeight: 8,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
+                    // Natrium Box removed
                     Stack(
                       clipBehavior: Clip.none,
                       alignment: Alignment.topCenter,
@@ -273,28 +136,70 @@ class DokterDetailPasienChatView
                           const SizedBox(height: 32),
                           _buildSectionTitle('Data Kesehatan'),
                           const SizedBox(height: 16),
-                          _buildInputField(
-                            label: 'Kondisi Kesehatan',
-                            controller: controller.kondisiKesehatanController,
-                            icon: Icons.favorite_border_rounded,
-                            readOnly: readOnly,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildInputField(
-                            label: 'Tinggi (cm)',
-                            controller: controller.tinggiBadanController,
-                            icon: Icons.height_rounded,
-                            keyboardType: TextInputType.number,
-                            readOnly: readOnly,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildInputField(
-                            label: 'Berat Badan (kg)',
-                            controller: controller.beratBadanController,
-                            icon: Icons.scale_rounded,
-                            keyboardType: TextInputType.number,
-                            readOnly: readOnly,
-                          ),
+                          Obx(() {
+                            final rawKondisi = controller.pasienData['kondisi_kesehatan'] ?? controller.pasienData['kondisi'] ?? 'Sehat';
+                            final List<String> conditionsList = rawKondisi.toString().split(',').map((e) => e.trim()).toList();
+                            
+                            List<String> options = [
+                              'Hipertensi',
+                              'Penyakit kardiovaskular',
+                              'Penyakit ginjal kronis',
+                              'Stroke',
+                              'Tidak terindikasi penyakit di atas',
+                            ];
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Kondisi Kesehatan',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF8F8F8),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: Colors.grey.shade200),
+                                  ),
+                                  child: Column(
+                                    children: options.map((option) {
+                                      bool isSelected = conditionsList.contains(option) || 
+                                                        (option == 'Tidak terindikasi penyakit di atas' && (conditionsList.isEmpty || conditionsList.contains('Sehat') || conditionsList.contains('Tidak terindikasi penyakit di atas')));
+                                      return Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: 8),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              isSelected ? Icons.check_circle : Icons.circle_outlined,
+                                              color: isSelected ? const Color(0xFF2E7D32) : Colors.grey.shade400,
+                                              size: 22,
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Text(
+                                                option,
+                                                style: TextStyle(
+                                                  color: isSelected ? const Color(0xFF2E7D32) : Colors.black54,
+                                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
+                              ],
+                            );
+                          }),
 
                         ],
                       ),

@@ -137,6 +137,10 @@ class ForgotPasswordController extends GetxController {
         message = 'Tidak ada pengguna dengan email ini.';
       } else if (e.code == 'invalid-email') {
         message = 'Format email tidak valid.';
+      } else if (e.code == 'too-many-requests') {
+        message = 'Terlalu banyak percobaan gagal. Silakan coba lagi nanti.';
+      } else if (e.code == 'network-request-failed') {
+        message = 'Koneksi internet bermasalah. Harap periksa jaringan Anda.';
       }
       _showPopup(
         title: 'Gagal',

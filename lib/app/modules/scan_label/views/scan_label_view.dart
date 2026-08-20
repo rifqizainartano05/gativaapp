@@ -132,8 +132,25 @@ class ScanLabelView extends GetView<ScanLabelController> {
                     }
                   }),
                 ),
-
-
+                // 2.1 Back Button
+                if (canGoBack)
+                  Positioned(
+                    top: 50,
+                    left: 20,
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: Colors.black45,
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.arrow_back_rounded,
+                          color: Colors.white,
+                        ),
+                        onPressed: () => Get.back(),
+                      ),
+                    ),
+                  ),
 
                 // 2.5 Flash Toggle Button
                 Positioned(

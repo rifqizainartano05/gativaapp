@@ -8,24 +8,24 @@ import '../../../services/auth_service.dart';
 class FaqController extends GetxController {
   final List<Map<String, String>> faqs = [
     {
-      "question": "Berapa batas konsumsi natrium harian yang aman?",
+      "question": "Bagaimana cara mengubah profil dan preferensi saya?",
       "answer":
-          "Batas aman konsumsi natrium bervariasi. Aplikasi Gativa akan secara otomatis menghitung batas harian maksimal (Daily Limit) Anda secara spesifik berdasarkan Usia dan Kondisi Kesehatan (seperti Hipertensi, Penyakit Jantung, Ginjal, dll) sesuai dengan standar pedoman kesehatan WHO.",
+          "Buka tab Profil di navigasi bawah, lalu ketuk opsi Edit Profil. Anda bisa memperbarui data pribadi, tinggi, berat badan, serta kondisi kesehatan Anda di sana.",
     },
     {
-      "question": "Bagaimana cara memindai barcode makanan?",
+      "question": "Apakah data privasi dan riwayat saya aman?",
       "answer":
-          "Buka tab Pindai di navigasi bawah, lalu arahkan kamera ke barcode kemasan makanan. Sistem kami akan secara otomatis membaca dan menampilkan kadar natriumnya.",
+          "Ya, kami menjamin kerahasiaan data Anda. Aplikasi Gativa menggunakan sistem keamanan terenkripsi sesuai standar untuk melindungi rekam medis dan riwayat nutrisi Anda.",
     },
     {
-      "question": "Apa itu Fitur Grup Pantauan?",
+      "question": "Bagaimana cara membagikan pemantauan ke anggota keluarga?",
       "answer":
-          "Fitur ini memungkinkan Anda memantau asupan natrium anggota grup, seperti orang tua, pasangan, anak, atau pendamping kesehatan, dan memberikan peringatan jika mereka mendekati batas harian.",
+          "Masuk ke menu 'Anggota' di navigasi utama, ketuk ikon QR Code, lalu minta keluarga Anda untuk memindai kode tersebut menggunakan fitur Gabung Anggota di perangkat mereka.",
     },
     {
-      "question": "Bagaimana cara berkonsultasi dengan Tenaga Kesehatan?",
+      "question": "Bagaimana cara mengatur ulang kata sandi?",
       "answer":
-          "Masuk ke halaman Profil, lalu ketuk 'Tenaga Kesehatan'. Anda dapat melihat daftar tenaga kesehatan yang tersedia dan memulai obrolan (chat) untuk berkonsultasi mengenai asupan natrium dan kondisi kesehatan Anda.",
+          "Pada halaman Login, Anda dapat mengetuk 'Lupa Kata Sandi' (Forgot Password) dan sistem kami akan mengirimkan tautan pemulihan ke alamat email yang Anda daftarkan.",
     },
   ];
 
@@ -147,17 +147,26 @@ class FaqController extends GetxController {
                                               .delete();
                                         }
                                         
-                                        // 2. Hapus semua dokumen di subkoleksi milik diri sendiri
-                                        final allAnggota = await userRef.collection('anggota').get();
-                                        for (var d in allAnggota.docs) { await d.reference.delete(); }
+                                        // 2. Hapus semua dokumen di subkoleksi milik diri sendiri secara menyeluruh
+                                        List<String> subcollections = [
+                                          'anggota', 'riwayat', 'group_requests', 'notifikasi',
+                                          'chats', 'labels', 'jajanan', 'label gizi makanan'
+                                        ];
                                         
-                                        final allRiwayat = await userRef.collection('riwayat').get();
-                                        for (var d in allRiwayat.docs) { await d.reference.delete(); }
-                                        
-                                        final allReqs = await userRef.collection('group_requests').get();
-                                        for (var d in allReqs.docs) { await d.reference.delete(); }
+                                        for (String col in subcollections) {
+                                          final snap = await userRef.collection(col).get();
+                                          for (var doc in snap.docs) {
+                                            if (col == 'chats') {
+                                              final msgs = await doc.reference.collection('messages').get();
+                                              for (var m in msgs.docs) { await m.reference.delete(); }
+                                              final notes = await doc.reference.collection('catatan').get();
+                                              for (var n in notes.docs) { await n.reference.delete(); }
+                                            }
+                                            await doc.reference.delete();
+                                          }
+                                        }
                                       } catch (e) {
-                                        debugPrint("Gagal menghapus relasi anggota: $e");
+                                        debugPrint("Gagal menghapus relasi dan data: $e");
                                       }
 
                                       // Delete user data in firestore
@@ -165,7 +174,8 @@ class FaqController extends GetxController {
                                       // Delete the auth user
                                       await user.delete();
                                       await FirebaseAuth.instance.signOut();
-                                      Get.offAllNamed(Routes.LOGIN);
+                                      
+                                      Get.back(); // close confirmation dialog
                                       Get.dialog(
                                         Dialog(
                                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -202,7 +212,7 @@ class FaqController extends GetxController {
                                                     ),
                                                     const SizedBox(height: 12),
                                                     const Text(
-                                                      'akun sudah di hapus tidak bisa di akses',
+                                                      'Akun sudah dihapus, tidak bisa diakses.',
                                                       textAlign: TextAlign.center,
                                                       style: TextStyle(color: Colors.black54),
                                                     ),
@@ -210,7 +220,7 @@ class FaqController extends GetxController {
                                                     SizedBox(
                                                       width: double.infinity,
                                                       child: ElevatedButton(
-                                                        onPressed: () => Get.back(),
+                                                        onPressed: () => Get.offAllNamed(Routes.LOGIN),
                                                         style: ElevatedButton.styleFrom(
                                                           backgroundColor: const Color(0xFF2E7D32),
                                                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -225,6 +235,7 @@ class FaqController extends GetxController {
                                             ],
                                           ),
                                         ),
+                                        barrierDismissible: false,
                                       );
                                   }
                                 } catch (e) {
@@ -235,6 +246,232 @@ class FaqController extends GetxController {
                             child: const Text(
                               "Hapus",
                               style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void deleteAllData() {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: Colors.transparent,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            children: [
+              Positioned(
+                right: -20,
+                bottom: -20,
+                child: Opacity(
+                  opacity: 0.05,
+                  child: Icon(
+                    Icons.delete_sweep_rounded,
+                    size: 140,
+                    color: Colors.orange.shade900,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade50,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.warning_amber_rounded,
+                        color: Colors.orange.shade600,
+                        size: 40,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      "Hapus Semua Data?",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF1E293B),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      "Apakah Anda yakin ingin menghapus semua data riwayat konsumsi? Data yang dihapus tidak dapat dikembalikan, namun akun Anda tetap aktif.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade600,
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              side: BorderSide(color: Colors.grey.shade300),
+                            ),
+                            onPressed: () => Get.back(),
+                            child: const Text(
+                              "Batal",
+                              style: TextStyle(
+                                color: Colors.black87,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange.shade600,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 0,
+                            ),
+                            onPressed: () async {
+                              try {
+                                User? user = FirebaseAuth.instance.currentUser;
+                                if (user != null) {
+                                  String uid = user.uid;
+                                  final userRef = Get.find<AuthService>().getUserReference(uid);
+                                  
+                                  // Hapus data riwayat konsumsi (labels)
+                                  final labelsSnapshot = await userRef.collection('labels').get();
+                                  for (var doc in labelsSnapshot.docs) {
+                                    await doc.reference.delete();
+                                  }
+                                  
+                                  // Hapus data jajanan
+                                  final jajananSnapshot = await userRef.collection('jajanan').get();
+                                  for (var doc in jajananSnapshot.docs) {
+                                    await doc.reference.delete();
+                                  }
+
+                                  // Hapus data riwayat harian
+                                  final riwayatSnapshot = await userRef.collection('riwayat').get();
+                                  for (var doc in riwayatSnapshot.docs) {
+                                    await doc.reference.delete();
+                                  }
+
+                                  // Hapus data label gizi makanan (Lensa Pintar)
+                                  final labelGiziSnapshot = await userRef.collection('label gizi makanan').get();
+                                  for (var doc in labelGiziSnapshot.docs) {
+                                    await doc.reference.delete();
+                                  }
+                                  
+                                  // Reset total natrium harian pengguna
+                                  await userRef.update({
+                                    'natrium': 0.0,
+                                  });
+                                  
+                                  Get.back();
+                                  Get.dialog(
+                                    Dialog(
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                                      backgroundColor: Colors.white,
+                                      clipBehavior: Clip.antiAlias,
+                                      child: Stack(
+                                        children: [
+                                          Positioned(
+                                            right: -30,
+                                            top: -30,
+                                            child: Opacity(
+                                              opacity: 0.05,
+                                              child: Image.asset('assets/logo.png', width: 150, height: 150),
+                                            ),
+                                          ),
+                                          Padding(
+                                            padding: const EdgeInsets.all(24),
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Container(
+                                                  padding: const EdgeInsets.all(16),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.green.withOpacity(0.1),
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  child: const Icon(Icons.check_circle_rounded, color: Colors.green, size: 64),
+                                                ),
+                                                const SizedBox(height: 20),
+                                                const Text(
+                                                  'Berhasil',
+                                                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                const SizedBox(height: 12),
+                                                const Text(
+                                                  'Semua data riwayat berhasil dihapus.',
+                                                  textAlign: TextAlign.center,
+                                                  style: TextStyle(color: Colors.black54),
+                                                ),
+                                                const SizedBox(height: 24),
+                                                SizedBox(
+                                                  width: double.infinity,
+                                                  child: ElevatedButton(
+                                                    onPressed: () => Get.back(),
+                                                    style: ElevatedButton.styleFrom(
+                                                      backgroundColor: const Color(0xFF2E7D32),
+                                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                                    ),
+                                                    child: const Text('Tutup', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                print(e);
+                                Get.back();
+                                Get.snackbar(
+                                  'Error', 
+                                  'Gagal menghapus data',
+                                  snackPosition: SnackPosition.BOTTOM,
+                                  backgroundColor: Colors.red,
+                                  colorText: Colors.white,
+                                );
+                              }
+                            },
+                            child: const Text(
+                              "Hapus Data",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ),

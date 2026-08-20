@@ -195,6 +195,7 @@ class ScanLabelController extends GetxController {
       int matchCount = 0;
 
       String bestServingSize = "";
+      Map<String, int> servingSizeCounts = {};
       double bestServingsPerPack = 0.0;
 
       while (isScanning.value && !hasResult.value) {
@@ -217,7 +218,7 @@ class ScanLabelController extends GetxController {
 
         List<Rect> blocks = [];
         final keywordRegex = RegExp(
-          r'(informasi|gizi|nutrition|takaran|sajian|serving|natrium|sodium|garam|salt|mg|gram)',
+          r'(informasi|gizi|nutrition|takaran|sajian|serving|natrium|sodium|garam|salt|mg|gram|kemasan|wadah|bungkus|container|pack|jumlah|perkemasan|persajian|porsi|\b(g|gr|ml|mcg)\b|[+\-<>=_±]*\s*[0-9]+(?:[.,\s]*[0-9]+)*\s*%?)',
           caseSensitive: false,
         );
         for (var block in recognizedText.blocks) {
@@ -232,25 +233,31 @@ class ScanLabelController extends GetxController {
           ' ',
         );
 
-        // Validasi harus ada tulisan informasi nilai gizi atau nutrition facts
+        // Validasi harus ada salah satu dari kata kunci ini agar dikenali sebagai area Informasi Gizi
+        // Diperbarui: Dikembalikan seperti semula, kata "Informasi Gizi" / "Nutrition Facts" WAJIB ada di layar
         RegExp infoGiziRegex = RegExp(
-          r'informasi\s*nilai\s*gizi|nutrition\s*facts|nilai\s*gizi',
+          r'informasi\s*nilai\s*gizi|nutrition\s*facts|nilai\s*gizi|takaran\s*saji|sajian\s*per\s*kemasan|sajian\s*perkemasan',
           caseSensitive: false,
         );
         if (!infoGiziRegex.hasMatch(fullText)) {
           await Future.delayed(const Duration(milliseconds: 300));
-          continue; // Lewati jika bukan tabel gizi
+          continue; // Lewati jika bukan area gizi
         }
 
         double foundSodium = -1.0;
         double backupSodium = -1.0;
 
         // Extract Takaran Saji / Serving Size
+        // Diperbarui: Mampu melewati teks dalam kurung seperti (serving size) dan menangkap unit sekunder seperti 1 bungkus (25 gram)
         RegExp servingSizeRegex = RegExp(
-          r'(?:takaran\s*saji|serving\s*size|jumlah\s*persajian).{0,40}?([0-9oOlI]+(?:\s*[.,]\s*[0-9oOlI]+)?)\s*(g|gr|ml|oz|cup|sdm|sdt|keping|bks|bungkus|porsi|sajian|gram)',
+          r'(?:takaran\s*saji|takaran\s*sajian|takaran|ukuran\s*saji|serving\s*size|jumlah\s*persajian|jumlah\s*per\s*sajian|sajian|per\s*sajian)\s*(?:\s*[({\[][^)}\]]*[)}\]]\s*)?[:()/{}\[\]\-\\\|±+<>=_~]*\s*([0-9oOlI]+(?:\s*[.,]\s*[0-9oOlI]+)*)(?:\s*(bungkus|keping|sajian|sejian|porsi|gram|cup|sdm|sdt|bks|gr|ml|oz|g|q|9)(?:\s*[({\[]?\s*[0-9oOlI]+(?:\s*[.,]\s*[0-9oOlI]+)*\s*(?:gram|g|gr|ml|mcg)\s*[)}\]]?)?|\s+([a-z]{1,7}))\b',
           caseSensitive: false,
         );
-        var ssMatch = servingSizeRegex.firstMatch(fullText);
+        RegExp servingSizeBeforeRegex = RegExp(
+          r'(?<=[\s:(/±+<>=_~]|^)([0-9oOlI]+(?:\s*[.,]\s*[0-9oOlI]+)*)(?:\s*(bungkus|keping|sajian|sejian|porsi|gram|cup|sdm|sdt|bks|gr|ml|oz|g|q|9)(?:\s*[({\[]?\s*[0-9oOlI]+(?:\s*[.,]\s*[0-9oOlI]+)*\s*(?:gram|g|gr|ml|mcg)\s*[)}\]]?)?|\s+([a-z]{1,7}))\b\s*(?:\s*[({\[][^)}\]]*[)}\]]\s*)?[:()/{}\[\]\-\\\|±+<>=_~]*\s*(?:takaran\s*saji|takaran\s*sajian|takaran|ukuran\s*saji|serving\s*size|jumlah\s*persajian|jumlah\s*per\s*sajian|sajian|per\s*sajian)',
+          caseSensitive: false,
+        );
+        var ssMatch = servingSizeRegex.firstMatch(fullText) ?? servingSizeBeforeRegex.firstMatch(fullText);
         if (ssMatch != null) {
           String numStr = ssMatch
               .group(1)!
@@ -259,32 +266,26 @@ class ScanLabelController extends GetxController {
               .replaceAll('O', '0')
               .replaceAll('l', '1')
               .replaceAll('I', '1')
+              .replaceAll('i', '1')
               .replaceAll(' ', '');
-          String unit = ssMatch.group(2) ?? '';
-          bestServingSize = "$numStr $unit";
+          String unit = (ssMatch.groupCount >= 3 ? (ssMatch.group(2) ?? ssMatch.group(3)) : ssMatch.group(2)) ?? '';
+          if (unit == 'q' || unit == '9' || unit == 'ng') unit = 'g'; // Fix common OCR typos for gram
+          String newServingSize = "$numStr $unit";
+          servingSizeCounts[newServingSize] = (servingSizeCounts[newServingSize] ?? 0) + 1;
         }
 
+        String sppKeywords = r'(?:sajian\s*per\s*kemasan|sajian\s*perkemasan|sajian\s*per\s*wadah|sajian\s*per\s*bungkus|servings?\s*per\s*container|servings?\s*per\s*pack|jumlah\s*sajian\s*per\s*kemasan|jumlah\s*sajian|sajian|sejian|serving|takaran|porsi|perkemasan|kemasan)';
+        // Diperbarui: Gunakan \s*[:()/{}\[\]\-\\\|±+<>=_~]*\s* agar mengabaikan simbol dan fokus mengambil angkanya
         RegExp sppRegex = RegExp(
-          r'([0-9oOlI]+(?:\s*[.,]\s*[0-9oOlI]+)?)\s*(?:sajian|serving|takaran|porsi).{0,20}?(?:kemasan|container|bungkus|pack|wadah)',
+          r'(?<=[\s:(/±+<>=_~]|^)([0-9oOlI]+(?:\s*[.,]\s*[0-9oOlI]+)*)\b\s*[:()/{}\[\]\-\\\|±+<>=_~]*\s*' + sppKeywords,
           caseSensitive: false,
         );
         RegExp sppAfterRegex = RegExp(
-          r'(?:sajian|serving|takaran|porsi).{0,20}?(?:kemasan|container|bungkus|pack|wadah).{0,10}?([0-9oOlI]+(?:\s*[.,]\s*[0-9oOlI]+)?)',
-          caseSensitive: false,
-        );
-        RegExp sppFallbackRegex = RegExp(
-          r'([0-9oOlI]+(?:\s*[.,]\s*[0-9oOlI]+)?)\s*(?:sajian|serving)',
-          caseSensitive: false,
-        );
-        RegExp sppFallbackAfterRegex = RegExp(
-          r'(?:jumlah\s*sajian|sajian|serving).{0,5}?([0-9oOlI]+(?:\s*[.,]\s*[0-9oOlI]+)?)',
+          sppKeywords + r'\s*[:()/{}\[\]\-\\\|±+<>=_~]*\s*([0-9oOlI]+(?:\s*[.,]\s*[0-9oOlI]+)*)\b',
           caseSensitive: false,
         );
 
-        var sppMatch = sppRegex.firstMatch(fullText) ?? 
-                       sppAfterRegex.firstMatch(fullText) ?? 
-                       sppFallbackRegex.firstMatch(fullText) ?? 
-                       sppFallbackAfterRegex.firstMatch(fullText);
+        var sppMatch = sppRegex.firstMatch(fullText) ?? sppAfterRegex.firstMatch(fullText);
 
         if (sppMatch != null) {
           String numStr = sppMatch
@@ -294,34 +295,24 @@ class ScanLabelController extends GetxController {
               .replaceAll('O', '0')
               .replaceAll('l', '1')
               .replaceAll('I', '1')
+              .replaceAll('i', '1')
               .replaceAll(' ', '');
           double val = double.tryParse(numStr) ?? -1.0;
-          if (val > 0 && val < 100) {
-            // Koreksi otomatis jika OCR melewatkan titik (membaca 2.5 sebagai 25)
-            // Karena sangat jarang kemasan makanan ringan memiliki sajian >= 10 yang bukan puluhan bulat
-            if (val >= 10 && val % 10 != 0) {
-              val = val / 10.0;
-            }
-
-            // Prioritize decimals (like 2.5) because they are rarely false positives.
-            // If we already have a decimal, don't overwrite it with an integer.
-            bool isNewValDecimal = (val != val.toInt());
-            bool isOldValDecimal = (bestServingsPerPack != bestServingsPerPack.toInt());
-            
-            if (isNewValDecimal) {
-              bestServingsPerPack = val;
-            } else if (!isOldValDecimal && val > bestServingsPerPack) {
-              bestServingsPerPack = val;
-            } else if (bestServingsPerPack == 0.0) {
-              bestServingsPerPack = val;
-            }
+          // Bebas tanpa batas maksimal angka dan tanpa mengunci desimal
+          if (val > 0) {
+            bestServingsPerPack = val;
           }
         }
 
         // Regex super dinamis agar "anti tangguh" terhadap tulisan buram
-        // Dihapus satuan "g" agar tidak salah membaca nilai Protein/Lemak/Karbohidrat
+        // Diperbarui: Satuan mg kembali DIWAJIBKAN agar tidak salah tangkap angka lain, 
+        // namun DIPERPINTAR: (1) Angka kebal terhadap spasi nyasar (misal '1 5 0' -> 150), 
+        // (2) Satuan kebal terhadap spasi (misal 'm g', 'rn g').
+        // Jarak diperlebar menjadi 60 agar angka yang letaknya jauh di kanan tabel tidak terlewat (jika terlewat, sistem malah membaca 'sodium' lain di komposisi).
+        // Diperketat: Hanya mendeteksi garam, sodium, natrium, mononatrium glutamat, salt (dan typo-nya).
+        // Diperbarui: Mendukung format "Garam (Natrium/Sodium)" atau apa pun di dalam kurung.
         RegExp sodiumRegex = RegExp(
-          r'(?:garam\s*\(?\s*natrium\s*\)?|salt\s*\(?\s*sodium\s*\)?|mononatrium\s*glutamat|mononatrium\s*glumat|natrium|natriun|natriurn|natrum|nartium|nattium|natruim|n4trium|sodium|sodiun|sodiurn|s0dium|s0diun|garam|garan|salt|glutamat|glumat).{0,40}?([0-9oOlI]+(?:\s*[.,]\s*[0-9oOlI]+)?)\s*(mg|mcg|mq|rnq|rriq|rng|nng|maq|rns|ng|rn|me)',
+          r'(?:garam\s*\(?[^)]*\)?|salt\s*\(?[^)]*\)?|natrium\s*/\s*sodium|sodium\s*/\s*natrium|mononatrium\s*glutamat|mononatrium\s*glumat|natrium|natriun|natriurn|natrum|nartium|nattium|natruim|n4trium|sodium|sodiun|sodiurn|s0dium|s0diun|garam|garan|salt).{0,60}?([0-9oOlI]+(?:[\s.,]*[0-9oOlI]+)*)\s*(m\s*g|m\s*c\s*g|m\s*q|rn\s*q|rri\s*q|rn\s*g|nn\s*g|ma\s*q|rn\s*s|n\s*g|r\s*n|m\s*e|m\s*9|m\s*8|n\s*9|rn\s*9|m\s*s|m\s*o)',
           caseSensitive: false,
         );
 
@@ -346,8 +337,8 @@ class ScanLabelController extends GetxController {
           }
 
           double val = double.tryParse(numStr) ?? -1.0;
-          if (val >= 0 && val < 5000) {
-            // Natrium per sajian jarang > 5000mg
+          // Bebas tanpa batas maksimal angka
+          if (val >= 0) {
             if (unit.startsWith('m') ||
                 unit.startsWith('r') ||
                 unit.startsWith('n')) {
@@ -371,8 +362,12 @@ class ScanLabelController extends GetxController {
             matchCount = 1;
           }
 
-          // We require the same number to be read across 3 consecutive frames for fast and accurate scanning
-          if (matchCount >= 3) {
+          // We require the same number to be read across 2 consecutive frames for fast and accurate scanning
+          if (matchCount >= 2) {
+            if (servingSizeCounts.isNotEmpty) {
+              bestServingSize = servingSizeCounts.entries.reduce((a, b) => a.value > b.value ? a : b).key;
+            }
+            
             scannedSodiumPerServing.value = foundSodium;
             scannedFoodName.value = _packageName.value.isNotEmpty
                 ? _packageName.value
@@ -434,7 +429,7 @@ class ScanLabelController extends GetxController {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                "${foundSodium.toInt()} mg Natrium",
+                                "${foundSodium == foundSodium.toInt() ? foundSodium.toInt() : foundSodium} mg Natrium",
                                 style: const TextStyle(
                                   fontSize: 30,
                                   fontWeight: FontWeight.w900,
@@ -589,6 +584,15 @@ class ScanLabelController extends GetxController {
         });
 
         batch.update(userRef, {'natrium': FieldValue.increment(sodiumValue)});
+
+        final notifRef = userRef.collection('notifikasi').doc();
+        batch.set(notifRef, {
+          'title': 'Konsumsi Natrium Tercatat',
+          'message': 'Anda baru saja merekam konsumsi sejumlah ${sodiumValue.toInt()} mg natrium.',
+          'timestamp': Timestamp.now(),
+          'isRead': false,
+          'type': 'sistem',
+        });
 
         await batch.commit();
 

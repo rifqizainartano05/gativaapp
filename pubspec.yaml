@@ -65,6 +65,7 @@ dependencies:
   speech_to_text: ^7.4.0
   swipe_to: ^1.0.6
   google_mlkit_commons: ^0.11.1
+  audioplayers: ^6.7.1
 
 dev_dependencies:
   flutter_test:
@@ -92,6 +93,12 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/logo.png
+    - assets/avatar_scan.png
+    - assets/avatar_health.png
+    - assets/avatar_family.png
+    - assets/suara_berhasil.mp3
+    - assets/suara_chat.mp3
+    - assets/suara_opening.mp3
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

@@ -92,40 +92,59 @@ class RiwayatAnggotaController extends GetxController {
   final RxInt currentStreak = 0.obs;
   final RxBool isMissionCompleted = false.obs;
 
+  late String memberId;
+  late String memberName;
+
   @override
   void onInit() {
     super.onInit();
+    final args = Get.arguments;
+    if (args != null) {
+      try {
+        memberId = args.id;
+        memberName = args.name;
+      } catch (e) {
+        if (args is Map) {
+          memberId = args['id'] ?? FirebaseAuth.instance.currentUser?.uid ?? '';
+          memberName = args['name'] ?? 'Anggota';
+        } else {
+          memberId = FirebaseAuth.instance.currentUser?.uid ?? '';
+          memberName = 'Anggota';
+        }
+      }
+    } else {
+      memberId = FirebaseAuth.instance.currentUser?.uid ?? '';
+      memberName = 'Anggota';
+    }
+
     fetchHistoryData();
     fetchDailyLimit();
   }
 
   void fetchDailyLimit() {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      Get.find<AuthService>().getUserReference(user.uid).snapshots().listen((
-        doc,
-      ) {
-        if (doc.exists) {
-          final data = doc.data() as Map<String, dynamic>;
-          if (data['dailyLimit'] != null && data['dailyLimit'] != 0) {
-            dailyLimit.value = (data['dailyLimit'] as num).toDouble();
-          } else {
-            int age = data['age'] ?? 28;
-            String condition = data['kondisi_kesehatan'] ?? data['kondisi'] ?? 'Sehat';
-            dailyLimit.value = calculateDailyLimit(age, condition);
-          }
+    if (memberId.isEmpty) return;
+    Get.find<AuthService>().getUserReference(memberId).snapshots().listen((
+      doc,
+    ) {
+      if (doc.exists) {
+        final data = doc.data() as Map<String, dynamic>;
+        if (data['dailyLimit'] != null && data['dailyLimit'] != 0) {
+          dailyLimit.value = (data['dailyLimit'] as num).toDouble();
+        } else {
+          int age = data['age'] ?? 28;
+          String condition = data['kondisi_kesehatan'] ?? data['kondisi'] ?? 'Sehat';
+          dailyLimit.value = calculateDailyLimit(age, condition);
         }
-      });
-    }
+      }
+    });
   }
 
   void fetchHistoryData() {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      Get.find<AuthService>()
-          .getUserReference(user.uid)
-          .collection('label gizi makanan')
-          .snapshots()
+    if (memberId.isEmpty) return;
+    Get.find<AuthService>()
+        .getUserReference(memberId)
+        .collection('label gizi makanan')
+        .snapshots()
           .listen((snapshot) {
             var rawLogs = snapshot.docs.map((doc) {
               final data = doc.data();
@@ -154,10 +173,7 @@ class RiwayatAnggotaController extends GetxController {
             // Sort descending locally to ensure we don't miss docs without created_at field
             rawLogs.sort((a, b) => b.timestamp.compareTo(a.timestamp));
             logs.value = rawLogs;
-            
-
           });
-    }
   }
 
   List<SodiumLog> get filteredLogs {
@@ -268,6 +284,50 @@ class RiwayatAnggotaController extends GetxController {
     return filteredLogs.where((l) => l.amount > dailyLimit.value * 0.2).fold(0.0, (sum, item) => sum + item.amount);
   }
 
+  double getAbsoluteMaxChartValue() {
+    final foodLogs = logs.where((l) => l.type == 'makanan').toList();
+    if (foodLogs.isEmpty) return dailyLimit.value > 0 ? dailyLimit.value : 2000;
+
+    double maxVal = 0;
+    
+    if (currentUnit == 'Hari' || currentUnit == 'Atur Tanggal') {
+      Map<String, double> dailyTotals = {};
+      for (var log in foodLogs) {
+        String key = "${log.timestamp.year}-${log.timestamp.month}-${log.timestamp.day}";
+        dailyTotals[key] = (dailyTotals[key] ?? 0) + log.amount;
+      }
+      maxVal = dailyTotals.values.isEmpty ? 0 : dailyTotals.values.reduce((a, b) => a > b ? a : b);
+    } 
+    else if (currentUnit == 'Minggu') {
+      Map<String, double> weeklyTotals = {};
+      for (var log in foodLogs) {
+        int weekNum = (log.timestamp.difference(DateTime(log.timestamp.year, 1, 1)).inDays / 7).floor();
+        String key = "${log.timestamp.year}-W$weekNum";
+        weeklyTotals[key] = (weeklyTotals[key] ?? 0) + log.amount;
+      }
+      maxVal = weeklyTotals.values.isEmpty ? 0 : weeklyTotals.values.reduce((a, b) => a > b ? a : b);
+    }
+    else if (currentUnit == 'Bulan') {
+      Map<String, double> monthlyTotals = {};
+      for (var log in foodLogs) {
+        String key = "${log.timestamp.year}-${log.timestamp.month}";
+        monthlyTotals[key] = (monthlyTotals[key] ?? 0) + log.amount;
+      }
+      maxVal = monthlyTotals.values.isEmpty ? 0 : monthlyTotals.values.reduce((a, b) => a > b ? a : b);
+    }
+    else if (currentUnit == 'Tahun') {
+      Map<String, double> yearlyTotals = {};
+      for (var log in foodLogs) {
+        String key = "${log.timestamp.year}";
+        yearlyTotals[key] = (yearlyTotals[key] ?? 0) + log.amount;
+      }
+      maxVal = yearlyTotals.values.isEmpty ? 0 : yearlyTotals.values.reduce((a, b) => a > b ? a : b);
+    } else {
+      maxVal = foodLogs.fold(0.0, (sum, log) => sum + log.amount);
+    }
+
+    return maxVal == 0 ? (dailyLimit.value > 0 ? dailyLimit.value : 2000) : maxVal;
+  }
 
   Map<String, double> getRadialData() {
     double total = 0;

@@ -93,7 +93,7 @@ class EdukasiDokterView extends StatelessWidget {
             margin: const EdgeInsets.fromLTRB(20, 24, 20, 8),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(30),
+              borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.05),

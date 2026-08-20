@@ -21,11 +21,13 @@ class NotificationService {
   static Future<void> showLimitWarning(double current, double limit) async {
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
-          'gativa_limit_channel',
+          'gativa_limit_channel_v2',
           'Peringatan Batas Natrium',
           channelDescription: 'Notifikasi jika melewati batas asupan',
           importance: Importance.max,
           priority: Priority.high,
+          enableVibration: true,
+          playSound: true,
         );
     const NotificationDetails platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,
@@ -43,7 +45,7 @@ class NotificationService {
   static Future<void> showNotification({required int id, required String title, required String body}) async {
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
-          'gativa_general_channel',
+          'gativa_general_channel_v2',
           'Notifikasi Umum',
           channelDescription: 'Notifikasi sistem dan pengingat',
           importance: Importance.max,
@@ -63,14 +65,40 @@ class NotificationService {
     );
   }
 
+  static Future<void> showChatNotification({required int id, required String title, required String body}) async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+          'gativa_chat_channel_v3',
+          'Notifikasi Chat',
+          channelDescription: 'Notifikasi untuk pesan masuk dari pasien atau dokter',
+          importance: Importance.max,
+          priority: Priority.max,
+          enableVibration: true,
+          playSound: true,
+          sound: RawResourceAndroidNotificationSound('suara_chat'),
+        );
+    const NotificationDetails platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+    );
+
+    await _notificationsPlugin.show(
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: platformChannelSpecifics,
+    );
+  }
+
   static Future<void> scheduleDailyReminder() async {
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
-          'gativa_daily_channel',
+          'gativa_daily_channel_v2',
           'Pengingat Harian',
           channelDescription: 'Pengingat misi dan target harian',
           importance: Importance.high,
           priority: Priority.high,
+          enableVibration: true,
+          playSound: true,
         );
     const NotificationDetails platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,

@@ -23,7 +23,6 @@ class GabungAnggotaView extends GetView<GabungAnggotaController> {
     );
   }
 
-
   Widget _buildScannerTab(BuildContext context) {
     return Stack(
       children: [
@@ -71,7 +70,9 @@ class GabungAnggotaView extends GetView<GabungAnggotaController> {
 
         // 4. Bottom Information Panel
         Positioned(
-          bottom: MediaQuery.of(context).padding.bottom + 24, // Keep safe from nav bar
+          bottom:
+              MediaQuery.of(context).padding.bottom +
+              24, // Keep safe from nav bar
           left: 24,
           right: 24,
           child: Container(
@@ -185,7 +186,8 @@ class _ScannerOverlayState extends State<_ScannerOverlay>
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final scanAreaSize = constraints.maxWidth * 0.7; // Square again, not lonjong
+        final scanAreaSize =
+            constraints.maxWidth * 0.7; // Square again, not lonjong
 
         return Stack(
           children: [
@@ -256,7 +258,9 @@ class _ScannerOverlayPainter extends CustomPainter {
     );
 
     final holePath = Path()
-      ..addRRect(RRect.fromRectAndRadius(scanRect, Radius.circular(borderRadius)));
+      ..addRRect(
+        RRect.fromRectAndRadius(scanRect, Radius.circular(borderRadius)),
+      );
 
     final overlayPath = Path.combine(PathOperation.difference, path, holePath);
     canvas.drawPath(overlayPath, paint);

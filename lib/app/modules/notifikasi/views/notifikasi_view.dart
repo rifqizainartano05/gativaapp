@@ -162,40 +162,31 @@ class NotifikasiView extends GetView<NotifikasiController> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          notif.title,
-                                          style: TextStyle(
-                                            fontWeight: notif.isRead
-                                                ? FontWeight.normal
-                                                : FontWeight.bold,
-                                            fontSize: 16,
-                                            color: Colors.black87,
-                                          ),
-                                        ),
-                                      ),
-                                      Text(
-                                        DateFormat(
-                                          'dd MMM, HH:mm',
-                                        ).format(notif.timestamp),
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey.shade600,
-                                        ),
-                                      ),
-                                    ],
+                                  Text(
+                                    notif.title,
+                                    style: TextStyle(
+                                      fontWeight: notif.isRead
+                                          ? FontWeight.w600
+                                          : FontWeight.bold,
+                                      fontSize: 16,
+                                      color: Colors.black87,
+                                    ),
                                   ),
-                                  const SizedBox(height: 8),
+                                  const SizedBox(height: 4),
                                   Text(
                                     notif.message,
                                     style: TextStyle(
                                       fontSize: 14,
                                       color: Colors.black54,
                                       height: 1.4,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    DateFormat('dd MMMM yyyy, HH:mm').format(notif.timestamp),
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey.shade500,
                                     ),
                                   ),
                                 ],

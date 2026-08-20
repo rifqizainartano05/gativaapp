@@ -12,19 +12,25 @@ class OnboardingController extends GetxController {
       'title': 'Pindai Natrium Anda',
       'description':
           'Ketahui kandungan garam pada makanan dalam hitungan detik. Hindari penyakit berisiko tinggi.',
-      'icon': Icons.document_scanner_rounded,
+      'icon': 'assets/avatar_scan.png',
+      'color_top': const Color(0xFF6C63FF), // Ungu
+      'color_bottom': const Color(0xFFFF6584), // Pink
     },
     {
       'title': 'Pantau Kesehatan',
       'description':
           'Lihat status kesehatan dan perbandingan asupan natrium harian melalui grafik interaktif modern.',
-      'icon': Icons.monitor_heart_rounded,
+      'icon': 'assets/avatar_health.png',
+      'color_top': const Color(0xFF42A5F5), // Biru Muda
+      'color_bottom': const Color(0xFFFFCA28), // Kuning
     },
     {
       'title': 'Jaga Orang Terdekat',
       'description':
           'Tambahkan anggota grup, pantau rekam medis mereka, dan pastikan tetap dalam batas aman.',
-      'icon': Icons.groups_2_rounded,
+      'icon': 'assets/avatar_family.png',
+      'color_top': const Color(0xFF26A69A), // Teal/Hijau Tosca
+      'color_bottom': const Color(0xFFFF7043), // Oranye
     },
   ];
 

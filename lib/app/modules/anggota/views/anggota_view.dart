@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:intl/intl.dart';
 import '../controllers/anggota_controller.dart';
-import '../../gabung_anggota/controllers/gabung_anggota_controller.dart';
 
 class AppColors {
   static const primary = Color(0xFF2E7D32);
@@ -35,6 +34,7 @@ class AppTheme {
 }
 
 void _showJoinOptions(BuildContext context) {
+  final controller = Get.find<AnggotaController>();
   showDialog(
     context: context,
     builder: (context) {
@@ -110,11 +110,12 @@ void _showJoinOptions(BuildContext context) {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+
+                    const SizedBox(height: 12),
                     InkWell(
                       onTap: () {
                         Get.back();
-                        _showManualInputDialog(context);
+                        controller.showManualInputDialog();
                       },
                       borderRadius: BorderRadius.circular(16),
                       child: Container(
@@ -124,20 +125,20 @@ void _showJoinOptions(BuildContext context) {
                           borderRadius: BorderRadius.circular(16),
                           color: Colors.white,
                         ),
-                        child: const Row(
+                        child: Row(
                           children: [
-                            Icon(Icons.keyboard_alt_rounded, color: Colors.grey, size: 32),
-                            SizedBox(width: 16),
+                            Icon(Icons.pin_rounded, color: Colors.grey.shade700, size: 32),
+                            const SizedBox(width: 16),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text("Kode Akses", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87)),
-                                  Text("Masukkan 8 digit kode", style: TextStyle(fontSize: 12, color: Colors.black54)),
+                                  Text("Masukkan Kode Akses", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.grey.shade700)),
+                                  Text("Ketik 8 digit kode", style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
                                 ],
                               ),
                             ),
-                            Icon(Icons.arrow_forward_ios_rounded, color: Colors.grey, size: 16),
+                            Icon(Icons.arrow_forward_ios_rounded, color: Colors.grey.shade400, size: 16),
                           ],
                         ),
                       ),
@@ -160,122 +161,7 @@ void _showJoinOptions(BuildContext context) {
     );
   }
 
-  void _showManualInputDialog(BuildContext context) {
-    final gabungController = Get.put(GabungAnggotaController());
-    showDialog(
-      context: context,
-      builder: (context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          backgroundColor: Colors.white,
-          clipBehavior: Clip.antiAlias,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-          child: Stack(
-            children: [
-              Positioned(
-                right: -30,
-                bottom: -30,
-                child: Transform.rotate(
-                  angle: -0.2,
-                  child: Icon(
-                    Icons.vpn_key_rounded,
-                    size: 160,
-                    color: Colors.green.withValues(alpha: 0.05),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      "Kode Akses",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      "Masukkan 8 digit kode akses untuk bergabung ke anggota.",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.black54,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    TextField(
-                      controller: gabungController.accessCodeController,
-                      textCapitalization: TextCapitalization.characters,
-                      maxLength: 8,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 4.0,
-                      ),
-                      textAlign: TextAlign.center,
-                      decoration: InputDecoration(
-                        counterText: "",
-                        hintText: "XXXXXXXX",
-                        hintStyle: TextStyle(color: Colors.grey.shade300, letterSpacing: 4.0),
-                        filled: true,
-                        fillColor: Colors.grey.shade100,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: const BorderSide(color: Colors.green, width: 2),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Get.back(); // close dialog first
-                          gabungController.validateAccessCode();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: const Text(
-                          "Gabung",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Positioned(
-                top: 8,
-                right: 8,
-                child: IconButton(
-                  icon: const Icon(Icons.close, color: Colors.grey),
-                  onPressed: () => Get.back(),
-                ),
-              ),
-            ],
-          ),
-        );
-      }
-    );
-  }
+
 
 class AnggotaView extends StatelessWidget {
   const AnggotaView({super.key});

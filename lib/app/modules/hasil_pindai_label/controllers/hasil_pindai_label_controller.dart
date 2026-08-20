@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../routes/app_pages.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 import '../../main_navigation/controllers/main_navigation_controller.dart';
 class HasilPindaiLabelController extends GetxController {
@@ -33,7 +34,8 @@ class HasilPindaiLabelController extends GetxController {
       servingSizeController = TextEditingController(text: servingSizeArg.trim());
       
       double sodium = args['sodiumPerServing'] ?? 0.0;
-      sodiumPerServingController = TextEditingController(text: sodium.toInt().toString());
+      String sodiumStr = sodium == sodium.toInt() ? sodium.toInt().toString() : sodium.toString();
+      sodiumPerServingController = TextEditingController(text: sodiumStr);
       
       // Default to 1 if it's 0 to prevent 0 division/multiplication issues if desired, 
       // but let's use the actual parsed value or 1 as fallback.
@@ -102,6 +104,7 @@ class HasilPindaiLabelController extends GetxController {
         'servingSize': servingSizeController.text,
         'servingsPerPack': double.tryParse(servingsPerPackController.text.replaceAll(',', '.')) ?? 1.0,
         'sodiumPerServing': double.tryParse(sodiumPerServingController.text.replaceAll(',', '.')) ?? 0.0,
+        'portionEaten': double.tryParse(portionController.text.replaceAll(',', '.')) ?? 1.0,
         'created_at': Timestamp.now(),
       });
       
@@ -109,7 +112,19 @@ class HasilPindaiLabelController extends GetxController {
         'natrium': FieldValue.increment(totalCalculatedSodium.toInt()),
       }, SetOptions(merge: true));
       
-      batch.commit();
+      final notifRef = docRef.collection('notifikasi').doc();
+      batch.set(notifRef, {
+        'title': 'Konsumsi Natrium Tercatat',
+        'message': 'Anda baru saja merekam konsumsi ${foodNameController.text} sejumlah ${totalCalculatedSodium.toInt()} mg natrium.',
+        'timestamp': Timestamp.now(),
+        'isRead': false,
+        'type': 'sistem',
+      });
+      
+      await batch.commit();
+      
+      final player = AudioPlayer();
+      await player.play(AssetSource('suara_berhasil.mp3'));
       
       Get.offNamedUntil(
         Routes.LENSA_PINTAR_DETAIL, 
@@ -122,6 +137,7 @@ class HasilPindaiLabelController extends GetxController {
           'servingSize': servingSizeController.text,
           'servingsPerPack': double.tryParse(servingsPerPackController.text.replaceAll(',', '.')) ?? 1.0,
           'sodiumPerServing': double.tryParse(sodiumPerServingController.text.replaceAll(',', '.')) ?? 0.0,
+          'portionEaten': double.tryParse(portionController.text.replaceAll(',', '.')) ?? 1.0,
         }
       );
     } else {
