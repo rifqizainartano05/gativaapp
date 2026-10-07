@@ -130,14 +130,35 @@ class HomeDokterView extends GetView<HomeDokterController> {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            "Selamat Datang,\ndi Gativa",
-                            style: TextStyle(
-                              fontSize: 24,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w500,
-                              height: 1.3,
-                            ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Selamat Datang,\ndi Gativa",
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.3,
+                                ),
+                              ),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: IconButton(
+                                  icon: const Icon(
+                                    Icons.notifications_outlined,
+                                    color: Colors.white,
+                                  ),
+                                  onPressed: () {
+                                    Get.toNamed(Routes.NOTIFIKASI_DOKTER);
+                                  },
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 16),
                           Container(

@@ -27,6 +27,7 @@ abstract class Routes {
 
 
   static const NOTIFIKASI = _Paths.NOTIFIKASI;
+  static const NOTIFIKASI_DOKTER = _Paths.NOTIFIKASI_DOKTER;
   static const DETAIL_DOKTER = _Paths.DETAIL_DOKTER;
   static const DOKTER_PROFILE = _Paths.DOKTER_PROFILE;
   static const DOKTER_GANTI_KATA_SANDI = _Paths.DOKTER_GANTI_KATA_SANDI;
@@ -73,6 +74,7 @@ abstract class _Paths {
 
 
   static const NOTIFIKASI = '/notifikasi';
+  static const NOTIFIKASI_DOKTER = '/notifikasi-dokter';
   static const DETAIL_DOKTER = '/detail-dokter';
   static const DOKTER_PROFILE = '/dokter-profile';
   static const DOKTER_GANTI_KATA_SANDI = '/dokter-ganti-kata-sandi';

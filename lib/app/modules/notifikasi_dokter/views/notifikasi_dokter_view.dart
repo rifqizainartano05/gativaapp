@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import '../controllers/notifikasi_controller.dart';
+import '../controllers/notifikasi_dokter_controller.dart';
 
 import 'package:flutter/services.dart';
 
-class NotifikasiView extends GetView<NotifikasiController> {
-  const NotifikasiView({super.key});
+class NotifikasiDokterView extends GetView<NotifikasiDokterController> {
+  const NotifikasiDokterView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -178,7 +178,7 @@ class NotifikasiView extends GetView<NotifikasiController> {
                                   const SizedBox(height: 4),
                                   Text(
                                     notif.message,
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontSize: 14,
                                       color: Colors.black54,
                                       height: 1.4,

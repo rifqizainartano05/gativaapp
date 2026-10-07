@@ -43,12 +43,14 @@ class CatatanDokterController extends GetxController {
           isLoading.value = false;
         }, onError: (error) {
           isLoading.value = false;
-          Get.snackbar('Error', 'Gagal memuat catatan medis');
+          // Silently handle error as requested
         });
+      } else {
+        isLoading.value = false;
       }
     } catch (e) {
       isLoading.value = false;
-      Get.snackbar('Error', 'Gagal inisialisasi catatan medis');
+      // Silently handle error as requested
     }
   }
 }

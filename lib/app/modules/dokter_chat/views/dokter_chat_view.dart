@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../../../routes/app_pages.dart';
 import '../controllers/dokter_chat_controller.dart';
+import '../../notifikasi/controllers/notifikasi_controller.dart';
 
 class DokterChatView extends GetView<DokterChatController> {
   const DokterChatView({super.key});
@@ -89,6 +90,7 @@ class DokterChatView extends GetView<DokterChatController> {
                           ),
                         ),
                       ),
+
                     ],
                   ),
                 ],

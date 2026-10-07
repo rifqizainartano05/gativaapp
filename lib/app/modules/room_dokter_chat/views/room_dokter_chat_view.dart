@@ -6,6 +6,7 @@ import 'package:swipe_to/swipe_to.dart';
 import '../../../routes/app_pages.dart';
 import '../controllers/room_dokter_chat_controller.dart';
 import '../../../widgets/custom_popup.dart';
+import '../../notifikasi/controllers/notifikasi_controller.dart';
 
 class RoomDokterChatView extends GetView<RoomDokterChatController> {
   const RoomDokterChatView({super.key});
@@ -360,7 +361,7 @@ class RoomDokterChatView extends GetView<RoomDokterChatController> {
                           return const SizedBox.shrink();
                         }),
                       ),
-                        // Obx dihapus karena icon delete sudah dihapus
+
                     ],
                   );
                 }),

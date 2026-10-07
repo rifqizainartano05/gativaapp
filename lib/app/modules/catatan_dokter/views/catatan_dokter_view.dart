@@ -125,25 +125,15 @@ class CatatanDokterView extends StatelessWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text(
-                                      "CATATAN & ANJURAN DOKTER",
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w900,
-                                        fontSize: 13,
-                                        letterSpacing: 1.2,
-                                        color: Color(0xFF2E7D32),
+                                      Text(
+                                        "SISTEM PEMANTAUAN KESEHATAN",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 10,
+                                          letterSpacing: 1.2,
+                                          color: Colors.grey.shade600,
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      "SISTEM PEMANTAUAN KESEHATAN",
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 10,
-                                        letterSpacing: 1.2,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                    ),
                                   ],
                                 ),
                               ),
@@ -262,33 +252,7 @@ class CatatanDokterView extends StatelessWidget {
                                       ).toList(),
                                     ),
                                     
-                                  const SizedBox(height: 40),
-                                  
-                                  // Footer Validation
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            Icons.verified_rounded,
-                                            color: const Color(0xFF2E7D32).withOpacity(0.5),
-                                            size: 40,
-                                          ),
-                                          const SizedBox(height: 8),
-                                          Text(
-                                            "Tervalidasi Digital",
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey.shade500,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
+                                  // Removed Footer Validation
                                 ],
                               ),
                             ],

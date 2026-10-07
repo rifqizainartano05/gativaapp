@@ -51,13 +51,12 @@ class RegisterView extends GetView<RegisterController> {
               ),
             ),
             SafeArea(
-              child: Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     const SizedBox(height: 8),
                     const Text(
                       'Pilih peran dan lengkapi informasi Anda.',
@@ -73,156 +72,17 @@ class RegisterView extends GetView<RegisterController> {
                 _buildRoleToggleBar(),
                 const SizedBox(height: 32),
 
-                // Common Fields
-                const Text(
-                  'Nama Lengkap',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                ),
-                const SizedBox(height: 8),
-                _buildTextField(
-                  controller.nameController,
-                  'Masukkan nama lengkap',
-                  Icons.person_outline_rounded,
-                  false,
-                ),
-                const SizedBox(height: 16),
-
-                const Text(
-                  'Email',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                ),
-                const SizedBox(height: 8),
-                _buildTextField(
-                  controller.emailController,
-                  'Masukkan email',
-                  Icons.email_outlined,
-                  false,
-                  TextInputType.emailAddress,
-                ),
-                const SizedBox(height: 16),
-
-                Obx(() => controller.selectedRole.value == 'Pasien'
-                    ? Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Usia (Tahun)',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 14),
-                          ),
-                          const SizedBox(height: 8),
-                          _buildTextField(
-                            controller.ageController,
-                            'Contoh: 25',
-                            Icons.cake_outlined,
-                            false,
-                            TextInputType.number,
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-                      )
-                    : const SizedBox.shrink()),
-
-                const Text(
-                  'Kata Sandi',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                ),
-                const SizedBox(height: 8),
-                _buildTextField(
-                  controller.passwordController,
-                  'Buat kata sandi',
-                  Icons.lock_outline_rounded,
-                  true,
-                  TextInputType.text,
-                  controller.isPasswordObscure,
-                  controller.togglePassword,
-                ),
-                const SizedBox(height: 16),
-
-                const Text(
-                  'Konfirmasi Kata Sandi',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                ),
-                const SizedBox(height: 8),
-                _buildTextField(
-                  controller.confirmPasswordController,
-                  'Ulangi kata sandi',
-                  Icons.lock_outline_rounded,
-                  true,
-                  TextInputType.text,
-                  controller.isConfirmPasswordObscure,
-                  controller.toggleConfirmPassword,
-                ),
-                const SizedBox(height: 32),
-
-                // Dynamic Fields based on Role
-                Obx(
-                  () => controller.selectedRole.value == 'Pasien'
-                      ? _buildPasienFields()
-                      : _buildDokterFields(),
-                ),
-
-                const SizedBox(height: 40),
-                SizedBox(
-                  width: double.infinity,
-                  height: 55,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2E7D32),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      elevation: 5,
-                      shadowColor: const Color(0xFF2E7D32).withOpacity(0.5),
-                    ),
-                    onPressed: controller.register,
-                    child: Obx(
-                      () => controller.isLoading.value
-                          ? const SizedBox(
-                              height: 24,
-                              width: 24,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 3,
-                              ),
-                            )
-                          : const Text(
-                              'Daftar',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 32),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      'Sudah punya akun?',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                    TextButton(
-                      onPressed: controller.goToLogin,
-                      child: const Text(
-                        'Masuk di sini',
-                        style: TextStyle(
-                          color: Color(0xFF2E7D32),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 40),
+                // Content based on step and role
+                Obx(() {
+                  if (controller.selectedRole.value == 'Pasien' && controller.currentStep.value == 1) {
+                    return _buildStep1Pasien();
+                  } else {
+                    return _buildStep2OrDokter();
+                  }
+                }),
               ],
             ),
           ),
-        ),
         ),
       ],
     ),
@@ -243,7 +103,10 @@ class RegisterView extends GetView<RegisterController> {
           children: [
             Expanded(
               child: GestureDetector(
-                onTap: () => controller.selectedRole.value = 'Pasien',
+                onTap: () {
+                  controller.selectedRole.value = 'Pasien';
+                  controller.currentStep.value = 1;
+                },
                 child: Container(
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
@@ -264,7 +127,9 @@ class RegisterView extends GetView<RegisterController> {
             ),
             Expanded(
               child: GestureDetector(
-                onTap: () => controller.selectedRole.value = 'Dokter',
+                onTap: () {
+                  controller.selectedRole.value = 'Dokter';
+                },
                 child: Container(
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
@@ -583,6 +448,63 @@ class RegisterView extends GetView<RegisterController> {
     );
   }
 
+  Widget _buildTensiField() {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F9FA),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: TextField(
+        controller: controller.tensiController,
+        keyboardType: TextInputType.text,
+        decoration: InputDecoration(
+          hintText: 'Contoh: 120/80',
+          hintStyle: const TextStyle(color: Colors.grey, fontSize: 14),
+          prefixIcon: const Icon(Icons.monitor_heart_outlined, color: Colors.grey),
+          suffixIcon: Obx(() {
+            if (controller.tensiStatus.value.isEmpty) {
+              return const SizedBox.shrink();
+            }
+            Color statusColor = Colors.grey;
+            String status = controller.tensiStatus.value;
+            if (status == 'Sehat') {
+              statusColor = Colors.green;
+            } else {
+              statusColor = Colors.red;
+            }
+
+            return Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: statusColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: statusColor),
+                ),
+                child: Text(
+                  status,
+                  style: TextStyle(
+                    color: statusColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            );
+          }),
+          suffixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 16,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildTextField(
     TextEditingController txtController,
     String hint,
@@ -629,6 +551,246 @@ class RegisterView extends GetView<RegisterController> {
       child: isPassword && obscureState != null
           ? Obx(() => buildTextFieldWidget(obscureState.value))
           : buildTextFieldWidget(false),
+    );
+  }
+
+  Widget _buildStep1Pasien() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Cek Tensi Darah',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
+            color: Color(0xFF2E7D32),
+          ),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Tuliskan hasil setelah cek tensi darah (contohnya dari Puskesmas, Klinik, Rumah Sakit, dll).',
+          style: TextStyle(fontSize: 14, color: Colors.grey, height: 1.5),
+        ),
+        const SizedBox(height: 24),
+        const Text(
+          'Tensi Darah (Sistolik/Diastolik)',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        ),
+        const SizedBox(height: 8),
+        _buildTensiField(),
+        const SizedBox(height: 32),
+        SizedBox(
+          width: double.infinity,
+          height: 55,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2E7D32),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              elevation: 5,
+              shadowColor: const Color(0xFF2E7D32).withOpacity(0.5),
+            ),
+            onPressed: controller.nextStep,
+            child: const Text(
+              'Lanjut',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 32),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'Sudah punya akun?',
+              style: TextStyle(color: Colors.grey),
+            ),
+            TextButton(
+              onPressed: controller.goToLogin,
+              child: const Text(
+                'Masuk di sini',
+                style: TextStyle(
+                  color: Color(0xFF2E7D32),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 40),
+      ],
+    );
+  }
+
+  Widget _buildStep2OrDokter() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (controller.selectedRole.value == 'Pasien') ...[
+          GestureDetector(
+            onTap: controller.previousStep,
+            child: Row(
+              children: [
+                const Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: Color(0xFF2E7D32)),
+                const SizedBox(width: 8),
+                const Text(
+                  'Kembali ke Step 1',
+                  style: TextStyle(
+                    color: Color(0xFF2E7D32),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
+        
+        const Text(
+          'Nama Lengkap',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        ),
+        const SizedBox(height: 8),
+        _buildTextField(
+          controller.nameController,
+          'Masukkan nama lengkap',
+          Icons.person_outline_rounded,
+          false,
+        ),
+        const SizedBox(height: 16),
+
+        const Text(
+          'Email',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        ),
+        const SizedBox(height: 8),
+        _buildTextField(
+          controller.emailController,
+          'Masukkan email',
+          Icons.email_outlined,
+          false,
+          TextInputType.emailAddress,
+        ),
+        const SizedBox(height: 16),
+
+        if (controller.selectedRole.value == 'Pasien') ...[
+          const Text(
+            'Usia (Tahun)',
+            style: TextStyle(
+                fontWeight: FontWeight.bold, fontSize: 14),
+          ),
+          const SizedBox(height: 8),
+          _buildTextField(
+            controller.ageController,
+            'Contoh: 25',
+            Icons.cake_outlined,
+            false,
+            TextInputType.number,
+          ),
+          const SizedBox(height: 16),
+        ],
+
+        const Text(
+          'Kata Sandi',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        ),
+        const SizedBox(height: 8),
+        _buildTextField(
+          controller.passwordController,
+          'Buat kata sandi',
+          Icons.lock_outline_rounded,
+          true,
+          TextInputType.text,
+          controller.isPasswordObscure,
+          controller.togglePassword,
+        ),
+        const SizedBox(height: 16),
+
+        const Text(
+          'Konfirmasi Kata Sandi',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        ),
+        const SizedBox(height: 8),
+        _buildTextField(
+          controller.confirmPasswordController,
+          'Ulangi kata sandi',
+          Icons.lock_outline_rounded,
+          true,
+          TextInputType.text,
+          controller.isConfirmPasswordObscure,
+          controller.toggleConfirmPassword,
+        ),
+        const SizedBox(height: 16),
+
+        if (controller.selectedRole.value == 'Pasien') 
+          _buildPasienFields()
+        else 
+          _buildDokterFields(),
+
+        const SizedBox(height: 40),
+        SizedBox(
+          width: double.infinity,
+          height: 55,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2E7D32),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              elevation: 5,
+              shadowColor: const Color(0xFF2E7D32).withOpacity(0.5),
+            ),
+            onPressed: controller.register,
+            child: Obx(
+              () => controller.isLoading.value
+                  ? const SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 3,
+                      ),
+                    )
+                  : const Text(
+                      'Daftar',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 32),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'Sudah punya akun?',
+              style: TextStyle(color: Colors.grey),
+            ),
+            TextButton(
+              onPressed: controller.goToLogin,
+              child: const Text(
+                'Masuk di sini',
+                style: TextStyle(
+                  color: Color(0xFF2E7D32),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 40),
+      ],
     );
   }
 }

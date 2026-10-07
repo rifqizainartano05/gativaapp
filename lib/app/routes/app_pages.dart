@@ -55,6 +55,8 @@ import '../modules/main_navigation/bindings/main_navigation_binding.dart';
 import '../modules/main_navigation/views/main_navigation_view.dart';
 import '../modules/notifikasi/bindings/notifikasi_binding.dart';
 import '../modules/notifikasi/views/notifikasi_view.dart';
+import '../modules/notifikasi_dokter/bindings/notifikasi_dokter_binding.dart';
+import '../modules/notifikasi_dokter/views/notifikasi_dokter_view.dart';
 import '../modules/onboarding/bindings/onboarding_binding.dart';
 import '../modules/onboarding/views/onboarding_view.dart';
 import '../modules/profile/bindings/profile_binding.dart';
@@ -189,6 +191,11 @@ class AppPages {
       name: _Paths.NOTIFIKASI,
       page: () => const NotifikasiView(),
       binding: NotifikasiBinding(),
+    ),
+    GetPage(
+      name: _Paths.NOTIFIKASI_DOKTER,
+      page: () => const NotifikasiDokterView(),
+      binding: NotifikasiDokterBinding(),
     ),
     GetPage(
       name: _Paths.DETAIL_DOKTER,

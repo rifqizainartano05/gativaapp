@@ -13,6 +13,8 @@ class RegisterController extends GetxController {
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
   final ageController = TextEditingController();
+  final tensiController = TextEditingController();
+  final tensiStatus = ''.obs;
 
   // Dokter specific
   final strController = TextEditingController();
@@ -33,6 +35,64 @@ class RegisterController extends GetxController {
   final isPasswordObscure = true.obs;
   final isConfirmPasswordObscure = true.obs;
   final isLoading = false.obs;
+  final currentStep = 1.obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    tensiController.addListener(_calculateTensiStatus);
+  }
+
+  @override
+  void onClose() {
+    tensiController.dispose();
+    super.onClose();
+  }
+
+  void nextStep() {
+    if (selectedRole.value == 'Pasien') {
+      if (tensiController.text.isEmpty) {
+        Get.snackbar(
+          'Input Kosong',
+          'Harap isi Tensi Darah terlebih dahulu',
+          backgroundColor: Colors.red.withOpacity(0.1),
+          colorText: Colors.red,
+        );
+        return;
+      }
+    }
+    currentStep.value = 2;
+  }
+
+  void previousStep() {
+    currentStep.value = 1;
+  }
+
+  void _calculateTensiStatus() {
+    String text = tensiController.text;
+    if (text.isEmpty) {
+      tensiStatus.value = '';
+      return;
+    }
+    List<String> parts = text.split('/');
+    if (parts.length == 2) {
+      int? sys = int.tryParse(parts[0]);
+      int? dia = int.tryParse(parts[1]);
+      if (sys != null && dia != null) {
+        if (sys >= 90 && sys <= 120 && dia >= 60 && dia <= 80) {
+          tensiStatus.value = 'Sehat';
+          selectedConditions.value = ['Tidak terindikasi penyakit di atas'];
+        } else {
+          tensiStatus.value = 'Terindikasi Penyakit Lainnya';
+          selectedConditions.value = List<String>.from(conditions);
+        }
+      } else {
+        tensiStatus.value = '';
+      }
+    } else {
+      tensiStatus.value = '';
+    }
+  }
 
   void togglePassword() {
     isPasswordObscure.value = !isPasswordObscure.value;
@@ -178,6 +238,7 @@ class RegisterController extends GetxController {
         if (selectedRole.value == 'Pasien') {
           userData['kondisi_kesehatan'] = selectedConditions.join(', ');
           userData['dailyLimit'] = calculatedLimit;
+          userData['tensi'] = tensiController.text.trim();
         } else {
           userData['strNumber'] = strController.text.trim();
           userData['strImageBase64'] = strImageBase64.value;

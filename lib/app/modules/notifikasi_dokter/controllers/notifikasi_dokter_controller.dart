@@ -5,7 +5,7 @@ import '../../../services/auth_service.dart';
 import 'dart:async';
 import '../../../services/notification_service.dart';
 
-class NotifikasiModel {
+class NotifikasiDokterModel {
   final String id;
   final String title;
   final String message;
@@ -13,7 +13,7 @@ class NotifikasiModel {
   final bool isRead;
   final String type;
 
-  NotifikasiModel({
+  NotifikasiDokterModel({
     required this.id,
     required this.title,
     required this.message,
@@ -23,8 +23,8 @@ class NotifikasiModel {
   });
 }
 
-class NotifikasiController extends GetxController {
-  final RxList<NotifikasiModel> notifications = <NotifikasiModel>[].obs;
+class NotifikasiDokterController extends GetxController {
+  final RxList<NotifikasiDokterModel> notifications = <NotifikasiDokterModel>[].obs;
   final RxBool isLoading = true.obs;
 
   @override
@@ -36,10 +36,8 @@ class NotifikasiController extends GetxController {
   final _firestore = FirebaseFirestore.instance;
   
   StreamSubscription? _userNotifSubscription;
-  StreamSubscription? _infoNotifSubscription;
 
-  List<NotifikasiModel> _userNotifs = [];
-  List<NotifikasiModel> _infoNotifs = [];
+  List<NotifikasiDokterModel> _userNotifs = [];
 
   void fetchNotifications() async {
     User? user = FirebaseAuth.instance.currentUser;
@@ -86,31 +84,13 @@ class NotifikasiController extends GetxController {
         
         _userNotifs = snapshot.docs.map((doc) {
           final data = doc.data();
-          return NotifikasiModel(
+          return NotifikasiDokterModel(
             id: doc.id,
             title: data['title'] ?? 'Notifikasi',
             message: data['message'] ?? '',
             timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
             isRead: data['isRead'] ?? false,
             type: data['type'] ?? 'umum',
-          );
-        }).toList();
-        _updateCombinedNotifs();
-      }, onError: (e) => print(e));
-
-      // 3. Fetch Informasi Kesehatan dari Dokter
-      _infoNotifSubscription?.cancel();
-      _infoNotifSubscription = _firestore.collectionGroup('informasi_kesehatan').snapshots().listen((snapshot) {
-        _infoNotifs = snapshot.docs.map((doc) {
-          final data = doc.data();
-          final timestamp = (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now();
-          return NotifikasiModel(
-            id: doc.id,
-            title: 'Info Kesehatan: ${data['keterangan'] ?? 'Info Baru'}',
-            message: 'Diunggah pada tanggal: ${timestamp.day}/${timestamp.month}/${timestamp.year} ${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}',
-            timestamp: timestamp,
-            isRead: true,
-            type: 'informasi_kesehatan',
           );
         }).toList();
         _updateCombinedNotifs();
@@ -130,12 +110,11 @@ class NotifikasiController extends GetxController {
   @override
   void onClose() {
     _userNotifSubscription?.cancel();
-    _infoNotifSubscription?.cancel();
     super.onClose();
   }
 
   void _updateCombinedNotifs() {
-    final combined = [..._userNotifs, ..._infoNotifs];
+    final combined = [..._userNotifs];
     // Sort descending by timestamp
     combined.sort((a, b) => b.timestamp.compareTo(a.timestamp));
     notifications.value = combined;
@@ -154,20 +133,4 @@ class NotifikasiController extends GetxController {
   }
 
   int get unreadCount => notifications.where((n) => !n.isRead).length;
-
-  NotifikasiModel? getDailyReminder() {
-    // Cari notifikasi terbaru dengan tipe 'pengingat_harian' yang dikirim hari ini
-    final now = DateTime.now();
-    try {
-      return notifications.firstWhere(
-        (n) =>
-            n.type == 'pengingat_harian' &&
-            n.timestamp.year == now.year &&
-            n.timestamp.month == now.month &&
-            n.timestamp.day == now.day,
-      );
-    } catch (e) {
-      return null;
-    }
-  }
 }
