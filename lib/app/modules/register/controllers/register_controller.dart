@@ -242,7 +242,7 @@ class RegisterController extends GetxController {
         } else {
           userData['strNumber'] = strController.text.trim();
           userData['strImageBase64'] = strImageBase64.value;
-          userData['status'] = 'menunggu'; // Set awal ke menunggu
+          userData['status'] = 'disetujui'; // Bypass approval, langsung disetujui
         }
 
         String subCollectionName = selectedRole.value == 'Pasien'
@@ -255,7 +255,7 @@ class RegisterController extends GetxController {
             .collection(subCollectionName)
             .doc(user.uid);
 
-        // Save all data to the role document directly (status 'menunggu' untuk dokter)
+        // Save all data to the role document directly
         await userDocRef.set(userData);
 
 

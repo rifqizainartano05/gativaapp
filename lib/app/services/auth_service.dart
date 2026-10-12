@@ -15,6 +15,19 @@ class AuthService extends GetxService {
   }
 
   Future<void> fetchUserRole(String uid) async {
+    // Cek di subcollection dokter TERLEBIH DAHULU
+    // Ini mencegah masalah saat email yang sama pernah digunakan untuk mendaftar sebagai pasien sebelumnya
+    var dokterDoc = await FirebaseFirestore.instance
+        .collection('mobile')
+        .doc('roles')
+        .collection('dokter')
+        .doc(uid)
+        .get();
+    if (dokterDoc.exists) {
+      userRole.value = 'Tenaga Kesehatan';
+      return;
+    }
+
     // Cek di subcollection pasien
     var pasienDoc = await FirebaseFirestore.instance
         .collection('mobile')
@@ -24,18 +37,6 @@ class AuthService extends GetxService {
         .get();
     if (pasienDoc.exists) {
       userRole.value = 'Pasien';
-      return;
-    }
-
-    // Cek di subcollection dokter
-    var dokterDoc = await FirebaseFirestore.instance
-        .collection('mobile')
-        .doc('roles')
-        .collection('dokter')
-        .doc(uid)
-        .get();
-    if (dokterDoc.exists) {
-      userRole.value = 'Tenaga Kesehatan';
       return;
     }
 

@@ -202,11 +202,23 @@ class LoginController extends GetxController {
               );
             }
           } catch (e) {
-            Get.offAllNamed(Routes.MAIN_NAVIGATION);
+            await FirebaseAuth.instance.signOut();
+            Get.snackbar(
+              'Gagal Masuk',
+              'Terjadi kesalahan saat memuat data dokter: $e',
+              backgroundColor: Colors.red.withOpacity(0.1),
+              colorText: Colors.red,
+            );
           }
         } else {
           // Fallback if role is unknown
-          Get.offAllNamed(Routes.MAIN_NAVIGATION);
+          await FirebaseAuth.instance.signOut();
+          Get.snackbar(
+            'Akses Ditolak',
+            'Role akun Anda tidak diketahui atau tidak valid.',
+            backgroundColor: Colors.red.withOpacity(0.1),
+            colorText: Colors.red,
+          );
         }
       }
     } on FirebaseAuthException catch (e) {
